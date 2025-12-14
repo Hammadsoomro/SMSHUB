@@ -39,6 +39,17 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     const availableNumbers =
       await twilioClient.getAvailableNumbers(countryCode);
 
+    // Check for Twilio API errors
+    if (availableNumbers.error || availableNumbers.error_message) {
+      console.error("Twilio API error:", availableNumbers);
+      return res.status(400).json({
+        error:
+          availableNumbers.error_message ||
+          availableNumbers.error ||
+          "Failed to fetch numbers from Twilio",
+      });
+    }
+
     if (!availableNumbers || !availableNumbers.available_phone_numbers) {
       return res.json({ numbers: [] });
     }
@@ -60,7 +71,14 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     res.json({ numbers });
   } catch (error) {
     console.error("Get available numbers error:", error);
-    res.status(500).json({ error: "Failed to fetch available numbers" });
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to fetch available numbers";
+    res
+      .status(500)
+      .json({
+        error: errorMessage,
+        details: "Please ensure your Twilio credentials are valid",
+      });
   }
 };
 
