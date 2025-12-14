@@ -1,120 +1,115 @@
 /**
- * Simple in-memory database for MVP
- * Can be swapped out with a real database like PostgreSQL or MongoDB
+ * MongoDB-backed storage layer
+ * Provides persistent data storage using MongoDB
  */
+import {
+  UserModel,
+  TwilioCredentialsModel,
+  PhoneNumberModel,
+  TeamMemberModel,
+  MessageModel,
+  ContactModel,
+} from "./models";
 import { User, TwilioCredentials, PhoneNumber, TeamMember, Message, Contact } from "@shared/api";
 
-interface StorageData {
-  users: Map<string, User & { password: string }>;
-  twilioCredentials: Map<string, TwilioCredentials>;
-  phoneNumbers: Map<string, PhoneNumber>;
-  teamMembers: Map<string, TeamMember>;
-  messages: Map<string, Message>;
-  contacts: Map<string, Contact>;
-}
-
 class Storage {
-  private data: StorageData = {
-    users: new Map(),
-    twilioCredentials: new Map(),
-    phoneNumbers: new Map(),
-    teamMembers: new Map(),
-    messages: new Map(),
-    contacts: new Map(),
-  };
-
   // User operations
-  createUser(user: User & { password: string }): void {
-    this.data.users.set(user.id, user);
+  async createUser(user: User & { password: string }): Promise<void> {
+    const newUser = new UserModel(user);
+    await newUser.save();
   }
 
-  getUserByEmail(email: string): (User & { password: string }) | undefined {
-    return Array.from(this.data.users.values()).find((u) => u.email === email);
+  async getUserByEmail(email: string): Promise<(User & { password: string }) | undefined> {
+    return (await UserModel.findOne({ email: email.toLowerCase() })) as
+      | (User & { password: string })
+      | null;
   }
 
-  getUserById(id: string): User | undefined {
-    const user = this.data.users.get(id);
+  async getUserById(id: string): Promise<User | undefined> {
+    const user = (await UserModel.findById(id)) as (User & { password: string }) | null;
     if (!user) return undefined;
-    const { password, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user.toObject();
     return userWithoutPassword as User;
   }
 
   // Twilio Credentials
-  setTwilioCredentials(credentials: TwilioCredentials): void {
-    this.data.twilioCredentials.set(credentials.id, credentials);
+  async setTwilioCredentials(credentials: TwilioCredentials): Promise<void> {
+    await TwilioCredentialsModel.updateOne(
+      { adminId: credentials.adminId },
+      credentials,
+      { upsert: true }
+    );
   }
 
-  getTwilioCredentialsByAdminId(adminId: string): TwilioCredentials | undefined {
-    return Array.from(this.data.twilioCredentials.values()).find(
-      (c) => c.adminId === adminId
-    );
+  async getTwilioCredentialsByAdminId(adminId: string): Promise<TwilioCredentials | undefined> {
+    return (await TwilioCredentialsModel.findOne({ adminId })) as TwilioCredentials | null;
   }
 
   // Phone Numbers
-  addPhoneNumber(number: PhoneNumber): void {
-    this.data.phoneNumbers.set(number.id, number);
+  async addPhoneNumber(number: PhoneNumber): Promise<void> {
+    const newNumber = new PhoneNumberModel(number);
+    await newNumber.save();
   }
 
-  getPhoneNumbersByAdminId(adminId: string): PhoneNumber[] {
-    return Array.from(this.data.phoneNumbers.values()).filter(
-      (n) => n.adminId === adminId
-    );
+  async getPhoneNumbersByAdminId(adminId: string): Promise<PhoneNumber[]> {
+    return (await PhoneNumberModel.find({ adminId })) as PhoneNumber[];
   }
 
-  getPhoneNumberById(id: string): PhoneNumber | undefined {
-    return this.data.phoneNumbers.get(id);
+  async getPhoneNumberById(id: string): Promise<PhoneNumber | undefined> {
+    return (await PhoneNumberModel.findById(id)) as PhoneNumber | null;
   }
 
-  updatePhoneNumber(number: PhoneNumber): void {
-    this.data.phoneNumbers.set(number.id, number);
+  async updatePhoneNumber(number: PhoneNumber): Promise<void> {
+    await PhoneNumberModel.findByIdAndUpdate(number.id, number);
   }
 
   // Team Members
-  addTeamMember(member: TeamMember & { password: string }): void {
-    this.data.teamMembers.set(member.id, member);
+  async addTeamMember(member: TeamMember & { password: string }): Promise<void> {
+    const newMember = new TeamMemberModel(member);
+    await newMember.save();
   }
 
-  getTeamMembersByAdminId(adminId: string): TeamMember[] {
-    return Array.from(this.data.teamMembers.values())
-      .filter((m) => m.adminId === adminId)
-      .map(({ password, ...member }) => member as TeamMember);
+  async getTeamMembersByAdminId(adminId: string): Promise<TeamMember[]> {
+    const members = await TeamMemberModel.find({ adminId });
+    return members.map((member) => {
+      const { password, ...teamMember } = member.toObject() as any;
+      return teamMember as TeamMember;
+    });
   }
 
-  getTeamMemberById(id: string): TeamMember | undefined {
-    const member = this.data.teamMembers.get(id);
+  async getTeamMemberById(id: string): Promise<TeamMember | undefined> {
+    const member = await TeamMemberModel.findOne({ id });
     if (!member) return undefined;
-    const { password, ...memberWithoutPassword } = member;
+    const { password, ...memberWithoutPassword } = member.toObject() as any;
     return memberWithoutPassword as TeamMember;
   }
 
   // Messages
-  addMessage(message: Message): void {
-    this.data.messages.set(message.id, message);
+  async addMessage(message: Message): Promise<void> {
+    const newMessage = new MessageModel(message);
+    await newMessage.save();
   }
 
-  getMessagesByPhoneNumber(phoneNumberId: string): Message[] {
-    return Array.from(this.data.messages.values()).filter(
-      (m) => m.phoneNumberId === phoneNumberId
-    );
+  async getMessagesByPhoneNumber(phoneNumberId: string): Promise<Message[]> {
+    return (await MessageModel.find({ phoneNumberId }).sort({ timestamp: -1 })) as Message[];
   }
 
   // Contacts
-  addContact(contact: Contact): void {
-    this.data.contacts.set(contact.id, contact);
+  async addContact(contact: Contact): Promise<void> {
+    const newContact = new ContactModel(contact);
+    await newContact.save();
   }
 
-  getContactsByPhoneNumber(phoneNumberId: string): Contact[] {
-    return Array.from(this.data.contacts.values()).filter(
-      (c) => c.phoneNumberId === phoneNumberId
-    );
+  async getContactsByPhoneNumber(phoneNumberId: string): Promise<Contact[]> {
+    return (await ContactModel.find({ phoneNumberId })) as Contact[];
   }
 
-  getContactById(id: string): Contact | undefined {
-    return this.data.contacts.get(id);
+  async getContactById(id: string): Promise<Contact | undefined> {
+    return (await ContactModel.findById(id)) as Contact | null;
   }
 
-  updateContact(contact: Contact): void {
-    this.data.contacts.set(contact.id, contact);
+  async updateContact(contact: Contact): Promise<void> {
+    await ContactModel.findByIdAndUpdate(contact.id, contact);
   }
 
   // Utility
