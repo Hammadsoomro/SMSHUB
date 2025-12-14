@@ -21,6 +21,8 @@ const ADMIN_MENU = [
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
   { href: "/admin/credentials", label: "Credentials", icon: Settings },
   { href: "/admin/numbers", label: "Numbers", icon: Phone },
+  { href: "/admin/buy-numbers", label: "Buy Numbers", icon: Phone },
+  { href: "/admin/wallet", label: "Wallet", icon: Phone },
   { href: "/admin/team", label: "Team Management", icon: Users },
   { href: "/admin/account", label: "Account Info", icon: FileText },
 ];
