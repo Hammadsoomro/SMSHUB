@@ -54,6 +54,7 @@ export async function createServer() {
   // Admin routes (requires admin role)
   app.post("/api/admin/credentials", authMiddleware, adminOnly, handleSaveCredentials);
   app.get("/api/admin/credentials", authMiddleware, adminOnly, handleGetCredentials);
+  app.delete("/api/admin/credentials", authMiddleware, adminOnly, handleRemoveCredentials);
   app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
   app.get("/api/admin/team", authMiddleware, adminOnly, handleGetTeamMembers);
   app.post("/api/admin/team/invite", authMiddleware, adminOnly, handleInviteTeamMember);
