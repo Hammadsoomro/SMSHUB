@@ -54,41 +54,49 @@ export function setupSocketIO(httpServer: HTTPServer): IOServer {
     }
 
     // Handle new incoming SMS
-    socket.on("incoming_sms", (data: any) => {
+    socket.on("incoming_sms", async (data: any) => {
       const { phoneNumberId, from, body } = data;
 
-      // Emit to team member assigned to this number
-      const phoneNumber = storage.getPhoneNumberById(phoneNumberId);
-      if (phoneNumber?.assignedTo) {
-        io.to(`user:${phoneNumber.assignedTo}`).emit("new_message", {
+      try {
+        // Emit to team member assigned to this number
+        const phoneNumber = await storage.getPhoneNumberById(phoneNumberId);
+        if (phoneNumber?.assignedTo) {
+          io.to(`user:${phoneNumber.assignedTo}`).emit("new_message", {
+            phoneNumberId,
+            from,
+            body,
+            direction: "inbound",
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        // Emit to admin
+        io.to(`admin:${phoneNumber?.adminId}`).emit("incoming_sms_notification", {
           phoneNumberId,
           from,
-          body,
-          direction: "inbound",
-          timestamp: new Date().toISOString(),
+          preview: body.substring(0, 50),
         });
+      } catch (error) {
+        console.error("Error handling incoming SMS:", error);
       }
-
-      // Emit to admin
-      io.to(`admin:${phoneNumber?.adminId}`).emit("incoming_sms_notification", {
-        phoneNumberId,
-        from,
-        preview: body.substring(0, 50),
-      });
     });
 
     // Handle message sent
-    socket.on("message_sent", (data: any) => {
+    socket.on("message_sent", async (data: any) => {
       const { phoneNumberId, to, body } = data;
 
-      // Update all connected clients for this user
-      io.to(`user:${socket.userId}`).emit("message_updated", {
-        phoneNumberId,
-        to,
-        body,
-        direction: "outbound",
-        timestamp: new Date().toISOString(),
-      });
+      try {
+        // Update all connected clients for this user
+        io.to(`user:${socket.userId}`).emit("message_updated", {
+          phoneNumberId,
+          to,
+          body,
+          direction: "outbound",
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error("Error handling message sent:", error);
+      }
     });
 
     // Handle disconnect

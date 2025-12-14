@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import { connectDB } from "./db";
 
 // Auth routes
 import { handleSignup, handleLogin } from "./routes/auth";
@@ -26,7 +27,10 @@ import {
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
 import { handleDemo } from "./routes/demo";
 
-export function createServer() {
+export async function createServer() {
+  // Connect to MongoDB BEFORE creating the app
+  await connectDB();
+
   const app = express();
 
   // Middleware
