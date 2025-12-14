@@ -388,6 +388,76 @@ export default function BuyNumbers() {
           </div>
         )}
 
+        {/* Capability Filters */}
+        {availableNumbers.length > 0 && (
+          <Card className="p-6 mb-6 bg-muted/50 border-l-4 border-l-primary">
+            <h3 className="text-sm font-semibold mb-4">Filter by Capabilities</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                {
+                  id: "voice" as const,
+                  label: "Voice",
+                  icon: PhoneCall,
+                  color: "text-green-600",
+                },
+                {
+                  id: "sms" as const,
+                  label: "SMS",
+                  icon: MessageSquare,
+                  color: "text-blue-600",
+                },
+                {
+                  id: "mms" as const,
+                  label: "MMS",
+                  icon: Image,
+                  color: "text-purple-600",
+                },
+                { id: "fax" as const, label: "Fax", icon: Phone, color: "text-orange-600" },
+              ].map((capability) => {
+                const Icon = capability.icon;
+                return (
+                  <div
+                    key={capability.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-background cursor-pointer transition-colors"
+                    onClick={() =>
+                      setCapabilityFilters((prev) => ({
+                        ...prev,
+                        [capability.id]: !prev[capability.id],
+                      }))
+                    }
+                  >
+                    <Checkbox
+                      checked={capabilityFilters[capability.id]}
+                      onCheckedChange={(checked) =>
+                        setCapabilityFilters((prev) => ({
+                          ...prev,
+                          [capability.id]: checked === true,
+                        }))
+                      }
+                    />
+                    <div className="flex items-center gap-2 flex-1">
+                      <Icon className={`w-4 h-4 ${capability.color}`} />
+                      <span className="text-sm font-medium">
+                        {capability.label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {hasAnyFilterEnabled && (
+              <button
+                onClick={() =>
+                  setCapabilityFilters({ voice: false, sms: false, mms: false, fax: false })
+                }
+                className="text-xs text-primary hover:underline mt-3"
+              >
+                Clear filters
+              </button>
+            )}
+          </Card>
+        )}
+
         {/* Loading State */}
         {isLoadingNumbers && (
           <Card className="p-12 flex items-center justify-center">
