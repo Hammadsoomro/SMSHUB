@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Phone, Loader2, Search } from "lucide-react";
+import { AlertCircle, Phone, Loader2, Search, Plus, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneNumber } from "@shared/api";
 
@@ -12,7 +12,11 @@ export default function Numbers() {
   const [numbers, setNumbers] = useState<PhoneNumber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [phoneNumberInput, setPhoneNumberInput] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     fetchNumbers();
