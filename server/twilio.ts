@@ -90,15 +90,16 @@ export class TwilioClient {
         "base64",
       );
 
-      // Twilio requires at least one search parameter. Using a generic distance search
-      // to get available numbers in the country without specific criteria
-      const searchParams = new URLSearchParams();
-      searchParams.append("AreaCode", "");  // Empty area code to get all results
-      searchParams.append("Limit", "30");   // Limit results to 30
+      // Build query string - Twilio requires at least one search criterion
+      // For international numbers, we use distance search with a large radius
+      // You can also add NearNumber, NearLatLong, or other parameters
+      const query = new URLSearchParams({
+        Limit: "50",
+      }).toString();
 
       const options = {
         hostname: "api.twilio.com",
-        path: `/2010-04-01/Accounts/${this.accountSid}/AvailablePhoneNumbers/${countryCode}/Local.json?${searchParams.toString()}`,
+        path: `/2010-04-01/Accounts/${this.accountSid}/AvailablePhoneNumbers/${countryCode}/Local.json?${query}`,
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
