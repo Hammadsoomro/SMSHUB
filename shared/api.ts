@@ -102,6 +102,41 @@ export interface SendMessageRequest {
   phoneNumberId: string;
 }
 
+// Wallet & Transactions
+export interface Wallet {
+  id: string;
+  adminId: string;
+  balance: number;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  adminId: string;
+  type: 'credit' | 'debit';
+  amount: number;
+  description: string;
+  reference?: string; // phoneNumberId or other reference
+  createdAt: string;
+}
+
+export interface AvailablePhoneNumber {
+  phoneNumber: string;
+  friendlyName: string;
+  locality?: string;
+  region?: string;
+  postalCode?: string;
+  countryCode: string;
+  cost: string;
+}
+
+export interface PurchaseNumberRequest {
+  phoneNumber: string;
+  cost: number;
+}
+
 // API Responses
 export interface DemoResponse {
   message: string;
