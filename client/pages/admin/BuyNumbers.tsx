@@ -1,0 +1,430 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import AdminLayout from "@/components/AdminLayout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertCircle,
+  Phone,
+  Loader2,
+  Wallet,
+  Search,
+  Check,
+} from "lucide-react";
+import { AvailablePhoneNumber, Wallet as WalletType } from "@shared/api";
+
+const COUNTRIES = [
+  { code: "US", name: "United States" },
+  { code: "CA", name: "Canada" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "AU", name: "Australia" },
+  { code: "DE", name: "Germany" },
+  { code: "ES", name: "Spain" },
+  { code: "FR", name: "France" },
+];
+
+export default function BuyNumbers() {
+  const navigate = useNavigate();
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [availableNumbers, setAvailableNumbers] = useState<
+    AvailablePhoneNumber[]
+  >([]);
+  const [wallet, setWallet] = useState<WalletType | null>(null);
+  const [isLoadingNumbers, setIsLoadingNumbers] = useState(false);
+  const [isLoadingWallet, setIsLoadingWallet] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [purchasingNumber, setPurchasingNumber] = useState<string | null>(null);
+  const [purchasedNumbers, setPurchasedNumbers] = useState<Set<string>>(
+    new Set(),
+  );
+
+  useEffect(() => {
+    const validateAuth = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login", { replace: true });
+          return;
+        }
+        fetchWallet();
+        setIsLoadingWallet(false);
+      } catch (err) {
+        console.error("Auth check error:", err);
+        navigate("/login", { replace: true });
+      }
+    };
+
+    validateAuth();
+  }, [navigate]);
+
+  const fetchWallet = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/wallet", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setWallet(data.wallet);
+      }
+    } catch (err) {
+      console.error("Error fetching wallet:", err);
+    }
+  };
+
+  const fetchAvailableNumbers = async (countryCode: string) => {
+    if (!countryCode) return;
+
+    setIsLoadingNumbers(true);
+    setError("");
+    setAvailableNumbers([]);
+    setSearchTerm("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/admin/available-numbers?countryCode=${countryCode}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || "Failed to fetch numbers");
+        return;
+      }
+
+      const data = await response.json();
+      setAvailableNumbers(data.numbers || []);
+
+      if (!data.numbers || data.numbers.length === 0) {
+        setError("No available numbers for this country");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while fetching numbers",
+      );
+    } finally {
+      setIsLoadingNumbers(false);
+    }
+  };
+
+  const handleCountryChange = (value: string) => {
+    setSelectedCountry(value);
+    setAvailableNumbers([]);
+    setSearchTerm("");
+    fetchAvailableNumbers(value);
+  };
+
+  const handlePurchaseNumber = async (number: AvailablePhoneNumber) => {
+    if (!wallet || wallet.balance < parseFloat(number.cost)) {
+      setError("Insufficient wallet balance");
+      return;
+    }
+
+    setPurchasingNumber(number.phoneNumber);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/purchase-number", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phoneNumber: number.phoneNumber,
+          cost: parseFloat(number.cost),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to purchase number");
+      }
+
+      const data = await response.json();
+      setWallet(data.wallet);
+      setPurchasedNumbers((prev) => new Set(prev).add(number.phoneNumber));
+      setSuccess(`✅ Successfully purchased ${number.phoneNumber}`);
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while purchasing",
+      );
+    } finally {
+      setPurchasingNumber(null);
+    }
+  };
+
+  const filteredNumbers = availableNumbers.filter(
+    (num) =>
+      num.phoneNumber.includes(searchTerm) ||
+      (num.locality &&
+        num.locality.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (num.region &&
+        num.region.toLowerCase().includes(searchTerm.toLowerCase())),
+  );
+
+  if (isLoadingWallet) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div>
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Buy Phone Numbers</h1>
+            <p className="text-muted-foreground">
+              Purchase Twilio phone numbers from multiple countries
+            </p>
+          </div>
+        </div>
+
+        {/* Wallet Card */}
+        {wallet && (
+          <Card className="p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/20 rounded-lg">
+                  <Wallet className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Wallet Balance
+                  </p>
+                  <p className="text-2xl font-bold">
+                    ${wallet.balance.toFixed(2)} {wallet.currency}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/admin/wallet")}
+              >
+                Add Funds
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <Card className="p-6 bg-red-50 border-2 border-red-300 mb-8 animate-shake">
+            <div className="flex gap-4">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-red-900 mb-1">Error</h3>
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <Card className="p-6 bg-green-50 border-2 border-green-300 mb-8">
+            <div className="flex gap-4">
+              <Check className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-green-900 mb-1">Success</h3>
+                <p className="text-sm text-green-800">{success}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Country Selection */}
+        <Card className="p-8 mb-8 border-2">
+          <h2 className="text-lg font-semibold mb-4">Select Country</h2>
+          <Select value={selectedCountry} onValueChange={handleCountryChange}>
+            <SelectTrigger className="w-full max-w-sm">
+              <SelectValue placeholder="Choose a country..." />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNTRIES.map((country) => (
+                <SelectItem key={country.code} value={country.code}>
+                  {country.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Card>
+
+        {/* Search */}
+        {availableNumbers.length > 0 && (
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by number, locality or region..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-10"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoadingNumbers && (
+          <Card className="p-12 flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+              <p className="text-muted-foreground">
+                Fetching available numbers...
+              </p>
+            </div>
+          </Card>
+        )}
+
+        {/* Numbers Grid */}
+        {!isLoadingNumbers && selectedCountry && filteredNumbers.length > 0 && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {filteredNumbers.length} available number
+              {filteredNumbers.length !== 1 ? "s" : ""} found
+            </p>
+            <div className="grid gap-4">
+              {filteredNumbers.map((num, idx) => {
+                const cost = parseFloat(num.cost);
+                const hasBalance = wallet && wallet.balance >= cost;
+                const isPurchased = purchasedNumbers.has(num.phoneNumber);
+
+                return (
+                  <Card
+                    key={idx}
+                    className={`p-6 border-l-4 hover:shadow-lg smooth-transition ${
+                      isPurchased
+                        ? "border-l-green-500 bg-green-50"
+                        : hasBalance
+                          ? "border-l-primary hover:border-l-secondary"
+                          : "border-l-muted opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="p-3 bg-primary/10 rounded-lg">
+                          <Phone className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-mono font-semibold text-lg">
+                            {num.phoneNumber}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {num.locality || "N/A"}
+                            {num.region && `, ${num.region}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Monthly cost:{" "}
+                            <span className="font-semibold">
+                              ${cost.toFixed(2)} {wallet?.currency}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right ml-4 flex-shrink-0">
+                        {isPurchased ? (
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium flex items-center gap-2">
+                              <Check className="w-4 h-4" />
+                              Purchased
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate("/admin/numbers")}
+                            >
+                              Manage
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            <p className="text-sm font-semibold">
+                              ${cost.toFixed(2)}
+                            </p>
+                            <Button
+                              size="sm"
+                              disabled={
+                                !hasBalance ||
+                                purchasingNumber === num.phoneNumber
+                              }
+                              onClick={() => handlePurchaseNumber(num)}
+                              className="bg-gradient-to-r from-primary to-secondary"
+                            >
+                              {purchasingNumber === num.phoneNumber ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Buying...
+                                </>
+                              ) : !hasBalance ? (
+                                "No Balance"
+                              ) : (
+                                "Buy"
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoadingNumbers &&
+          selectedCountry &&
+          availableNumbers.length > 0 &&
+          filteredNumbers.length === 0 && (
+            <Card className="p-12 text-center">
+              <Phone className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+              <p className="text-muted-foreground">
+                No numbers matching your search
+              </p>
+            </Card>
+          )}
+
+        {/* No Country Selected */}
+        {!selectedCountry && (
+          <Card className="p-12 text-center">
+            <Phone className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+            <p className="text-muted-foreground text-lg">
+              Select a country to view available numbers
+            </p>
+          </Card>
+        )}
+      </div>
+    </AdminLayout>
+  );
+}

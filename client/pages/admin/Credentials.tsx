@@ -4,9 +4,9 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, CheckCircle2, Lock, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Lock, Loader2, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { TwilioCredentialsRequest } from "@shared/api";
+import { TwilioCredentialsRequest, TwilioCredentials } from "@shared/api";
 
 interface CredentialsForm {
   accountSid: string;
@@ -18,15 +18,17 @@ export default function Credentials() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [hasCredentials, setHasCredentials] = useState(false);
+  const [connectedCredentials, setConnectedCredentials] =
+    useState<TwilioCredentials | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<CredentialsForm>();
 
-  // Validate authentication on component mount
+  // Validate authentication on component mount and fetch credentials
   useEffect(() => {
     const validateAuth = async () => {
       try {
@@ -35,6 +37,19 @@ export default function Credentials() {
           navigate("/login", { replace: true });
           return;
         }
+
+        // Fetch existing credentials
+        const response = await fetch("/api/admin/credentials", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.credentials) {
+            setConnectedCredentials(data.credentials);
+          }
+        }
+
         setIsAuthLoading(false);
       } catch (err) {
         console.error("Auth check error:", err);
@@ -93,20 +108,75 @@ export default function Credentials() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.error || "Failed to connect Twilio credentials"
+          errorData.error || "Failed to connect Twilio credentials",
         );
       }
 
-      setHasCredentials(true);
+      const responseData = await response.json();
+      setConnectedCredentials(responseData.credentials);
       setSuccess("✅ Twilio credentials connected successfully!");
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred while validating credentials"
+          : "An error occurred while validating credentials",
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to disconnect Twilio credentials? Team members will no longer be able to send SMS.",
+      )
+    ) {
+      return;
+    }
+
+    setIsDisconnecting(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Session expired. Please login again.");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const response = await fetch("/api/admin/credentials", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        setError("Session expired. Please login again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to disconnect credentials");
+      }
+
+      setConnectedCredentials(null);
+      setSuccess("✅ Twilio credentials disconnected successfully!");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while disconnecting credentials",
+      );
+    } finally {
+      setIsDisconnecting(false);
     }
   };
 
@@ -124,6 +194,51 @@ export default function Credentials() {
     <AdminLayout>
       <div>
         <h1 className="text-3xl font-bold mb-8">Twilio Credentials</h1>
+
+        {/* Connection Status Card */}
+        {connectedCredentials && (
+          <Card className="p-6 bg-green-50 border-green-200 mb-8">
+            <div className="flex gap-4 justify-between items-start">
+              <div className="flex gap-4 flex-1">
+                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-green-900 mb-1">
+                    Credentials Connected
+                  </h3>
+                  <p className="text-sm text-green-700 mb-2">
+                    Twilio account is connected and active. Team members can
+                    send and receive SMS.
+                  </p>
+                  <p className="text-xs text-green-600">
+                    Connected:{" "}
+                    {new Date(
+                      connectedCredentials.connectedAt,
+                    ).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDisconnect}
+                disabled={isDisconnecting}
+                className="text-destructive border-destructive hover:bg-destructive hover:text-white flex-shrink-0"
+              >
+                {isDisconnecting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Disconnecting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Disconnect
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* Info Card */}
         <Card className="p-6 bg-blue-50 border-blue-200 mb-8">
