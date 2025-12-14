@@ -78,5 +78,14 @@ export async function createServer() {
   app.get("/api/messages/conversation/:contactId", authMiddleware, handleGetConversation);
   app.post("/api/messages/send", authMiddleware, handleSendMessage);
 
+  // Wallet routes (requires authentication)
+  app.get("/api/wallet", authMiddleware, handleGetWallet);
+  app.post("/api/wallet/add-funds", authMiddleware, handleAddFunds);
+  app.get("/api/wallet/transactions", authMiddleware, handleGetTransactions);
+
+  // Phone purchase routes (requires authentication)
+  app.get("/api/admin/available-numbers", authMiddleware, adminOnly, handleGetAvailableNumbers);
+  app.post("/api/admin/purchase-number", authMiddleware, adminOnly, handlePurchaseNumber);
+
   return app;
 }
