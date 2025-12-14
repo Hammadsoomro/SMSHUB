@@ -156,6 +156,17 @@ export const handleGetCredentials: RequestHandler = (req, res) => {
   }
 };
 
+export const handleRemoveCredentials: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    await storage.removeTwilioCredentials(adminId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Remove credentials error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // Phone Numbers
 export const handleGetNumbers: RequestHandler = (req, res) => {
   try {
