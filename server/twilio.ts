@@ -90,29 +90,47 @@ export class TwilioClient {
         "base64",
       );
 
-      // Reference numbers for different countries - used for NearNumber search
-      const referenceNumbers: Record<string, string> = {
-        US: "+15551234567",
-        CA: "+14165551234",
-        GB: "+442071838750",
-        AU: "+61261234567",
-        DE: "+493069999999",
-        ES: "+34913456789",
-        FR: "+33140205050",
-      };
+      // Build query string based on country
+      // Different countries require different search parameters
+      const query = new URLSearchParams();
 
-      // Build query string - Twilio requires at least one search criterion
-      // We use NearNumber to find available numbers near a reference number in that country
-      const nearNumber = referenceNumbers[countryCode] || referenceNumbers["US"];
-      const query = new URLSearchParams({
-        NearNumber: nearNumber,
-        Distance: "100",
-        Limit: "50",
-      }).toString();
+      // Add search criteria based on country
+      if (countryCode === "US") {
+        // For US, use major area codes: 212 (NY), 213 (LA), 415 (SF), etc
+        query.append("AreaCode", "212");
+      } else if (countryCode === "CA") {
+        // For Canada, use major area codes: 416 (Toronto), 604 (Vancouver), etc
+        query.append("AreaCode", "416");
+      } else if (countryCode === "GB") {
+        // For UK, use latitude/longitude for London
+        query.append("NearLatLong", "51.5074,-0.1278");
+        query.append("Distance", "50");
+      } else if (countryCode === "AU") {
+        // For Australia, use latitude/longitude for Sydney
+        query.append("NearLatLong", "-33.8688,151.2093");
+        query.append("Distance", "50");
+      } else if (countryCode === "DE") {
+        // For Germany, use latitude/longitude for Berlin
+        query.append("NearLatLong", "52.5200,13.4050");
+        query.append("Distance", "50");
+      } else if (countryCode === "FR") {
+        // For France, use latitude/longitude for Paris
+        query.append("NearLatLong", "48.8566,2.3522");
+        query.append("Distance", "50");
+      } else if (countryCode === "ES") {
+        // For Spain, use latitude/longitude for Madrid
+        query.append("NearLatLong", "40.4168,-3.7038");
+        query.append("Distance", "50");
+      } else {
+        // Default: use area code if available, otherwise use distance search
+        query.append("AreaCode", "212");
+      }
+
+      query.append("Limit", "50");
 
       const options = {
         hostname: "api.twilio.com",
-        path: `/2010-04-01/Accounts/${this.accountSid}/AvailablePhoneNumbers/${countryCode}/Local.json?${query}`,
+        path: `/2010-04-01/Accounts/${this.accountSid}/AvailablePhoneNumbers/${countryCode}/Local.json?${query.toString()}`,
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
