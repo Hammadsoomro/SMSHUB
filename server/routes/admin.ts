@@ -140,10 +140,10 @@ export const handleSaveCredentials: RequestHandler = async (req, res) => {
   }
 };
 
-export const handleGetCredentials: RequestHandler = (req, res) => {
+export const handleGetCredentials: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const credentials = storage.getTwilioCredentialsByAdminId(adminId);
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
 
     if (!credentials) {
       return res.json({ credentials: null });
