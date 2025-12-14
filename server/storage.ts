@@ -26,7 +26,7 @@ class Storage {
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    const user = (await UserModel.findById(id)) as (User & { password: string }) | null;
+    const user = (await UserModel.findById(id)) as any;
     if (!user) return undefined;
     const { password, ...userWithoutPassword } = user.toObject();
     return userWithoutPassword as User;
