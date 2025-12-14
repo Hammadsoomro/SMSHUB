@@ -96,21 +96,23 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
         Array.isArray(region.available_phone_numbers)
       ) {
         // This is a region object with nested phone numbers
-        const regionNumbers = region.available_phone_numbers.map((num: any) => ({
-          phoneNumber: num.phone_number,
-          friendlyName: num.friendly_name || num.phone_number,
-          locality: num.locality || "",
-          region: num.region || "",
-          postalCode: num.postal_code || "",
-          countryCode: countryCode,
-          cost: num.price || "1.00",
-          capabilities: {
-            SMS: num.capabilities?.SMS === true,
-            MMS: num.capabilities?.MMS === true,
-            voice: num.capabilities?.voice === true,
-            fax: false,
-          },
-        }));
+        const regionNumbers = region.available_phone_numbers.map(
+          (num: any) => ({
+            phoneNumber: num.phone_number,
+            friendlyName: num.friendly_name || num.phone_number,
+            locality: num.locality || "",
+            region: num.region || "",
+            postalCode: num.postal_code || "",
+            countryCode: countryCode,
+            cost: num.price || "1.00",
+            capabilities: {
+              SMS: num.capabilities?.SMS === true,
+              MMS: num.capabilities?.MMS === true,
+              voice: num.capabilities?.voice === true,
+              fax: false,
+            },
+          }),
+        );
         allNumbers.push(...regionNumbers);
       }
     }
@@ -123,7 +125,9 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
   } catch (error) {
     console.error("Get available numbers error:", error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to fetch available numbers";
+      error instanceof Error
+        ? error.message
+        : "Failed to fetch available numbers";
     res.status(500).json({
       error: errorMessage,
       details: "Please ensure your Twilio credentials are valid",
@@ -174,11 +178,9 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
       await twilioClient.purchasePhoneNumber(phoneNumber);
 
     if (purchaseResponse.error || purchaseResponse.error_message) {
-      return res
-        .status(400)
-        .json({
-          error: purchaseResponse.error_message || purchaseResponse.error,
-        });
+      return res.status(400).json({
+        error: purchaseResponse.error_message || purchaseResponse.error,
+      });
     }
 
     // Deduct from wallet

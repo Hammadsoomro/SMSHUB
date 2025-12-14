@@ -58,12 +58,14 @@ export default function BuyNumbers() {
   const [purchasedNumbers, setPurchasedNumbers] = useState<Set<string>>(
     new Set(),
   );
-  const [capabilityFilters, setCapabilityFilters] = useState<CapabilityFilters>({
-    voice: false,
-    sms: false,
-    mms: false,
-    fax: false,
-  });
+  const [capabilityFilters, setCapabilityFilters] = useState<CapabilityFilters>(
+    {
+      voice: false,
+      sms: false,
+      mms: false,
+      fax: false,
+    },
+  );
 
   useEffect(() => {
     const validateAuth = async () => {
@@ -133,8 +135,7 @@ export default function BuyNumbers() {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         try {
           const errorData = await response.json();
-          errorMessage =
-            errorData.error || errorData.details || errorMessage;
+          errorMessage = errorData.error || errorData.details || errorMessage;
         } catch (parseError) {
           console.warn("Could not parse error response:", parseError);
         }
@@ -194,7 +195,9 @@ export default function BuyNumbers() {
     }
 
     if (wallet.balance < cost) {
-      setError(`Insufficient wallet balance. Need $${cost.toFixed(2)}, have $${wallet.balance.toFixed(2)}`);
+      setError(
+        `Insufficient wallet balance. Need $${cost.toFixed(2)}, have $${wallet.balance.toFixed(2)}`,
+      );
       return;
     }
 
@@ -259,11 +262,7 @@ export default function BuyNumbers() {
     if (!hasAnyFilterEnabled) return true;
 
     const caps = num.capabilities || {};
-    if (
-      capabilityFilters.voice &&
-      !caps.voice
-    )
-      return false;
+    if (capabilityFilters.voice && !caps.voice) return false;
     if (capabilityFilters.sms && !caps.SMS) return false;
     if (capabilityFilters.mms && !caps.MMS) return false;
     if (capabilityFilters.fax) return false; // Fax not available from Twilio
@@ -391,7 +390,9 @@ export default function BuyNumbers() {
         {/* Capability Filters */}
         {availableNumbers.length > 0 && (
           <Card className="p-6 mb-6 bg-muted/50 border-l-4 border-l-primary">
-            <h3 className="text-sm font-semibold mb-4">Filter by Capabilities</h3>
+            <h3 className="text-sm font-semibold mb-4">
+              Filter by Capabilities
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 {
@@ -412,7 +413,12 @@ export default function BuyNumbers() {
                   icon: Image,
                   color: "text-purple-600",
                 },
-                { id: "fax" as const, label: "Fax", icon: Phone, color: "text-orange-600" },
+                {
+                  id: "fax" as const,
+                  label: "Fax",
+                  icon: Phone,
+                  color: "text-orange-600",
+                },
               ].map((capability) => {
                 const Icon = capability.icon;
                 return (
@@ -448,7 +454,12 @@ export default function BuyNumbers() {
             {hasAnyFilterEnabled && (
               <button
                 onClick={() =>
-                  setCapabilityFilters({ voice: false, sms: false, mms: false, fax: false })
+                  setCapabilityFilters({
+                    voice: false,
+                    sms: false,
+                    mms: false,
+                    fax: false,
+                  })
                 }
                 className="text-xs text-primary hover:underline mt-3"
               >

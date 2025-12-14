@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 if (!process.env.MONGODB_URI) {
   throw new Error(
-    "MONGODB_URI environment variable is not set. Please configure it in your .env file."
+    "MONGODB_URI environment variable is not set. Please configure it in your .env file.",
   );
 }
 

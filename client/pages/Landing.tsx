@@ -19,20 +19,21 @@ export default function Landing() {
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          "name": "SMSHub",
-          "description": "Professional SMS messaging platform for teams. Send bulk SMS, manage phone numbers, and automate communication.",
-          "url": "https://smshub.io",
-          "applicationCategory": "BusinessApplication",
-          "offers": {
+          name: "SMSHub",
+          description:
+            "Professional SMS messaging platform for teams. Send bulk SMS, manage phone numbers, and automate communication.",
+          url: "https://smshub.io",
+          applicationCategory: "BusinessApplication",
+          offers: {
             "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD"
+            price: "0",
+            priceCurrency: "USD",
           },
-          "aggregateRating": {
+          aggregateRating: {
             "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "ratingCount": "500"
-          }
+            ratingValue: "4.8",
+            ratingCount: "500",
+          },
         })}
       </script>
 
@@ -83,7 +84,10 @@ export default function Landing() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/signup">
-                <Button size="lg" className="bg-gradient-to-r from-primary to-secondary">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-secondary"
+                >
                   Start Free
                 </Button>
               </Link>
@@ -134,8 +138,7 @@ export default function Landing() {
               {
                 icon: Zap,
                 title: "Number Assignment",
-                description:
-                  "Assign and manage phone numbers for team members",
+                description: "Assign and manage phone numbers for team members",
               },
               {
                 icon: Lock,
@@ -229,12 +232,18 @@ export default function Landing() {
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10 border-t border-border">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Transform Your SMS Business?</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Ready to Transform Your SMS Business?
+          </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Join teams using SMSHub to manage their Twilio operations efficiently
+            Join teams using SMSHub to manage their Twilio operations
+            efficiently
           </p>
           <Link to="/signup">
-            <Button size="lg" className="bg-gradient-to-r from-primary to-secondary">
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-primary to-secondary"
+            >
               Get Started Free
             </Button>
           </Link>
