@@ -74,6 +74,28 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       // 1. Direct phone numbers in the region object (newer API)
       // 2. Nested available_phone_numbers array (older API)
 
+      const parseCapabilities = (caps: any) => {
+        if (Array.isArray(caps)) {
+          // Capabilities come as array of strings: ["SMS", "Voice", "MMS"]
+          return {
+            SMS: caps.includes("SMS"),
+            MMS: caps.includes("MMS"),
+            voice: caps.includes("Voice"),
+            fax: caps.includes("Fax"),
+          };
+        } else if (typeof caps === "object" && caps !== null) {
+          // Capabilities come as object properties
+          return {
+            SMS: caps.SMS === true,
+            MMS: caps.MMS === true,
+            voice: caps.voice === true || caps.Voice === true,
+            fax: caps.fax === true || caps.Fax === true,
+          };
+        }
+        // Default: no capabilities
+        return { SMS: false, MMS: false, voice: false, fax: false };
+      };
+
       if (region.phone_number) {
         // This is a direct phone number object
         allNumbers.push({
@@ -84,12 +106,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
           postalCode: region.postal_code || "",
           countryCode: countryCode,
           cost: region.price || "1.00",
-          capabilities: {
-            SMS: region.capabilities?.SMS === true,
-            MMS: region.capabilities?.MMS === true,
-            voice: region.capabilities?.voice === true,
-            fax: false,
-          },
+          capabilities: parseCapabilities(region.capabilities),
         });
       } else if (
         region.available_phone_numbers &&
@@ -105,12 +122,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
             postalCode: num.postal_code || "",
             countryCode: countryCode,
             cost: num.price || "1.00",
-            capabilities: {
-              SMS: num.capabilities?.SMS === true,
-              MMS: num.capabilities?.MMS === true,
-              voice: num.capabilities?.voice === true,
-              fax: false,
-            },
+            capabilities: parseCapabilities(num.capabilities),
           }),
         );
         allNumbers.push(...regionNumbers);
