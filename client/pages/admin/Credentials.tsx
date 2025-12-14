@@ -111,7 +111,8 @@ export default function Credentials() {
         );
       }
 
-      setHasCredentials(true);
+      const responseData = await response.json();
+      setConnectedCredentials(responseData.credentials);
       setSuccess("✅ Twilio credentials connected successfully!");
     } catch (err) {
       setError(
@@ -121,6 +122,58 @@ export default function Credentials() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!window.confirm("Are you sure you want to disconnect Twilio credentials? Team members will no longer be able to send SMS.")) {
+      return;
+    }
+
+    setIsDisconnecting(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Session expired. Please login again.");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const response = await fetch("/api/admin/credentials", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        setError("Session expired. Please login again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "Failed to disconnect credentials"
+        );
+      }
+
+      setConnectedCredentials(null);
+      setSuccess("✅ Twilio credentials disconnected successfully!");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while disconnecting credentials"
+      );
+    } finally {
+      setIsDisconnecting(false);
     }
   };
 
