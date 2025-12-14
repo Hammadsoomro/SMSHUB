@@ -90,10 +90,23 @@ export class TwilioClient {
         "base64",
       );
 
+      // Reference numbers for different countries - used for NearNumber search
+      const referenceNumbers: Record<string, string> = {
+        US: "+15551234567",
+        CA: "+14165551234",
+        GB: "+442071838750",
+        AU: "+61261234567",
+        DE: "+493069999999",
+        ES: "+34913456789",
+        FR: "+33140205050",
+      };
+
       // Build query string - Twilio requires at least one search criterion
-      // For international numbers, we use distance search with a large radius
-      // You can also add NearNumber, NearLatLong, or other parameters
+      // We use NearNumber to find available numbers near a reference number in that country
+      const nearNumber = referenceNumbers[countryCode] || referenceNumbers["US"];
       const query = new URLSearchParams({
+        NearNumber: nearNumber,
+        Distance: "100",
         Limit: "50",
       }).toString();
 
