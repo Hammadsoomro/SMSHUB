@@ -34,6 +34,13 @@ const COUNTRIES = [
   { code: "FR", name: "France" },
 ];
 
+interface CapabilityFilters {
+  voice: boolean;
+  sms: boolean;
+  mms: boolean;
+  fax: boolean;
+}
+
 export default function BuyNumbers() {
   const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState<string>("");
@@ -50,6 +57,12 @@ export default function BuyNumbers() {
   const [purchasedNumbers, setPurchasedNumbers] = useState<Set<string>>(
     new Set(),
   );
+  const [capabilityFilters, setCapabilityFilters] = useState<CapabilityFilters>({
+    voice: false,
+    sms: false,
+    mms: false,
+    fax: false,
+  });
 
   useEffect(() => {
     const validateAuth = async () => {
