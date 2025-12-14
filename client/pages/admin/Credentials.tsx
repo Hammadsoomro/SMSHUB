@@ -4,9 +4,9 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, CheckCircle2, Lock, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Lock, Loader2, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { TwilioCredentialsRequest } from "@shared/api";
+import { TwilioCredentialsRequest, TwilioCredentials } from "@shared/api";
 
 interface CredentialsForm {
   accountSid: string;
@@ -18,15 +18,16 @@ export default function Credentials() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [hasCredentials, setHasCredentials] = useState(false);
+  const [connectedCredentials, setConnectedCredentials] = useState<TwilioCredentials | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<CredentialsForm>();
 
-  // Validate authentication on component mount
+  // Validate authentication on component mount and fetch credentials
   useEffect(() => {
     const validateAuth = async () => {
       try {
@@ -35,6 +36,19 @@ export default function Credentials() {
           navigate("/login", { replace: true });
           return;
         }
+
+        // Fetch existing credentials
+        const response = await fetch("/api/admin/credentials", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.credentials) {
+            setConnectedCredentials(data.credentials);
+          }
+        }
+
         setIsAuthLoading(false);
       } catch (err) {
         console.error("Auth check error:", err);
