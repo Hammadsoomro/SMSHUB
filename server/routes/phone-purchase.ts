@@ -84,6 +84,11 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
           postalCode: region.postal_code || "",
           countryCode: countryCode,
           cost: region.price || "1.00",
+          capabilities: {
+            SMS: region.capabilities?.SMS === true,
+            MMS: region.capabilities?.MMS === true,
+            voice: region.capabilities?.voice === true,
+          },
         });
       } else if (
         region.available_phone_numbers &&
@@ -98,6 +103,11 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
           postalCode: num.postal_code || "",
           countryCode: countryCode,
           cost: num.price || "1.00",
+          capabilities: {
+            SMS: num.capabilities?.SMS === true,
+            MMS: num.capabilities?.MMS === true,
+            voice: num.capabilities?.voice === true,
+          },
         }));
         allNumbers.push(...regionNumbers);
       }
