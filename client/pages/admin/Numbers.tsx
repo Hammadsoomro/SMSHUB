@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { PhoneNumber } from "@shared/api";
 
 export default function Numbers() {
+  const navigate = useNavigate();
   const [numbers, setNumbers] = useState<PhoneNumber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
