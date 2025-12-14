@@ -113,3 +113,25 @@ export const handleLogin: RequestHandler = (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const handleVerifySession: RequestHandler = (req, res) => {
+  try {
+    // This handler requires authMiddleware, so if we get here, the token is valid
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        error: "Session invalid",
+        valid: false
+      });
+    }
+
+    res.json({
+      valid: true,
+      user,
+    });
+  } catch (error) {
+    console.error("Session verification error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
