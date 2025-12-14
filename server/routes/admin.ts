@@ -168,10 +168,10 @@ export const handleRemoveCredentials: RequestHandler = async (req, res) => {
 };
 
 // Phone Numbers
-export const handleGetNumbers: RequestHandler = (req, res) => {
+export const handleGetNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const numbers = storage.getPhoneNumbersByAdminId(adminId);
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
     res.json({ numbers });
   } catch (error) {
     console.error("Get numbers error:", error);
