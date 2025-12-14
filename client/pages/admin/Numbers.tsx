@@ -48,7 +48,10 @@ export default function Numbers() {
             <h1 className="text-3xl font-bold mb-2">Phone Numbers</h1>
             <p className="text-muted-foreground">Manage your Twilio phone numbers</p>
           </div>
-          <Button className="bg-gradient-to-r from-primary to-secondary">
+          <Button
+            onClick={() => navigate("/admin/buy-numbers")}
+            className="bg-gradient-to-r from-primary to-secondary"
+          >
             Buy New Number
           </Button>
         </div>
