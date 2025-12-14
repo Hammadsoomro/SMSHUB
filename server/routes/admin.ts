@@ -180,10 +180,10 @@ export const handleGetNumbers: RequestHandler = async (req, res) => {
 };
 
 // Team Management
-export const handleGetTeamMembers: RequestHandler = (req, res) => {
+export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const members = storage.getTeamMembersByAdminId(adminId);
+    const members = await storage.getTeamMembersByAdminId(adminId);
     res.json({ members });
   } catch (error) {
     console.error("Get team members error:", error);
