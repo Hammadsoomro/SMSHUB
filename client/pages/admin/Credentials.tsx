@@ -98,12 +98,22 @@ export default function Credentials() {
 
         {/* Error Message */}
         {error && (
-          <Card className="p-6 bg-red-50 border-red-200 mb-8">
+          <Card className="p-6 bg-red-50 border-2 border-red-300 mb-8 animate-shake">
             <div className="flex gap-4">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-red-900 mb-1">Error</h3>
-                <p className="text-sm text-red-700">{error}</p>
+                <h3 className="font-semibold text-red-900 mb-2">❌ Connection Failed</h3>
+                <p className="text-sm text-red-800 mb-3">{error}</p>
+                <details className="text-xs text-red-700 cursor-pointer">
+                  <summary className="font-medium hover:text-red-800">What to check?</summary>
+                  <ul className="mt-2 ml-2 space-y-1">
+                    <li>✓ Account SID should start with "AC" and be 34 characters long</li>
+                    <li>✓ Auth Token should be at least 32 characters</li>
+                    <li>✓ Copy both values from Twilio Console (Account Settings)</li>
+                    <li>✓ Make sure there are no extra spaces</li>
+                    <li>✓ Check your internet connection</li>
+                  </ul>
+                </details>
               </div>
             </div>
           </Card>
