@@ -64,10 +64,10 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if number is already purchased
-    const existingNumber = await storage.getPhoneNumberById(phoneNumber);
-    if (existingNumber) {
-      return res.status(400).json({ error: "This number is already purchased" });
+    // Check if number is already purchased in the system
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    if (numbers.some(n => n.phoneNumber === phoneNumber)) {
+      return res.status(400).json({ error: "This number is already purchased by you" });
     }
 
     // Get wallet
