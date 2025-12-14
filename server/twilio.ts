@@ -84,7 +84,7 @@ export class TwilioClient {
 
       const options = {
         hostname: "api.twilio.com",
-        path: `/2010-04-01/Accounts/${this.accountSid}/AvailablePhoneNumbers/${countryCode}/Local.json?Contains=XXX`,
+        path: `/2010-04-01/Accounts/${this.accountSid}/AvailablePhoneNumbers/${countryCode}/Local.json`,
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
