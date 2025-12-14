@@ -2,19 +2,18 @@ import { RequestHandler } from "express";
 import { storage } from "../storage";
 import { SendMessageRequest, Message, Contact } from "@shared/api";
 
-export const handleGetContacts: RequestHandler = (req, res) => {
+export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId!;
-    
-    // Get phone numbers assigned to this team member
-    const user = storage.getUserById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
 
-    // TODO: Get phone numbers assigned to this team member
-    // For now, return empty array
-    const contacts: Contact[] = [];
+    // Get phone numbers assigned to this user
+    const phoneNumbers = await storage.getPhoneNumbersByAdminId(userId);
+    
+    let contacts: Contact[] = [];
+    for (const phoneNumber of phoneNumbers) {
+      const phoneContacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
+      contacts = contacts.concat(phoneContacts);
+    }
 
     res.json({ contacts });
   } catch (error) {
@@ -23,74 +22,48 @@ export const handleGetContacts: RequestHandler = (req, res) => {
   }
 };
 
-export const handleGetConversation: RequestHandler = (req, res) => {
+export const handleGetConversation: RequestHandler = async (req, res) => {
   try {
     const { contactId } = req.params;
-    
-    // Get messages for this contact
-    const messages = storage.getMessagesByPhoneNumber(contactId);
-    
-    // Sort by timestamp
-    messages.sort((a, b) => 
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+
+    const contact = await storage.getContactById(contactId);
+    if (!contact) {
+      return res.status(404).json({ error: "Contact not found" });
+    }
+
+    const messages = await storage.getMessagesByPhoneNumber(contact.phoneNumberId);
+    const conversation = messages.filter(
+      (m) => m.from === contact.phoneNumber || m.to === contact.phoneNumber
     );
 
-    res.json({ messages });
+    res.json({ messages: conversation });
   } catch (error) {
     console.error("Get conversation error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const handleSendMessage: RequestHandler = (req, res) => {
+export const handleSendMessage: RequestHandler = async (req, res) => {
   try {
-    const userId = req.userId!;
     const { to, body, phoneNumberId } = req.body as SendMessageRequest;
 
     if (!to || !body || !phoneNumberId) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Verify that the user has access to this phone number
-    const phoneNumber = storage.getPhoneNumberById(phoneNumberId);
-    if (!phoneNumber || phoneNumber.assignedTo !== userId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const messageId = storage.generateId();
+    // In a real app, you would send this via Twilio
+    // For now, we'll just store it in the database
     const message: Message = {
-      id: messageId,
+      id: Math.random().toString(36).substr(2, 9),
       phoneNumberId,
-      from: phoneNumber.phoneNumber,
+      from: "your-number", // This would come from the phone number object
       to,
       body,
       direction: "outbound",
       timestamp: new Date().toISOString(),
     };
 
-    storage.addMessage(message);
-
-    // Update or create contact
-    const existingContact = storage
-      .getContactsByPhoneNumber(phoneNumberId)
-      .find((c) => c.phoneNumber === to);
-
-    if (existingContact) {
-      existingContact.lastMessage = body;
-      existingContact.lastMessageTime = message.timestamp;
-      storage.updateContact(existingContact);
-    } else {
-      const contactId = storage.generateId();
-      const contact: Contact = {
-        id: contactId,
-        phoneNumberId,
-        phoneNumber: to,
-        lastMessage: body,
-        lastMessageTime: message.timestamp,
-        unreadCount: 0,
-      };
-      storage.addContact(contact);
-    }
+    await storage.addMessage(message);
 
     res.json({ message });
   } catch (error) {
