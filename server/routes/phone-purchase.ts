@@ -100,6 +100,8 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
 
       if (region.phone_number) {
         // This is a direct phone number object
+        const caps = parseCapabilities(region.capabilities);
+        console.log("DEBUG - Direct number:", region.phone_number, "capabilities:", region.capabilities, "parsed:", caps);
         allNumbers.push({
           phoneNumber: region.phone_number,
           friendlyName: region.friendly_name || region.phone_number,
@@ -108,7 +110,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
           postalCode: region.postal_code || "",
           countryCode: countryCode,
           cost: region.price || "1.00",
-          capabilities: parseCapabilities(region.capabilities),
+          capabilities: caps,
         });
       } else if (
         region.available_phone_numbers &&
@@ -116,16 +118,22 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       ) {
         // This is a region object with nested phone numbers
         const regionNumbers = region.available_phone_numbers.map(
-          (num: any) => ({
-            phoneNumber: num.phone_number,
-            friendlyName: num.friendly_name || num.phone_number,
-            locality: num.locality || "",
-            region: num.region || "",
-            postalCode: num.postal_code || "",
-            countryCode: countryCode,
-            cost: num.price || "1.00",
-            capabilities: parseCapabilities(num.capabilities),
-          }),
+          (num: any) => {
+            const caps = parseCapabilities(num.capabilities);
+            if (allNumbers.length < 3) {
+              console.log("DEBUG - Nested number:", num.phone_number, "capabilities:", num.capabilities, "parsed:", caps);
+            }
+            return {
+              phoneNumber: num.phone_number,
+              friendlyName: num.friendly_name || num.phone_number,
+              locality: num.locality || "",
+              region: num.region || "",
+              postalCode: num.postal_code || "",
+              countryCode: countryCode,
+              cost: num.price || "1.00",
+              capabilities: caps,
+            };
+          },
         );
         allNumbers.push(...regionNumbers);
       }
@@ -135,6 +143,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       console.warn("No phone numbers found for country:", countryCode);
     }
 
+    console.log("DEBUG - Total numbers parsed:", allNumbers.length, "First 2 samples:", JSON.stringify(allNumbers.slice(0, 2), null, 2));
     res.json({ numbers: allNumbers });
   } catch (error) {
     console.error("Get available numbers error:", error);
