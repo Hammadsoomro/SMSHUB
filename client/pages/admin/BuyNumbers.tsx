@@ -94,26 +94,39 @@ export default function BuyNumbers() {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
+        console.error("No token found");
         navigate("/login", { replace: true });
         return;
       }
 
-      const response = await fetch(
-        `/api/admin/available-numbers?countryCode=${countryCode}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      const url = `/api/admin/available-numbers?countryCode=${countryCode}`;
+      console.log("Fetching available numbers from:", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
+
+      console.log("Response status:", response.status, response.statusText);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage =
-          errorData.error || errorData.details || "Failed to fetch numbers";
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage =
+            errorData.error || errorData.details || errorMessage;
+        } catch (parseError) {
+          console.warn("Could not parse error response:", parseError);
+        }
         setError(errorMessage);
         return;
       }
 
       const data = await response.json();
+      console.log("Received data:", data);
 
       if (!data || typeof data !== "object") {
         setError("Invalid response from server");
@@ -121,16 +134,22 @@ export default function BuyNumbers() {
       }
 
       const numbers = Array.isArray(data.numbers) ? data.numbers : [];
+      console.log("Parsed numbers:", numbers.length);
       setAvailableNumbers(numbers);
 
       if (numbers.length === 0) {
-        setError("No available numbers for this country");
+        setError(
+          "No available numbers for this country. Please check your Twilio account.",
+        );
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "An error occurred while fetching numbers";
+      let errorMessage = "Failed to fetch numbers";
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        errorMessage =
+          "Network error: Unable to reach the API. Please check your internet connection or try again later.";
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
       console.error("Fetch error:", err);
       setError(errorMessage);
     } finally {
