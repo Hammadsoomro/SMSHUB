@@ -98,12 +98,21 @@ export default function Numbers() {
               Manage your Twilio phone numbers
             </p>
           </div>
-          <Button
-            onClick={() => navigate("/admin/buy-numbers")}
-            className="bg-gradient-to-r from-primary to-secondary"
-          >
-            Buy New Number
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowAddForm(!showAddForm)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Existing
+            </Button>
+            <Button
+              onClick={() => navigate("/admin/buy-numbers")}
+              className="bg-gradient-to-r from-primary to-secondary"
+            >
+              Buy New Number
+            </Button>
+          </div>
         </div>
 
         {/* Info Card */}
