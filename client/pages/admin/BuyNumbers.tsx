@@ -146,8 +146,19 @@ export default function BuyNumbers() {
   };
 
   const handlePurchaseNumber = async (number: AvailablePhoneNumber) => {
-    if (!wallet || wallet.balance < parseFloat(number.cost)) {
-      setError("Insufficient wallet balance");
+    if (!wallet) {
+      setError("Wallet information not loaded. Please refresh the page.");
+      return;
+    }
+
+    const cost = parseFloat(number.cost);
+    if (isNaN(cost)) {
+      setError("Invalid number cost");
+      return;
+    }
+
+    if (wallet.balance < cost) {
+      setError(`Insufficient wallet balance. Need $${cost.toFixed(2)}, have $${wallet.balance.toFixed(2)}`);
       return;
     }
 
@@ -157,6 +168,11 @@ export default function BuyNumbers() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const response = await fetch("/api/admin/purchase-number", {
         method: "POST",
         headers: {
@@ -165,7 +181,7 @@ export default function BuyNumbers() {
         },
         body: JSON.stringify({
           phoneNumber: number.phoneNumber,
-          cost: parseFloat(number.cost),
+          cost: cost,
         }),
       });
 
@@ -175,7 +191,9 @@ export default function BuyNumbers() {
       }
 
       const data = await response.json();
-      setWallet(data.wallet);
+      if (data.wallet) {
+        setWallet(data.wallet);
+      }
       setPurchasedNumbers((prev) => new Set(prev).add(number.phoneNumber));
       setSuccess(`✅ Successfully purchased ${number.phoneNumber}`);
 
@@ -183,11 +201,12 @@ export default function BuyNumbers() {
         setSuccess("");
       }, 3000);
     } catch (err) {
-      setError(
+      const errorMessage =
         err instanceof Error
           ? err.message
-          : "An error occurred while purchasing",
-      );
+          : "An error occurred while purchasing";
+      console.error("Purchase error:", err);
+      setError(errorMessage);
     } finally {
       setPurchasingNumber(null);
     }
