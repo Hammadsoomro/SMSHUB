@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import crypto from "crypto";
+import https from "https";
 import { storage } from "../storage";
 import { generateToken } from "../jwt";
 import {
@@ -14,14 +15,106 @@ function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+// Validate Twilio credentials by making a test API call
+async function validateTwilioCredentials(
+  accountSid: string,
+  authToken: string
+): Promise<{ valid: boolean; error?: string }> {
+  return new Promise((resolve) => {
+    try {
+      // Validate format first
+      if (!accountSid.startsWith("AC") || accountSid.length !== 34) {
+        return resolve({
+          valid: false,
+          error: "Invalid Account SID format (should start with AC and be 34 characters)",
+        });
+      }
+
+      if (authToken.length < 32) {
+        return resolve({
+          valid: false,
+          error: "Invalid Auth Token format (should be at least 32 characters)",
+        });
+      }
+
+      // Make a test API call to Twilio
+      const auth = Buffer.from(`${accountSid}:${authToken}`).toString("base64");
+
+      const options = {
+        hostname: "api.twilio.com",
+        path: `/2010-04-01/Accounts/${accountSid}/Calls.json?PageSize=1`,
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      };
+
+      const req = https.request(options, (res) => {
+        // If we get 401, credentials are invalid
+        if (res.statusCode === 401) {
+          return resolve({
+            valid: false,
+            error: "Invalid Twilio credentials (401 Unauthorized). Please check your Account SID and Auth Token.",
+          });
+        }
+
+        // If we get 403, account might be suspended
+        if (res.statusCode === 403) {
+          return resolve({
+            valid: false,
+            error: "Access forbidden (403). Your Twilio account may be suspended or restricted.",
+          });
+        }
+
+        // If we get 200 or 429 (rate limited), credentials are valid
+        if (res.statusCode === 200 || res.statusCode === 429) {
+          return resolve({ valid: true });
+        }
+
+        // Any other status code might indicate an issue
+        if (res.statusCode && res.statusCode >= 500) {
+          return resolve({
+            valid: false,
+            error: "Twilio API error. Please try again later.",
+          });
+        }
+
+        return resolve({ valid: true });
+      });
+
+      req.on("error", (error) => {
+        console.error("Twilio validation error:", error);
+        return resolve({
+          valid: false,
+          error: "Failed to connect to Twilio API. Please check your internet connection.",
+        });
+      });
+
+      req.end();
+    } catch (error) {
+      console.error("Credential validation error:", error);
+      return resolve({
+        valid: false,
+        error: "Failed to validate credentials",
+      });
+    }
+  });
+}
+
 // Twilio Credentials
-export const handleSaveCredentials: RequestHandler = (req, res) => {
+export const handleSaveCredentials: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
     const { accountSid, authToken } = req.body as TwilioCredentialsRequest;
 
     if (!accountSid || !authToken) {
-      return res.status(400).json({ error: "Missing credentials" });
+      return res.status(400).json({ error: "Please enter both Account SID and Auth Token" });
+    }
+
+    // Validate credentials format and connectivity
+    const validation = await validateTwilioCredentials(accountSid, authToken);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
     }
 
     const credentialsId = storage.generateId();
