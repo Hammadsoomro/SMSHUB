@@ -50,35 +50,60 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       });
     }
 
-    if (!availableNumbers || !availableNumbers.available_phone_numbers) {
+    // Validate response structure
+    if (
+      !availableNumbers ||
+      !availableNumbers.available_phone_numbers ||
+      !Array.isArray(availableNumbers.available_phone_numbers) ||
+      availableNumbers.available_phone_numbers.length === 0
+    ) {
+      console.warn(
+        "No phone numbers available for country:",
+        countryCode,
+        "Response:",
+        availableNumbers,
+      );
+      return res.json({ numbers: [] });
+    }
+
+    // Get the first region's phone numbers
+    const firstRegion = availableNumbers.available_phone_numbers[0];
+    if (
+      !firstRegion ||
+      !firstRegion.available_phone_numbers ||
+      !Array.isArray(firstRegion.available_phone_numbers)
+    ) {
+      console.warn(
+        "Invalid phone numbers structure for country:",
+        countryCode,
+        "Region data:",
+        firstRegion,
+      );
       return res.json({ numbers: [] });
     }
 
     // Transform the response
-    const numbers: AvailablePhoneNumber[] =
-      availableNumbers.available_phone_numbers[0]?.available_phone_numbers.map(
-        (num: any) => ({
-          phoneNumber: num.phone_number,
-          friendlyName: num.friendly_name,
-          locality: num.locality,
-          region: num.region,
-          postalCode: num.postal_code,
-          countryCode: countryCode,
-          cost: num.price || "0.00",
-        }),
-      ) || [];
+    const numbers: AvailablePhoneNumber[] = firstRegion.available_phone_numbers.map(
+      (num: any) => ({
+        phoneNumber: num.phone_number,
+        friendlyName: num.friendly_name,
+        locality: num.locality,
+        region: num.region,
+        postalCode: num.postal_code,
+        countryCode: countryCode,
+        cost: num.price || "0.00",
+      }),
+    );
 
     res.json({ numbers });
   } catch (error) {
     console.error("Get available numbers error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Failed to fetch available numbers";
-    res
-      .status(500)
-      .json({
-        error: errorMessage,
-        details: "Please ensure your Twilio credentials are valid",
-      });
+    res.status(500).json({
+      error: errorMessage,
+      details: "Please ensure your Twilio credentials are valid",
+    });
   }
 };
 
