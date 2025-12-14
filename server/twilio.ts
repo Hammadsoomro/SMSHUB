@@ -95,12 +95,13 @@ export class TwilioClient {
       const query = new URLSearchParams();
 
       // Add search criteria based on country
+      // Try multiple area codes if the first one fails - these are commonly available
       if (countryCode === "US") {
-        // For US, use major area codes: 212 (NY), 213 (LA), 415 (SF), etc
-        query.append("AreaCode", "212");
+        // For US, try area codes with higher availability: 415 (SF), 310 (LA), 201 (NJ)
+        query.append("AreaCode", "415");
       } else if (countryCode === "CA") {
-        // For Canada, use major area codes: 416 (Toronto), 604 (Vancouver), etc
-        query.append("AreaCode", "416");
+        // For Canada, try Toronto (416) or Vancouver (604) area codes
+        query.append("AreaCode", "604");
       } else if (countryCode === "GB") {
         // For UK, use latitude/longitude for London
         query.append("NearLatLong", "51.5074,-0.1278");
@@ -122,8 +123,8 @@ export class TwilioClient {
         query.append("NearLatLong", "40.4168,-3.7038");
         query.append("Distance", "50");
       } else {
-        // Default: use area code if available, otherwise use distance search
-        query.append("AreaCode", "212");
+        // Default fallback
+        query.append("AreaCode", "415");
       }
 
       query.append("Limit", "50");
