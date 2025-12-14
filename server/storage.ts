@@ -9,8 +9,10 @@ import {
   TeamMemberModel,
   MessageModel,
   ContactModel,
+  WalletModel,
+  WalletTransactionModel,
 } from "./models";
-import { User, TwilioCredentials, PhoneNumber, TeamMember, Message, Contact } from "@shared/api";
+import { User, TwilioCredentials, PhoneNumber, TeamMember, Message, Contact, Wallet, WalletTransaction } from "@shared/api";
 
 class Storage {
   // User operations
