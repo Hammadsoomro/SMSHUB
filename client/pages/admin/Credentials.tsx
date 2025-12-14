@@ -17,7 +17,11 @@ export default function Credentials() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [hasCredentials, setHasCredentials] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<CredentialsForm>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CredentialsForm>();
 
   const onSubmit = async (data: CredentialsForm) => {
     // Client-side validation
@@ -52,13 +56,19 @@ export default function Credentials() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to connect Twilio credentials");
+        throw new Error(
+          errorData.error || "Failed to connect Twilio credentials",
+        );
       }
 
       setHasCredentials(true);
       setSuccess("✅ Twilio credentials connected successfully!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred while validating credentials");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while validating credentials",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -74,10 +84,13 @@ export default function Credentials() {
           <div className="flex gap-4">
             <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">Important Security Notice</h3>
+              <h3 className="font-semibold text-blue-900 mb-1">
+                Important Security Notice
+              </h3>
               <p className="text-sm text-blue-700">
-                Your Twilio credentials are stored securely and encrypted. They are only used 
-                to connect to Twilio's API on your behalf. Never share these credentials with anyone.
+                Your Twilio credentials are stored securely and encrypted. They
+                are only used to connect to Twilio's API on your behalf. Never
+                share these credentials with anyone.
               </p>
             </div>
           </div>
@@ -102,14 +115,23 @@ export default function Credentials() {
             <div className="flex gap-4">
               <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-red-900 mb-2">❌ Connection Failed</h3>
+                <h3 className="font-semibold text-red-900 mb-2">
+                  ❌ Connection Failed
+                </h3>
                 <p className="text-sm text-red-800 mb-3">{error}</p>
                 <details className="text-xs text-red-700 cursor-pointer">
-                  <summary className="font-medium hover:text-red-800">What to check?</summary>
+                  <summary className="font-medium hover:text-red-800">
+                    What to check?
+                  </summary>
                   <ul className="mt-2 ml-2 space-y-1">
-                    <li>✓ Account SID should start with "AC" and be 34 characters long</li>
+                    <li>
+                      ✓ Account SID should start with "AC" and be 34 characters
+                      long
+                    </li>
                     <li>✓ Auth Token should be at least 32 characters</li>
-                    <li>✓ Copy both values from Twilio Console (Account Settings)</li>
+                    <li>
+                      ✓ Copy both values from Twilio Console (Account Settings)
+                    </li>
                     <li>✓ Make sure there are no extra spaces</li>
                     <li>✓ Check your internet connection</li>
                   </ul>
@@ -125,8 +147,12 @@ export default function Credentials() {
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex gap-3">
               <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
               <div>
-                <p className="font-medium text-green-900">Credentials Connected</p>
-                <p className="text-sm text-green-700">Your Twilio account is connected and ready to use.</p>
+                <p className="font-medium text-green-900">
+                  Credentials Connected
+                </p>
+                <p className="text-sm text-green-700">
+                  Your Twilio account is connected and ready to use.
+                </p>
               </div>
             </div>
           )}
@@ -142,7 +168,8 @@ export default function Credentials() {
                   required: "Account SID is required",
                   pattern: {
                     value: /^AC[a-f0-9]{32}$/i,
-                    message: "Invalid format (must start with AC and be 34 characters)",
+                    message:
+                      "Invalid format (must start with AC and be 34 characters)",
                   },
                 })}
                 placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -204,27 +231,51 @@ export default function Credentials() {
 
         {/* Help Section */}
         <Card className="p-6 mt-8 bg-muted">
-          <h3 className="font-semibold mb-4">How to find your Twilio Credentials</h3>
+          <h3 className="font-semibold mb-4">
+            How to find your Twilio Credentials
+          </h3>
           <ol className="space-y-3 text-sm text-muted-foreground">
             <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">1.</span>
-              <span>Go to <a href="https://console.twilio.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Twilio Console</a></span>
+              <span className="font-semibold text-foreground flex-shrink-0">
+                1.
+              </span>
+              <span>
+                Go to{" "}
+                <a
+                  href="https://console.twilio.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Twilio Console
+                </a>
+              </span>
             </li>
             <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">2.</span>
+              <span className="font-semibold text-foreground flex-shrink-0">
+                2.
+              </span>
               <span>Click on your account name in the top-left corner</span>
             </li>
             <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">3.</span>
+              <span className="font-semibold text-foreground flex-shrink-0">
+                3.
+              </span>
               <span>Select "Account Settings"</span>
             </li>
             <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">4.</span>
+              <span className="font-semibold text-foreground flex-shrink-0">
+                4.
+              </span>
               <span>Find your Account SID and Auth Token on that page</span>
             </li>
             <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">5.</span>
-              <span>Copy and paste them here (Auth Token is marked as "AUTH TOKEN")</span>
+              <span className="font-semibold text-foreground flex-shrink-0">
+                5.
+              </span>
+              <span>
+                Copy and paste them here (Auth Token is marked as "AUTH TOKEN")
+              </span>
             </li>
           </ol>
         </Card>

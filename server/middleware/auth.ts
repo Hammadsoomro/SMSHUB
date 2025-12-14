@@ -19,7 +19,7 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         error: "Missing authorization token. Please login again.",
-        code: "NO_TOKEN"
+        code: "NO_TOKEN",
       });
     }
 
@@ -27,7 +27,7 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
     if (!payload) {
       return res.status(401).json({
         error: "Your session has expired. Please login again.",
-        code: "INVALID_TOKEN"
+        code: "INVALID_TOKEN",
       });
     }
 
@@ -37,7 +37,9 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
     if (!user) {
       // If user not found in storage, create a minimal user object from token
       // This handles the case where server restarted but token is still valid
-      console.warn(`User ${payload.userId} not found in storage, using token data`);
+      console.warn(
+        `User ${payload.userId} not found in storage, using token data`,
+      );
       user = {
         id: payload.userId,
         email: payload.email,
@@ -56,7 +58,7 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
     console.error("Auth middleware error:", error);
     res.status(500).json({
       error: "Authentication failed. Please login again.",
-      code: "AUTH_ERROR"
+      code: "AUTH_ERROR",
     });
   }
 };

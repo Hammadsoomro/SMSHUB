@@ -18,7 +18,7 @@ function hashPassword(password: string): string {
 // Validate Twilio credentials by making a test API call
 async function validateTwilioCredentials(
   accountSid: string,
-  authToken: string
+  authToken: string,
 ): Promise<{ valid: boolean; error?: string }> {
   return new Promise((resolve) => {
     try {
@@ -26,7 +26,8 @@ async function validateTwilioCredentials(
       if (!accountSid.startsWith("AC") || accountSid.length !== 34) {
         return resolve({
           valid: false,
-          error: "Invalid Account SID format (should start with AC and be 34 characters)",
+          error:
+            "Invalid Account SID format (should start with AC and be 34 characters)",
         });
       }
 
@@ -54,7 +55,8 @@ async function validateTwilioCredentials(
         if (res.statusCode === 401) {
           return resolve({
             valid: false,
-            error: "Invalid Twilio credentials (401 Unauthorized). Please check your Account SID and Auth Token.",
+            error:
+              "Invalid Twilio credentials (401 Unauthorized). Please check your Account SID and Auth Token.",
           });
         }
 
@@ -62,7 +64,8 @@ async function validateTwilioCredentials(
         if (res.statusCode === 403) {
           return resolve({
             valid: false,
-            error: "Access forbidden (403). Your Twilio account may be suspended or restricted.",
+            error:
+              "Access forbidden (403). Your Twilio account may be suspended or restricted.",
           });
         }
 
@@ -86,7 +89,8 @@ async function validateTwilioCredentials(
         console.error("Twilio validation error:", error);
         return resolve({
           valid: false,
-          error: "Failed to connect to Twilio API. Please check your internet connection.",
+          error:
+            "Failed to connect to Twilio API. Please check your internet connection.",
         });
       });
 
@@ -108,7 +112,9 @@ export const handleSaveCredentials: RequestHandler = async (req, res) => {
     const { accountSid, authToken } = req.body as TwilioCredentialsRequest;
 
     if (!accountSid || !authToken) {
-      return res.status(400).json({ error: "Please enter both Account SID and Auth Token" });
+      return res
+        .status(400)
+        .json({ error: "Please enter both Account SID and Auth Token" });
     }
 
     // Validate credentials format and connectivity

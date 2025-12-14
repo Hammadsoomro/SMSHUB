@@ -122,7 +122,7 @@ export const handleVerifySession: RequestHandler = (req, res) => {
     if (!user) {
       return res.status(401).json({
         error: "Session invalid",
-        valid: false
+        valid: false,
       });
     }
 
