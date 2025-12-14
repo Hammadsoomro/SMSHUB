@@ -12,7 +12,7 @@ function verifyPassword(password: string, hash: string): boolean {
   return hashPassword(password) === hash;
 }
 
-export const handleSignup: RequestHandler = (req, res) => {
+export const handleSignup: RequestHandler = async (req, res) => {
   try {
     const { email, password, name } = req.body as SignupRequest;
 
@@ -22,7 +22,8 @@ export const handleSignup: RequestHandler = (req, res) => {
     }
 
     // Check if user exists
-    if (storage.getUserByEmail(email)) {
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
     }
 
@@ -39,7 +40,7 @@ export const handleSignup: RequestHandler = (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    storage.createUser(user);
+    await storage.createUser(user);
 
     const token = generateToken({
       userId,
@@ -114,9 +115,8 @@ export const handleLogin: RequestHandler = async (req, res) => {
   }
 };
 
-export const handleVerifySession: RequestHandler = (req, res) => {
+export const handleVerifySession: RequestHandler = async (req, res) => {
   try {
-    // This handler requires authMiddleware, so if we get here, the token is valid
     const user = req.user;
 
     if (!user) {
