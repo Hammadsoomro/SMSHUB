@@ -16,6 +16,8 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Credentials from "./pages/admin/Credentials";
 import Numbers from "./pages/admin/Numbers";
+import BuyNumbers from "./pages/admin/BuyNumbers";
+import Wallet from "./pages/admin/Wallet";
 import TeamManagement from "./pages/admin/TeamManagement";
 import AccountInfo from "./pages/admin/AccountInfo";
 import Insights from "./pages/admin/Insights";
