@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-export const authMiddleware: RequestHandler = (req, res, next) => {
+export const authMiddleware: RequestHandler = async (req, res, next) => {
   try {
     const token = extractTokenFromHeader(req.headers.authorization);
 
@@ -32,7 +32,7 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
     }
 
     // Get user from storage, but use token payload as fallback
-    let user = storage.getUserById(payload.userId);
+    let user = await storage.getUserById(payload.userId);
 
     if (!user) {
       // If user not found in storage, create a minimal user object from token
@@ -46,7 +46,7 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
         name: payload.email.split("@")[0],
         role: payload.role,
         createdAt: new Date().toISOString(),
-      };
+      } as any;
     }
 
     req.userId = payload.userId;
