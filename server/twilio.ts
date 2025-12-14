@@ -83,8 +83,10 @@ export class TwilioClient {
 
   /**
    * Get available phone numbers from Twilio
+   * @param countryCode - ISO country code (US, CA, GB, AU, etc)
+   * @param useFallback - If true, use alternative search parameters for fallback
    */
-  async getAvailableNumbers(countryCode: string = "US"): Promise<any> {
+  async getAvailableNumbers(countryCode: string = "US", useFallback: boolean = false): Promise<any> {
     return new Promise((resolve, reject) => {
       const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
         "base64",
@@ -95,36 +97,38 @@ export class TwilioClient {
       const query = new URLSearchParams();
 
       // Add search criteria based on country
-      // Try multiple area codes if the first one fails - these are commonly available
+      // Try multiple area codes/regions - these are commonly available
       if (countryCode === "US") {
-        // For US, try area codes with higher availability: 415 (SF), 310 (LA), 201 (NJ)
-        query.append("AreaCode", "415");
+        // For US, try different area codes: 415 (SF) first, then fallback to 310 (LA)
+        const areaCode = useFallback ? "310" : "415";
+        query.append("AreaCode", areaCode);
       } else if (countryCode === "CA") {
-        // For Canada, try Toronto (416) or Vancouver (604) area codes
-        query.append("AreaCode", "604");
+        // For Canada, try different area codes: 604 (Vancouver) first, then fallback to 416 (Toronto)
+        const areaCode = useFallback ? "416" : "604";
+        query.append("AreaCode", areaCode);
       } else if (countryCode === "GB") {
         // For UK, use latitude/longitude for London
         query.append("NearLatLong", "51.5074,-0.1278");
-        query.append("Distance", "50");
+        query.append("Distance", useFallback ? "100" : "50");
       } else if (countryCode === "AU") {
         // For Australia, use latitude/longitude for Sydney
         query.append("NearLatLong", "-33.8688,151.2093");
-        query.append("Distance", "50");
+        query.append("Distance", useFallback ? "100" : "50");
       } else if (countryCode === "DE") {
         // For Germany, use latitude/longitude for Berlin
         query.append("NearLatLong", "52.5200,13.4050");
-        query.append("Distance", "50");
+        query.append("Distance", useFallback ? "100" : "50");
       } else if (countryCode === "FR") {
         // For France, use latitude/longitude for Paris
         query.append("NearLatLong", "48.8566,2.3522");
-        query.append("Distance", "50");
+        query.append("Distance", useFallback ? "100" : "50");
       } else if (countryCode === "ES") {
         // For Spain, use latitude/longitude for Madrid
         query.append("NearLatLong", "40.4168,-3.7038");
-        query.append("Distance", "50");
+        query.append("Distance", useFallback ? "100" : "50");
       } else {
         // Default fallback
-        query.append("AreaCode", "415");
+        query.append("AreaCode", useFallback ? "310" : "415");
       }
 
       query.append("Limit", "50");
