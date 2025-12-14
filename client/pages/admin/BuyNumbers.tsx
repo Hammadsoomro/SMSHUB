@@ -405,6 +405,30 @@ export default function BuyNumbers() {
                               ${cost.toFixed(2)} {wallet?.currency}
                             </span>
                           </p>
+
+                          {/* Capabilities */}
+                          {num.capabilities && (
+                            <div className="flex gap-3 mt-3 flex-wrap">
+                              {num.capabilities.SMS && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                                  <MessageSquare className="w-3 h-3" />
+                                  SMS
+                                </div>
+                              )}
+                              {num.capabilities.MMS && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
+                                  <Image className="w-3 h-3" />
+                                  MMS
+                                </div>
+                              )}
+                              {num.capabilities.voice && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
+                                  <PhoneCall className="w-3 h-3" />
+                                  Voice
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-right ml-4 flex-shrink-0">
