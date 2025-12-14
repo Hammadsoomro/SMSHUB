@@ -7,9 +7,21 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId!;
 
-    // Get phone numbers assigned to this user
-    const phoneNumbers = await storage.getPhoneNumbersByAdminId(userId);
-    
+    // Determine the admin ID
+    let adminId = userId;
+    const user = await storage.getUserById(userId);
+    if (user?.role === "team_member") {
+      // For team members, get their admin's ID
+      const teamMemberId = await storage.getAdminIdByTeamMemberId(userId);
+      if (!teamMemberId) {
+        return res.status(400).json({ error: "Could not determine admin" });
+      }
+      adminId = teamMemberId;
+    }
+
+    // Get phone numbers for this admin
+    const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+
     let contacts: Contact[] = [];
     for (const phoneNumber of phoneNumbers) {
       const phoneContacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
