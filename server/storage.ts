@@ -88,6 +88,11 @@ class Storage {
     return memberWithoutPassword as TeamMember;
   }
 
+  async getAdminIdByTeamMemberId(teamMemberId: string): Promise<string | undefined> {
+    const member = await TeamMemberModel.findOne({ id: teamMemberId });
+    return member?.adminId;
+  }
+
   // Messages
   async addMessage(message: Message): Promise<void> {
     const newMessage = new MessageModel(message);
