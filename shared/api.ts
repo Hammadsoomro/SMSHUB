@@ -134,6 +134,7 @@ export interface AvailablePhoneNumber {
     SMS?: boolean;
     MMS?: boolean;
     voice?: boolean;
+    fax?: boolean;
   };
 }
 
