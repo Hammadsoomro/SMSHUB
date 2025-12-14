@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertCircle,
   Phone,
@@ -18,6 +19,9 @@ import {
   Wallet,
   Search,
   Check,
+  MessageSquare,
+  Image,
+  PhoneCall,
 } from "lucide-react";
 import { AvailablePhoneNumber, Wallet as WalletType } from "@shared/api";
 
@@ -30,6 +34,13 @@ const COUNTRIES = [
   { code: "ES", name: "Spain" },
   { code: "FR", name: "France" },
 ];
+
+interface CapabilityFilters {
+  voice: boolean;
+  sms: boolean;
+  mms: boolean;
+  fax: boolean;
+}
 
 export default function BuyNumbers() {
   const navigate = useNavigate();
@@ -46,6 +57,14 @@ export default function BuyNumbers() {
   const [purchasingNumber, setPurchasingNumber] = useState<string | null>(null);
   const [purchasedNumbers, setPurchasedNumbers] = useState<Set<string>>(
     new Set(),
+  );
+  const [capabilityFilters, setCapabilityFilters] = useState<CapabilityFilters>(
+    {
+      voice: false,
+      sms: false,
+      mms: false,
+      fax: false,
+    },
   );
 
   useEffect(() => {
@@ -93,31 +112,64 @@ export default function BuyNumbers() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        `/api/admin/available-numbers?countryCode=${countryCode}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      if (!token) {
+        console.error("No token found");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const url = `/api/admin/available-numbers?countryCode=${countryCode}`;
+      console.log("Fetching available numbers from:", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
+
+      console.log("Response status:", response.status, response.statusText);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to fetch numbers");
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.details || errorMessage;
+        } catch (parseError) {
+          console.warn("Could not parse error response:", parseError);
+        }
+        setError(errorMessage);
         return;
       }
 
       const data = await response.json();
-      setAvailableNumbers(data.numbers || []);
+      console.log("Received data:", data);
 
-      if (!data.numbers || data.numbers.length === 0) {
-        setError("No available numbers for this country");
+      if (!data || typeof data !== "object") {
+        setError("Invalid response from server");
+        return;
+      }
+
+      const numbers = Array.isArray(data.numbers) ? data.numbers : [];
+      console.log("Parsed numbers:", numbers.length);
+      setAvailableNumbers(numbers);
+
+      if (numbers.length === 0) {
+        setError(
+          "No available numbers for this country. Please check your Twilio account.",
+        );
       }
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "An error occurred while fetching numbers",
-      );
+      let errorMessage = "Failed to fetch numbers";
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        errorMessage =
+          "Network error: Unable to reach the API. Please check your internet connection or try again later.";
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      console.error("Fetch error:", err);
+      setError(errorMessage);
     } finally {
       setIsLoadingNumbers(false);
     }
@@ -131,8 +183,21 @@ export default function BuyNumbers() {
   };
 
   const handlePurchaseNumber = async (number: AvailablePhoneNumber) => {
-    if (!wallet || wallet.balance < parseFloat(number.cost)) {
-      setError("Insufficient wallet balance");
+    if (!wallet) {
+      setError("Wallet information not loaded. Please refresh the page.");
+      return;
+    }
+
+    const cost = parseFloat(number.cost);
+    if (isNaN(cost)) {
+      setError("Invalid number cost");
+      return;
+    }
+
+    if (wallet.balance < cost) {
+      setError(
+        `Insufficient wallet balance. Need $${cost.toFixed(2)}, have $${wallet.balance.toFixed(2)}`,
+      );
       return;
     }
 
@@ -142,6 +207,11 @@ export default function BuyNumbers() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const response = await fetch("/api/admin/purchase-number", {
         method: "POST",
         headers: {
@@ -150,7 +220,7 @@ export default function BuyNumbers() {
         },
         body: JSON.stringify({
           phoneNumber: number.phoneNumber,
-          cost: parseFloat(number.cost),
+          cost: cost,
         }),
       });
 
@@ -160,7 +230,9 @@ export default function BuyNumbers() {
       }
 
       const data = await response.json();
-      setWallet(data.wallet);
+      if (data.wallet) {
+        setWallet(data.wallet);
+      }
       setPurchasedNumbers((prev) => new Set(prev).add(number.phoneNumber));
       setSuccess(`✅ Successfully purchased ${number.phoneNumber}`);
 
@@ -168,23 +240,44 @@ export default function BuyNumbers() {
         setSuccess("");
       }, 3000);
     } catch (err) {
-      setError(
+      const errorMessage =
         err instanceof Error
           ? err.message
-          : "An error occurred while purchasing",
-      );
+          : "An error occurred while purchasing";
+      console.error("Purchase error:", err);
+      setError(errorMessage);
     } finally {
       setPurchasingNumber(null);
     }
   };
 
+  const isActiveFilter = (filter: keyof CapabilityFilters) =>
+    capabilityFilters[filter];
+
+  const hasAnyFilterEnabled = Object.values(capabilityFilters).some(
+    (value) => value === true,
+  );
+
+  const matchesCapabilityFilter = (num: AvailablePhoneNumber): boolean => {
+    if (!hasAnyFilterEnabled) return true;
+
+    const caps = num.capabilities || {};
+    if (capabilityFilters.voice && !caps.voice) return false;
+    if (capabilityFilters.sms && !caps.SMS) return false;
+    if (capabilityFilters.mms && !caps.MMS) return false;
+    if (capabilityFilters.fax) return false; // Fax not available from Twilio
+
+    return true;
+  };
+
   const filteredNumbers = availableNumbers.filter(
     (num) =>
-      num.phoneNumber.includes(searchTerm) ||
-      (num.locality &&
-        num.locality.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (num.region &&
-        num.region.toLowerCase().includes(searchTerm.toLowerCase())),
+      (num.phoneNumber.includes(searchTerm) ||
+        (num.locality &&
+          num.locality.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (num.region &&
+          num.region.toLowerCase().includes(searchTerm.toLowerCase()))) &&
+      matchesCapabilityFilter(num),
   );
 
   if (isLoadingWallet) {
@@ -294,6 +387,88 @@ export default function BuyNumbers() {
           </div>
         )}
 
+        {/* Capability Filters */}
+        {availableNumbers.length > 0 && (
+          <Card className="p-6 mb-6 bg-muted/50 border-l-4 border-l-primary">
+            <h3 className="text-sm font-semibold mb-4">
+              Filter by Capabilities
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                {
+                  id: "voice" as const,
+                  label: "Voice",
+                  icon: PhoneCall,
+                  color: "text-green-600",
+                },
+                {
+                  id: "sms" as const,
+                  label: "SMS",
+                  icon: MessageSquare,
+                  color: "text-blue-600",
+                },
+                {
+                  id: "mms" as const,
+                  label: "MMS",
+                  icon: Image,
+                  color: "text-purple-600",
+                },
+                {
+                  id: "fax" as const,
+                  label: "Fax",
+                  icon: Phone,
+                  color: "text-orange-600",
+                },
+              ].map((capability) => {
+                const Icon = capability.icon;
+                return (
+                  <div
+                    key={capability.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-background cursor-pointer transition-colors"
+                    onClick={() =>
+                      setCapabilityFilters((prev) => ({
+                        ...prev,
+                        [capability.id]: !prev[capability.id],
+                      }))
+                    }
+                  >
+                    <Checkbox
+                      checked={capabilityFilters[capability.id]}
+                      onCheckedChange={(checked) =>
+                        setCapabilityFilters((prev) => ({
+                          ...prev,
+                          [capability.id]: checked === true,
+                        }))
+                      }
+                    />
+                    <div className="flex items-center gap-2 flex-1">
+                      <Icon className={`w-4 h-4 ${capability.color}`} />
+                      <span className="text-sm font-medium">
+                        {capability.label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {hasAnyFilterEnabled && (
+              <button
+                onClick={() =>
+                  setCapabilityFilters({
+                    voice: false,
+                    sms: false,
+                    mms: false,
+                    fax: false,
+                  })
+                }
+                className="text-xs text-primary hover:underline mt-3"
+              >
+                Clear filters
+              </button>
+            )}
+          </Card>
+        )}
+
         {/* Loading State */}
         {isLoadingNumbers && (
           <Card className="p-12 flex items-center justify-center">
@@ -349,6 +524,30 @@ export default function BuyNumbers() {
                               ${cost.toFixed(2)} {wallet?.currency}
                             </span>
                           </p>
+
+                          {/* Capabilities */}
+                          {num.capabilities && (
+                            <div className="flex gap-3 mt-3 flex-wrap">
+                              {num.capabilities.SMS && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                                  <MessageSquare className="w-3 h-3" />
+                                  SMS
+                                </div>
+                              )}
+                              {num.capabilities.MMS && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
+                                  <Image className="w-3 h-3" />
+                                  MMS
+                                </div>
+                              )}
+                              {num.capabilities.voice && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
+                                  <PhoneCall className="w-3 h-3" />
+                                  Voice
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-right ml-4 flex-shrink-0">

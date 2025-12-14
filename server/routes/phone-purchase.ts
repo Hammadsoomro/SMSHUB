@@ -39,28 +39,99 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     const availableNumbers =
       await twilioClient.getAvailableNumbers(countryCode);
 
-    if (!availableNumbers || !availableNumbers.available_phone_numbers) {
+    // Check for Twilio API errors
+    if (availableNumbers.error || availableNumbers.error_message) {
+      console.error("Twilio API error:", availableNumbers);
+      return res.status(400).json({
+        error:
+          availableNumbers.error_message ||
+          availableNumbers.error ||
+          "Failed to fetch numbers from Twilio",
+      });
+    }
+
+    // Validate response structure
+    if (
+      !availableNumbers ||
+      !availableNumbers.available_phone_numbers ||
+      !Array.isArray(availableNumbers.available_phone_numbers)
+    ) {
+      console.warn(
+        "No phone numbers available for country:",
+        countryCode,
+        "Response:",
+        availableNumbers,
+      );
       return res.json({ numbers: [] });
     }
 
-    // Transform the response
-    const numbers: AvailablePhoneNumber[] =
-      availableNumbers.available_phone_numbers[0]?.available_phone_numbers.map(
-        (num: any) => ({
-          phoneNumber: num.phone_number,
-          friendlyName: num.friendly_name,
-          locality: num.locality,
-          region: num.region,
-          postalCode: num.postal_code,
-          countryCode: countryCode,
-          cost: num.price || "0.00",
-        }),
-      ) || [];
+    // Twilio returns available_phone_numbers as an array of region objects
+    // Each region object contains phone numbers
+    const allNumbers: AvailablePhoneNumber[] = [];
 
-    res.json({ numbers });
+    for (const region of availableNumbers.available_phone_numbers) {
+      // Handle both structures:
+      // 1. Direct phone numbers in the region object (newer API)
+      // 2. Nested available_phone_numbers array (older API)
+
+      if (region.phone_number) {
+        // This is a direct phone number object
+        allNumbers.push({
+          phoneNumber: region.phone_number,
+          friendlyName: region.friendly_name || region.phone_number,
+          locality: region.locality || "",
+          region: region.region || "",
+          postalCode: region.postal_code || "",
+          countryCode: countryCode,
+          cost: region.price || "1.00",
+          capabilities: {
+            SMS: region.capabilities?.SMS === true,
+            MMS: region.capabilities?.MMS === true,
+            voice: region.capabilities?.voice === true,
+            fax: false,
+          },
+        });
+      } else if (
+        region.available_phone_numbers &&
+        Array.isArray(region.available_phone_numbers)
+      ) {
+        // This is a region object with nested phone numbers
+        const regionNumbers = region.available_phone_numbers.map(
+          (num: any) => ({
+            phoneNumber: num.phone_number,
+            friendlyName: num.friendly_name || num.phone_number,
+            locality: num.locality || "",
+            region: num.region || "",
+            postalCode: num.postal_code || "",
+            countryCode: countryCode,
+            cost: num.price || "1.00",
+            capabilities: {
+              SMS: num.capabilities?.SMS === true,
+              MMS: num.capabilities?.MMS === true,
+              voice: num.capabilities?.voice === true,
+              fax: false,
+            },
+          }),
+        );
+        allNumbers.push(...regionNumbers);
+      }
+    }
+
+    if (allNumbers.length === 0) {
+      console.warn("No phone numbers found for country:", countryCode);
+    }
+
+    res.json({ numbers: allNumbers });
   } catch (error) {
     console.error("Get available numbers error:", error);
-    res.status(500).json({ error: "Failed to fetch available numbers" });
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Failed to fetch available numbers";
+    res.status(500).json({
+      error: errorMessage,
+      details: "Please ensure your Twilio credentials are valid",
+    });
   }
 };
 
@@ -107,11 +178,9 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
       await twilioClient.purchasePhoneNumber(phoneNumber);
 
     if (purchaseResponse.error || purchaseResponse.error_message) {
-      return res
-        .status(400)
-        .json({
-          error: purchaseResponse.error_message || purchaseResponse.error,
-        });
+      return res.status(400).json({
+        error: purchaseResponse.error_message || purchaseResponse.error,
+      });
     }
 
     // Deduct from wallet

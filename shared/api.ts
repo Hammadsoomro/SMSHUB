@@ -130,6 +130,12 @@ export interface AvailablePhoneNumber {
   postalCode?: string;
   countryCode: string;
   cost: string;
+  capabilities?: {
+    SMS?: boolean;
+    MMS?: boolean;
+    voice?: boolean;
+    fax?: boolean;
+  };
 }
 
 export interface PurchaseNumberRequest {

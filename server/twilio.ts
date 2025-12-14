@@ -28,9 +28,15 @@ export class TwilioClient {
   /**
    * Send an SMS message through Twilio
    */
-  async sendSMS(to: string, from: string, body: string): Promise<TwilioResponse> {
+  async sendSMS(
+    to: string,
+    from: string,
+    body: string,
+  ): Promise<TwilioResponse> {
     return new Promise((resolve, reject) => {
-      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString("base64");
+      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
+        "base64",
+      );
 
       const postData = new URLSearchParams({
         To: to,
@@ -80,11 +86,13 @@ export class TwilioClient {
    */
   async getAvailableNumbers(countryCode: string = "US"): Promise<any> {
     return new Promise((resolve, reject) => {
-      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString("base64");
+      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
+        "base64",
+      );
 
       const options = {
         hostname: "api.twilio.com",
-        path: `/2010-04-01/Accounts/${this.accountSid}/AvailablePhoneNumbers/${countryCode}/Local.json?Contains=XXX`,
+        path: `/2010-04-01/Accounts/${this.accountSid}/AvailablePhoneNumbers/${countryCode}/Local.json`,
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
@@ -101,6 +109,18 @@ export class TwilioClient {
         res.on("end", () => {
           try {
             const response = JSON.parse(data);
+
+            // Handle HTTP error status codes
+            if (res.statusCode && res.statusCode >= 400) {
+              return resolve({
+                error: response.code || response.message || "Twilio API error",
+                error_message:
+                  response.message ||
+                  `HTTP ${res.statusCode}: ${response.detail || "Error"}`,
+                status_code: res.statusCode,
+              });
+            }
+
             resolve(response);
           } catch (error) {
             reject(error);
@@ -121,7 +141,9 @@ export class TwilioClient {
    */
   async purchasePhoneNumber(phoneNumber: string): Promise<TwilioResponse> {
     return new Promise((resolve, reject) => {
-      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString("base64");
+      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
+        "base64",
+      );
 
       const postData = new URLSearchParams({
         PhoneNumber: phoneNumber,

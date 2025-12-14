@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   FileText,
+  Wallet,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -21,6 +22,8 @@ const ADMIN_MENU = [
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
   { href: "/admin/credentials", label: "Credentials", icon: Settings },
   { href: "/admin/numbers", label: "Numbers", icon: Phone },
+  { href: "/admin/buy-numbers", label: "Buy Numbers", icon: Phone },
+  { href: "/admin/wallet", label: "Wallet", icon: Wallet },
   { href: "/admin/team", label: "Team Management", icon: Users },
   { href: "/admin/account", label: "Account Info", icon: FileText },
 ];
@@ -50,11 +53,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
+          <Link
+            to="/"
+            className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border"
+          >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-accent flex items-center justify-center flex-shrink-0">
               <MessageSquare className="w-5 h-5 text-sidebar-primary-foreground" />
             </div>
-            <span className="text-lg font-bold text-sidebar-foreground">SMSHub</span>
+            <span className="text-lg font-bold text-sidebar-foreground">
+              SMSHub
+            </span>
           </Link>
 
           {/* Navigation */}
@@ -119,16 +127,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium">Admin Dashboard</p>
-              <p className="text-xs text-muted-foreground">Manage your SMS business</p>
+              <p className="text-xs text-muted-foreground">
+                Manage your SMS business
+              </p>
             </div>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-auto">
-          <div className="p-4 md:p-8">
-            {children}
-          </div>
+          <div className="p-4 md:p-8">{children}</div>
         </div>
       </div>
     </div>
