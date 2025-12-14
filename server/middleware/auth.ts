@@ -17,17 +17,34 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
     const token = extractTokenFromHeader(req.headers.authorization);
 
     if (!token) {
-      return res.status(401).json({ error: "Missing authorization token" });
+      return res.status(401).json({
+        error: "Missing authorization token. Please login again.",
+        code: "NO_TOKEN"
+      });
     }
 
     const payload = verifyToken(token);
     if (!payload) {
-      return res.status(401).json({ error: "Invalid token" });
+      return res.status(401).json({
+        error: "Your session has expired. Please login again.",
+        code: "INVALID_TOKEN"
+      });
     }
 
-    const user = storage.getUserById(payload.userId);
+    // Get user from storage, but use token payload as fallback
+    let user = storage.getUserById(payload.userId);
+
     if (!user) {
-      return res.status(401).json({ error: "User not found" });
+      // If user not found in storage, create a minimal user object from token
+      // This handles the case where server restarted but token is still valid
+      console.warn(`User ${payload.userId} not found in storage, using token data`);
+      user = {
+        id: payload.userId,
+        email: payload.email,
+        name: payload.email.split("@")[0],
+        role: payload.role,
+        createdAt: new Date().toISOString(),
+      };
     }
 
     req.userId = payload.userId;
@@ -36,7 +53,11 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
 
     next();
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Auth middleware error:", error);
+    res.status(500).json({
+      error: "Authentication failed. Please login again.",
+      code: "AUTH_ERROR"
+    });
   }
 };
 
