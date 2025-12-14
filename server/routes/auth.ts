@@ -77,7 +77,7 @@ export const handleLogin: RequestHandler = (req, res) => {
     }
 
     // Find user
-    const user = storage.getUserByEmail(email);
+    const user = await storage.getUserByEmail(email);
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
