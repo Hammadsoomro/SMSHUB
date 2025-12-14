@@ -10,6 +10,7 @@ import { handleSignup, handleLogin } from "./routes/auth";
 import {
   handleSaveCredentials,
   handleGetCredentials,
+  handleRemoveCredentials,
   handleGetNumbers,
   handleGetTeamMembers,
   handleInviteTeamMember,
