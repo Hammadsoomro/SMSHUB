@@ -88,6 +88,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
             SMS: region.capabilities?.SMS === true,
             MMS: region.capabilities?.MMS === true,
             voice: region.capabilities?.voice === true,
+            fax: false,
           },
         });
       } else if (
@@ -107,6 +108,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
             SMS: num.capabilities?.SMS === true,
             MMS: num.capabilities?.MMS === true,
             voice: num.capabilities?.voice === true,
+            fax: false,
           },
         }));
         allNumbers.push(...regionNumbers);
