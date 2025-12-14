@@ -18,7 +18,8 @@ export default function Credentials() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [connectedCredentials, setConnectedCredentials] = useState<TwilioCredentials | null>(null);
+  const [connectedCredentials, setConnectedCredentials] =
+    useState<TwilioCredentials | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const {
@@ -107,7 +108,7 @@ export default function Credentials() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.error || "Failed to connect Twilio credentials"
+          errorData.error || "Failed to connect Twilio credentials",
         );
       }
 
@@ -118,7 +119,7 @@ export default function Credentials() {
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred while validating credentials"
+          : "An error occurred while validating credentials",
       );
     } finally {
       setIsLoading(false);
@@ -126,7 +127,11 @@ export default function Credentials() {
   };
 
   const handleDisconnect = async () => {
-    if (!window.confirm("Are you sure you want to disconnect Twilio credentials? Team members will no longer be able to send SMS.")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to disconnect Twilio credentials? Team members will no longer be able to send SMS.",
+      )
+    ) {
       return;
     }
 
@@ -159,9 +164,7 @@ export default function Credentials() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to disconnect credentials"
-        );
+        throw new Error(errorData.error || "Failed to disconnect credentials");
       }
 
       setConnectedCredentials(null);
@@ -170,7 +173,7 @@ export default function Credentials() {
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred while disconnecting credentials"
+          : "An error occurred while disconnecting credentials",
       );
     } finally {
       setIsDisconnecting(false);
@@ -203,10 +206,14 @@ export default function Credentials() {
                     Credentials Connected
                   </h3>
                   <p className="text-sm text-green-700 mb-2">
-                    Twilio account is connected and active. Team members can send and receive SMS.
+                    Twilio account is connected and active. Team members can
+                    send and receive SMS.
                   </p>
                   <p className="text-xs text-green-600">
-                    Connected: {new Date(connectedCredentials.connectedAt).toLocaleString()}
+                    Connected:{" "}
+                    {new Date(
+                      connectedCredentials.connectedAt,
+                    ).toLocaleString()}
                   </p>
                 </div>
               </div>

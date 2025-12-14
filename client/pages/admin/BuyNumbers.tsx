@@ -11,7 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle, Phone, Loader2, Wallet, Search, Check } from "lucide-react";
+import {
+  AlertCircle,
+  Phone,
+  Loader2,
+  Wallet,
+  Search,
+  Check,
+} from "lucide-react";
 import { AvailablePhoneNumber, Wallet as WalletType } from "@shared/api";
 
 const COUNTRIES = [
@@ -27,7 +34,9 @@ const COUNTRIES = [
 export default function BuyNumbers() {
   const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState<string>("");
-  const [availableNumbers, setAvailableNumbers] = useState<AvailablePhoneNumber[]>([]);
+  const [availableNumbers, setAvailableNumbers] = useState<
+    AvailablePhoneNumber[]
+  >([]);
   const [wallet, setWallet] = useState<WalletType | null>(null);
   const [isLoadingNumbers, setIsLoadingNumbers] = useState(false);
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
@@ -35,7 +44,9 @@ export default function BuyNumbers() {
   const [success, setSuccess] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [purchasingNumber, setPurchasingNumber] = useState<string | null>(null);
-  const [purchasedNumbers, setPurchasedNumbers] = useState<Set<string>>(new Set());
+  const [purchasedNumbers, setPurchasedNumbers] = useState<Set<string>>(
+    new Set(),
+  );
 
   useEffect(() => {
     const validateAuth = async () => {
@@ -86,7 +97,7 @@ export default function BuyNumbers() {
         `/api/admin/available-numbers?countryCode=${countryCode}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -105,7 +116,7 @@ export default function BuyNumbers() {
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred while fetching numbers"
+          : "An error occurred while fetching numbers",
       );
     } finally {
       setIsLoadingNumbers(false);
@@ -145,14 +156,12 @@ export default function BuyNumbers() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to purchase number"
-        );
+        throw new Error(errorData.error || "Failed to purchase number");
       }
 
       const data = await response.json();
       setWallet(data.wallet);
-      setPurchasedNumbers(prev => new Set(prev).add(number.phoneNumber));
+      setPurchasedNumbers((prev) => new Set(prev).add(number.phoneNumber));
       setSuccess(`✅ Successfully purchased ${number.phoneNumber}`);
 
       setTimeout(() => {
@@ -162,7 +171,7 @@ export default function BuyNumbers() {
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred while purchasing"
+          : "An error occurred while purchasing",
       );
     } finally {
       setPurchasingNumber(null);
@@ -172,8 +181,10 @@ export default function BuyNumbers() {
   const filteredNumbers = availableNumbers.filter(
     (num) =>
       num.phoneNumber.includes(searchTerm) ||
-      (num.locality && num.locality.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (num.region && num.region.toLowerCase().includes(searchTerm.toLowerCase()))
+      (num.locality &&
+        num.locality.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (num.region &&
+        num.region.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   if (isLoadingWallet) {
@@ -207,7 +218,9 @@ export default function BuyNumbers() {
                   <Wallet className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Wallet Balance</p>
+                  <p className="text-sm text-muted-foreground">
+                    Wallet Balance
+                  </p>
                   <p className="text-2xl font-bold">
                     ${wallet.balance.toFixed(2)} {wallet.currency}
                   </p>
@@ -297,7 +310,8 @@ export default function BuyNumbers() {
         {!isLoadingNumbers && selectedCountry && filteredNumbers.length > 0 && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {filteredNumbers.length} available number{filteredNumbers.length !== 1 ? "s" : ""} found
+              {filteredNumbers.length} available number
+              {filteredNumbers.length !== 1 ? "s" : ""} found
             </p>
             <div className="grid gap-4">
               {filteredNumbers.map((num, idx) => {
@@ -330,7 +344,10 @@ export default function BuyNumbers() {
                             {num.region && `, ${num.region}`}
                           </p>
                           <p className="text-xs text-muted-foreground mt-2">
-                            Monthly cost: <span className="font-semibold">${cost.toFixed(2)} {wallet?.currency}</span>
+                            Monthly cost:{" "}
+                            <span className="font-semibold">
+                              ${cost.toFixed(2)} {wallet?.currency}
+                            </span>
                           </p>
                         </div>
                       </div>

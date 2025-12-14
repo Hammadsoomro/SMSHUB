@@ -26,27 +26,36 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
-      return res.status(400).json({ error: "Please connect your Twilio credentials first" });
+      return res
+        .status(400)
+        .json({ error: "Please connect your Twilio credentials first" });
     }
 
     // Fetch available numbers from Twilio
-    const twilioClient = new TwilioClient(credentials.accountSid, credentials.authToken);
-    const availableNumbers = await twilioClient.getAvailableNumbers(countryCode);
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      credentials.authToken,
+    );
+    const availableNumbers =
+      await twilioClient.getAvailableNumbers(countryCode);
 
     if (!availableNumbers || !availableNumbers.available_phone_numbers) {
       return res.json({ numbers: [] });
     }
 
     // Transform the response
-    const numbers: AvailablePhoneNumber[] = availableNumbers.available_phone_numbers[0]?.available_phone_numbers.map((num: any) => ({
-      phoneNumber: num.phone_number,
-      friendlyName: num.friendly_name,
-      locality: num.locality,
-      region: num.region,
-      postalCode: num.postal_code,
-      countryCode: countryCode,
-      cost: num.price || "0.00",
-    })) || [];
+    const numbers: AvailablePhoneNumber[] =
+      availableNumbers.available_phone_numbers[0]?.available_phone_numbers.map(
+        (num: any) => ({
+          phoneNumber: num.phone_number,
+          friendlyName: num.friendly_name,
+          locality: num.locality,
+          region: num.region,
+          postalCode: num.postal_code,
+          countryCode: countryCode,
+          cost: num.price || "0.00",
+        }),
+      ) || [];
 
     res.json({ numbers });
   } catch (error) {
@@ -58,7 +67,10 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
 export const handlePurchaseNumber: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const { phoneNumber, cost } = req.body as { phoneNumber: string; cost: number };
+    const { phoneNumber, cost } = req.body as {
+      phoneNumber: string;
+      cost: number;
+    };
 
     if (!phoneNumber || cost === undefined) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -66,8 +78,10 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
 
     // Check if number is already purchased in the system
     const numbers = await storage.getPhoneNumbersByAdminId(adminId);
-    if (numbers.some(n => n.phoneNumber === phoneNumber)) {
-      return res.status(400).json({ error: "This number is already purchased by you" });
+    if (numbers.some((n) => n.phoneNumber === phoneNumber)) {
+      return res
+        .status(400)
+        .json({ error: "This number is already purchased by you" });
     }
 
     // Get wallet
@@ -79,15 +93,25 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
-      return res.status(400).json({ error: "Please connect your Twilio credentials first" });
+      return res
+        .status(400)
+        .json({ error: "Please connect your Twilio credentials first" });
     }
 
     // Purchase number from Twilio
-    const twilioClient = new TwilioClient(credentials.accountSid, credentials.authToken);
-    const purchaseResponse = await twilioClient.purchasePhoneNumber(phoneNumber);
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      credentials.authToken,
+    );
+    const purchaseResponse =
+      await twilioClient.purchasePhoneNumber(phoneNumber);
 
     if (purchaseResponse.error || purchaseResponse.error_message) {
-      return res.status(400).json({ error: purchaseResponse.error_message || purchaseResponse.error });
+      return res
+        .status(400)
+        .json({
+          error: purchaseResponse.error_message || purchaseResponse.error,
+        });
     }
 
     // Deduct from wallet
