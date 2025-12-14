@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { User, TwilioCredentials, PhoneNumber, TeamMember, Message, Contact } from "@shared/api";
+import { User, TwilioCredentials, PhoneNumber, TeamMember, Message, Contact, Wallet, WalletTransaction } from "@shared/api";
 
 // User Schema
 export interface IUser extends Document, User {
