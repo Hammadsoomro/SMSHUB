@@ -101,6 +101,18 @@ export class TwilioClient {
         res.on("end", () => {
           try {
             const response = JSON.parse(data);
+
+            // Handle HTTP error status codes
+            if (res.statusCode && res.statusCode >= 400) {
+              return resolve({
+                error: response.code || response.message || "Twilio API error",
+                error_message:
+                  response.message ||
+                  `HTTP ${res.statusCode}: ${response.detail || "Error"}`,
+                status_code: res.statusCode,
+              });
+            }
+
             resolve(response);
           } catch (error) {
             reject(error);
