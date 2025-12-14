@@ -208,7 +208,7 @@ export default function Numbers() {
           </Card>
         )}
 
-        {error && (
+        {error && !showAddForm && (
           <Card className="p-6 bg-red-50 border-red-200 mb-8">
             <div className="flex gap-4">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
