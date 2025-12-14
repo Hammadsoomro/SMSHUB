@@ -36,10 +36,22 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       credentials.accountSid,
       credentials.authToken,
     );
-    const availableNumbers =
+    let availableNumbers =
       await twilioClient.getAvailableNumbers(countryCode);
 
     console.log("DEBUG - Twilio response for country", countryCode, ":", JSON.stringify(availableNumbers, null, 2));
+
+    // If no numbers found and it's US/CA, try alternative area codes
+    if ((!availableNumbers.available_phone_numbers || availableNumbers.available_phone_numbers.length === 0) &&
+        (countryCode === "US" || countryCode === "CA")) {
+      console.log("DEBUG - First query returned no results, trying alternative parameters...");
+      const fallbackClient = new TwilioClient(
+        credentials.accountSid,
+        credentials.authToken,
+      );
+      availableNumbers = await fallbackClient.getAvailableNumbers(countryCode, true);
+      console.log("DEBUG - Fallback response:", JSON.stringify(availableNumbers, null, 2));
+    }
 
     // Check for Twilio API errors
     if (availableNumbers.error || availableNumbers.error_message) {
