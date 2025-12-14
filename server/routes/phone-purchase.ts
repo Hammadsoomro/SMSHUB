@@ -39,6 +39,8 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     const availableNumbers =
       await twilioClient.getAvailableNumbers(countryCode);
 
+    console.log("DEBUG - Twilio response for country", countryCode, ":", JSON.stringify(availableNumbers, null, 2));
+
     // Check for Twilio API errors
     if (availableNumbers.error || availableNumbers.error_message) {
       console.error("Twilio API error:", availableNumbers);
