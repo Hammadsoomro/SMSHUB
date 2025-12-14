@@ -32,14 +32,20 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     }
 
     // Get user from storage, but use token payload as fallback
-    let user = await storage.getUserById(payload.userId);
+    let user;
+    try {
+      user = await storage.getUserById(payload.userId);
+    } catch (dbError) {
+      console.warn(
+        `Database lookup failed for user ${payload.userId}, using token data:`,
+        dbError
+      );
+      // Fall through to use token data as fallback
+    }
 
     if (!user) {
       // If user not found in storage, create a minimal user object from token
       // This handles the case where server restarted but token is still valid
-      console.warn(
-        `User ${payload.userId} not found in storage, using token data`,
-      );
       user = {
         id: payload.userId,
         email: payload.email,
@@ -56,7 +62,7 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    res.status(500).json({
+    res.status(401).json({
       error: "Authentication failed. Please login again.",
       code: "AUTH_ERROR",
     });
