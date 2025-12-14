@@ -17,6 +17,19 @@ import {
   handleRemoveTeamMember,
 } from "./routes/admin";
 
+// Wallet routes
+import {
+  handleGetWallet,
+  handleAddFunds,
+  handleGetTransactions,
+} from "./routes/wallet";
+
+// Phone purchase routes
+import {
+  handleGetAvailableNumbers,
+  handlePurchaseNumber,
+} from "./routes/phone-purchase";
+
 // Messages routes
 import {
   handleGetContacts,
