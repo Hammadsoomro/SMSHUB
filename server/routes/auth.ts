@@ -67,7 +67,7 @@ export const handleSignup: RequestHandler = (req, res) => {
   }
 };
 
-export const handleLogin: RequestHandler = (req, res) => {
+export const handleLogin: RequestHandler = async (req, res) => {
   try {
     const { email, password } = req.body as LoginRequest;
 
