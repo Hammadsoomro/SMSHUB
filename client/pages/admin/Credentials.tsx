@@ -20,6 +20,16 @@ export default function Credentials() {
   const { register, handleSubmit, formState: { errors } } = useForm<CredentialsForm>();
 
   const onSubmit = async (data: CredentialsForm) => {
+    // Client-side validation
+    if (!data.accountSid.trim()) {
+      setError("Please enter your Account SID");
+      return;
+    }
+    if (!data.authToken.trim()) {
+      setError("Please enter your Auth Token");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
     setSuccess("");
@@ -27,8 +37,8 @@ export default function Credentials() {
     try {
       const token = localStorage.getItem("token");
       const payload: TwilioCredentialsRequest = {
-        accountSid: data.accountSid,
-        authToken: data.authToken,
+        accountSid: data.accountSid.trim(),
+        authToken: data.authToken.trim(),
       };
 
       const response = await fetch("/api/admin/credentials", {
@@ -42,13 +52,13 @@ export default function Credentials() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save credentials");
+        throw new Error(errorData.error || "Failed to connect Twilio credentials");
       }
 
       setHasCredentials(true);
-      setSuccess("Twilio credentials connected successfully!");
+      setSuccess("✅ Twilio credentials connected successfully!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "An error occurred while validating credentials");
     } finally {
       setIsLoading(false);
     }
