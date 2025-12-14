@@ -40,6 +40,50 @@ export default function Numbers() {
     }
   };
 
+  const handleAddExistingNumber = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!phoneNumberInput.trim()) {
+      setError("Please enter a phone number");
+      return;
+    }
+
+    setIsAdding(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/add-existing-number", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ phoneNumber: phoneNumberInput }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add number");
+      }
+
+      const data = await response.json();
+      setNumbers([...numbers, data.phoneNumber]);
+      setPhoneNumberInput("");
+      setShowAddForm(false);
+      setSuccess(`✅ Number ${phoneNumberInput} added successfully!`);
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   const filteredNumbers = numbers.filter((num) =>
     num.phoneNumber.includes(searchTerm),
   );
