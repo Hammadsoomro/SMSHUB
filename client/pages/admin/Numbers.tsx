@@ -101,7 +101,11 @@ export default function Numbers() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => setShowAddForm(!showAddForm)}
+              onClick={() => {
+                setShowAddForm(!showAddForm);
+                setError("");
+                setSuccess("");
+              }}
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Existing
