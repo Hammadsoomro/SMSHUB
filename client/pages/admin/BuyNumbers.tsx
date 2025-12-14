@@ -93,6 +93,11 @@ export default function BuyNumbers() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const response = await fetch(
         `/api/admin/available-numbers?countryCode=${countryCode}`,
         {
@@ -102,22 +107,32 @@ export default function BuyNumbers() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        setError(errorData.error || "Failed to fetch numbers");
+        const errorMessage =
+          errorData.error || errorData.details || "Failed to fetch numbers";
+        setError(errorMessage);
         return;
       }
 
       const data = await response.json();
-      setAvailableNumbers(data.numbers || []);
 
-      if (!data.numbers || data.numbers.length === 0) {
+      if (!data || typeof data !== "object") {
+        setError("Invalid response from server");
+        return;
+      }
+
+      const numbers = Array.isArray(data.numbers) ? data.numbers : [];
+      setAvailableNumbers(numbers);
+
+      if (numbers.length === 0) {
         setError("No available numbers for this country");
       }
     } catch (err) {
-      setError(
+      const errorMessage =
         err instanceof Error
           ? err.message
-          : "An error occurred while fetching numbers",
-      );
+          : "An error occurred while fetching numbers";
+      console.error("Fetch error:", err);
+      setError(errorMessage);
     } finally {
       setIsLoadingNumbers(false);
     }
