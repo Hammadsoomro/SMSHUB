@@ -54,8 +54,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     if (
       !availableNumbers ||
       !availableNumbers.available_phone_numbers ||
-      !Array.isArray(availableNumbers.available_phone_numbers) ||
-      availableNumbers.available_phone_numbers.length === 0
+      !Array.isArray(availableNumbers.available_phone_numbers)
     ) {
       console.warn(
         "No phone numbers available for country:",
@@ -66,36 +65,49 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       return res.json({ numbers: [] });
     }
 
-    // Get the first region's phone numbers
-    const firstRegion = availableNumbers.available_phone_numbers[0];
-    if (
-      !firstRegion ||
-      !firstRegion.available_phone_numbers ||
-      !Array.isArray(firstRegion.available_phone_numbers)
-    ) {
-      console.warn(
-        "Invalid phone numbers structure for country:",
-        countryCode,
-        "Region data:",
-        firstRegion,
-      );
-      return res.json({ numbers: [] });
+    // Twilio returns available_phone_numbers as an array of region objects
+    // Each region object contains phone numbers
+    const allNumbers: AvailablePhoneNumber[] = [];
+
+    for (const region of availableNumbers.available_phone_numbers) {
+      // Handle both structures:
+      // 1. Direct phone numbers in the region object (newer API)
+      // 2. Nested available_phone_numbers array (older API)
+
+      if (region.phone_number) {
+        // This is a direct phone number object
+        allNumbers.push({
+          phoneNumber: region.phone_number,
+          friendlyName: region.friendly_name || region.phone_number,
+          locality: region.locality || "",
+          region: region.region || "",
+          postalCode: region.postal_code || "",
+          countryCode: countryCode,
+          cost: region.price || "1.00",
+        });
+      } else if (
+        region.available_phone_numbers &&
+        Array.isArray(region.available_phone_numbers)
+      ) {
+        // This is a region object with nested phone numbers
+        const regionNumbers = region.available_phone_numbers.map((num: any) => ({
+          phoneNumber: num.phone_number,
+          friendlyName: num.friendly_name || num.phone_number,
+          locality: num.locality || "",
+          region: num.region || "",
+          postalCode: num.postal_code || "",
+          countryCode: countryCode,
+          cost: num.price || "1.00",
+        }));
+        allNumbers.push(...regionNumbers);
+      }
     }
 
-    // Transform the response
-    const numbers: AvailablePhoneNumber[] = firstRegion.available_phone_numbers.map(
-      (num: any) => ({
-        phoneNumber: num.phone_number,
-        friendlyName: num.friendly_name,
-        locality: num.locality,
-        region: num.region,
-        postalCode: num.postal_code,
-        countryCode: countryCode,
-        cost: num.price || "0.00",
-      }),
-    );
+    if (allNumbers.length === 0) {
+      console.warn("No phone numbers found for country:", countryCode);
+    }
 
-    res.json({ numbers });
+    res.json({ numbers: allNumbers });
   } catch (error) {
     console.error("Get available numbers error:", error);
     const errorMessage =
