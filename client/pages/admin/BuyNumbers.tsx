@@ -18,6 +18,9 @@ import {
   Wallet,
   Search,
   Check,
+  MessageSquare,
+  Image,
+  PhoneCall,
 } from "lucide-react";
 import { AvailablePhoneNumber, Wallet as WalletType } from "@shared/api";
 
