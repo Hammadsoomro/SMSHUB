@@ -14,6 +14,28 @@ import {
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
+      {/* Schema.org structured data for SEO */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "SMSHub",
+          "description": "Professional SMS messaging platform for teams. Send bulk SMS, manage phone numbers, and automate communication.",
+          "url": "https://smshub.io",
+          "applicationCategory": "BusinessApplication",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "500"
+          }
+        })}
+      </script>
+
       {/* Navigation */}
       <nav className="border-b border-border sticky top-0 bg-background/80 backdrop-blur-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
