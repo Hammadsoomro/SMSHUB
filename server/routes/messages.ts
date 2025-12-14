@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { storage } from "../storage";
 import { SendMessageRequest, Message, Contact } from "@shared/api";
+import { TwilioClient } from "../twilio";
 
 export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
