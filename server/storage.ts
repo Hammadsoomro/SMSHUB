@@ -45,6 +45,10 @@ class Storage {
     return (await TwilioCredentialsModel.findOne({ adminId })) as TwilioCredentials | null;
   }
 
+  async removeTwilioCredentials(adminId: string): Promise<void> {
+    await TwilioCredentialsModel.deleteOne({ adminId });
+  }
+
   // Phone Numbers
   async addPhoneNumber(number: PhoneNumber): Promise<void> {
     const newNumber = new PhoneNumberModel(number);
