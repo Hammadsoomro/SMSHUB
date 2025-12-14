@@ -1,0 +1,300 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import {
+  MessageSquare,
+  Send,
+  Settings,
+  LogOut,
+  Search,
+  Plus,
+  Loader2,
+  Phone,
+  AlertCircle,
+} from "lucide-react";
+import { Message, Contact } from "@shared/api";
+
+interface ConversationState {
+  contact: Contact | null;
+  messages: Message[];
+}
+
+export default function Messages() {
+  const navigate = useNavigate();
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [conversation, setConversation] = useState<ConversationState>({
+    contact: null,
+    messages: [],
+  });
+  const [messageText, setMessageText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    fetchContacts();
+  }, [navigate]);
+
+  const fetchContacts = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/messages/contacts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch contacts");
+      const data = await response.json();
+      setContacts(data.contacts || []);
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchMessages = async (contactId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/messages/conversation/${contactId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch messages");
+      const data = await response.json();
+      setConversation({
+        contact: conversation.contact,
+        messages: data.messages || [],
+      });
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  const handleSelectContact = (contact: Contact) => {
+    setConversation({ ...conversation, contact });
+    fetchMessages(contact.id);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageText.trim() || !conversation.contact) return;
+
+    setIsSending(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/messages/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          to: conversation.contact.phoneNumber,
+          body: messageText,
+          phoneNumberId: conversation.contact.id,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to send message");
+      setMessageText("");
+      fetchMessages(conversation.contact.id);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
+  const filteredContacts = contacts.filter((contact) =>
+    contact.phoneNumber.includes(searchTerm) || contact.name?.includes(searchTerm)
+  );
+
+  return (
+    <div className="h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="border-b border-border bg-background h-16 flex items-center justify-between px-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+            <MessageSquare className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-lg font-bold">SMSHub Messages</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon">
+            <Settings className="w-5 h-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleLogout}>
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Contacts Sidebar */}
+        <div className="w-80 border-r border-border bg-card overflow-hidden flex flex-col">
+          {/* Search */}
+          <div className="p-4 border-b border-border">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search contacts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-10"
+              />
+            </div>
+          </div>
+
+          {/* Contacts List */}
+          <div className="flex-1 overflow-y-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredContacts.length > 0 ? (
+              <div className="space-y-1 p-2">
+                {filteredContacts.map((contact) => (
+                  <button
+                    key={contact.id}
+                    onClick={() => handleSelectContact(contact)}
+                    className={`w-full text-left p-4 rounded-lg smooth-transition ${
+                      conversation.contact?.id === contact.id
+                        ? "bg-primary text-white"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="font-semibold text-sm">
+                        {contact.name || contact.phoneNumber}
+                      </p>
+                      {contact.unreadCount > 0 && (
+                        <span className="px-2 py-1 rounded-full bg-destructive text-white text-xs font-semibold">
+                          {contact.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs opacity-75 truncate">
+                      {contact.lastMessage || "No messages yet"}
+                    </p>
+                    {contact.lastMessageTime && (
+                      <p className="text-xs opacity-50 mt-1">
+                        {new Date(contact.lastMessageTime).toLocaleDateString()}
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
+                  <p className="text-muted-foreground text-sm">No contacts yet</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Chat Area */}
+        {conversation.contact ? (
+          <div className="flex-1 flex flex-col">
+            {/* Chat Header */}
+            <div className="border-b border-border bg-card h-16 flex items-center justify-between px-6">
+              <div>
+                <p className="font-semibold">{conversation.contact.name || conversation.contact.phoneNumber}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                  <Phone className="w-3 h-3" />
+                  {conversation.contact.phoneNumber}
+                </p>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {conversation.messages.length > 0 ? (
+                conversation.messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.direction === "outbound" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-xs px-4 py-2 rounded-lg ${
+                        msg.direction === "outbound"
+                          ? "bg-primary text-white"
+                          : "bg-muted text-foreground"
+                      }`}
+                    >
+                      <p className="text-sm break-words">{msg.body}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {new Date(msg.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
+                    <p className="text-muted-foreground text-sm">No messages yet</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Message Input */}
+            <form onSubmit={handleSendMessage} className="border-t border-border bg-card p-4">
+              <div className="flex gap-2">
+                <Input
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1 h-10"
+                  disabled={isSending}
+                />
+                <Button
+                  type="submit"
+                  disabled={isSending || !messageText.trim()}
+                  className="bg-gradient-to-r from-primary to-secondary"
+                  size="sm"
+                >
+                  {isSending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center bg-card">
+            <div className="text-center">
+              <div className="p-4 bg-muted rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-lg font-semibold mb-2">No conversation selected</p>
+              <p className="text-muted-foreground text-sm">
+                Select a contact to start messaging
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
