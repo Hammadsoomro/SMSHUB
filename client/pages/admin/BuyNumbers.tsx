@@ -247,13 +247,37 @@ export default function BuyNumbers() {
     }
   };
 
+  const isActiveFilter = (filter: keyof CapabilityFilters) =>
+    capabilityFilters[filter];
+
+  const hasAnyFilterEnabled = Object.values(capabilityFilters).some(
+    (value) => value === true,
+  );
+
+  const matchesCapabilityFilter = (num: AvailablePhoneNumber): boolean => {
+    if (!hasAnyFilterEnabled) return true;
+
+    const caps = num.capabilities || {};
+    if (
+      capabilityFilters.voice &&
+      !caps.voice
+    )
+      return false;
+    if (capabilityFilters.sms && !caps.SMS) return false;
+    if (capabilityFilters.mms && !caps.MMS) return false;
+    if (capabilityFilters.fax) return false; // Fax not available from Twilio
+
+    return true;
+  };
+
   const filteredNumbers = availableNumbers.filter(
     (num) =>
-      num.phoneNumber.includes(searchTerm) ||
-      (num.locality &&
-        num.locality.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (num.region &&
-        num.region.toLowerCase().includes(searchTerm.toLowerCase())),
+      (num.phoneNumber.includes(searchTerm) ||
+        (num.locality &&
+          num.locality.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (num.region &&
+          num.region.toLowerCase().includes(searchTerm.toLowerCase()))) &&
+      matchesCapabilityFilter(num),
   );
 
   if (isLoadingWallet) {
