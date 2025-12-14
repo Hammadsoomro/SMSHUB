@@ -138,15 +138,23 @@ export default function Credentials() {
                 Account SID
               </label>
               <Input
-                {...register("accountSid", { required: "Account SID is required" })}
+                {...register("accountSid", {
+                  required: "Account SID is required",
+                  pattern: {
+                    value: /^AC[a-f0-9]{32}$/i,
+                    message: "Invalid format (must start with AC and be 34 characters)",
+                  },
+                })}
                 placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                className="h-10"
+                className={`h-10 ${errors.accountSid ? "border-red-500 focus:border-red-500" : ""}`}
               />
               {errors.accountSid && (
-                <p className="text-xs text-destructive mt-1">{errors.accountSid.message}</p>
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  ⚠️ {errors.accountSid.message}
+                </p>
               )}
               <p className="text-xs text-muted-foreground mt-2">
-                Find this in your Twilio Console under Account Settings
+                Format: Must start with "AC" and be exactly 34 characters long
               </p>
             </div>
 
@@ -156,16 +164,24 @@ export default function Credentials() {
                 Auth Token
               </label>
               <Input
-                {...register("authToken", { required: "Auth Token is required" })}
+                {...register("authToken", {
+                  required: "Auth Token is required",
+                  minLength: {
+                    value: 32,
+                    message: "Auth Token must be at least 32 characters",
+                  },
+                })}
                 type="password"
                 placeholder="••••••••••••••••••••••••••••••••"
-                className="h-10"
+                className={`h-10 ${errors.authToken ? "border-red-500 focus:border-red-500" : ""}`}
               />
               {errors.authToken && (
-                <p className="text-xs text-destructive mt-1">{errors.authToken.message}</p>
+                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                  ⚠️ {errors.authToken.message}
+                </p>
               )}
               <p className="text-xs text-muted-foreground mt-2">
-                Find this in your Twilio Console under Account Settings. Keep it secret!
+                Must be at least 32 characters. Never share this!
               </p>
             </div>
 
