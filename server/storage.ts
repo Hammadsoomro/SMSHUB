@@ -142,11 +142,11 @@ class Storage {
   }
 
   async getContactById(id: string): Promise<Contact | undefined> {
-    return (await ContactModel.findById(id)) as Contact | null;
+    return (await ContactModel.findOne({ id })) as Contact | null;
   }
 
   async updateContact(contact: Contact): Promise<void> {
-    await ContactModel.findByIdAndUpdate(contact.id, contact);
+    await ContactModel.findOneAndUpdate({ id: contact.id }, contact);
   }
 
   // Wallet operations
