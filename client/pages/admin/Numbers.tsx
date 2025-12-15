@@ -417,11 +417,21 @@ export default function Numbers() {
                 )}
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleAssignClick(num.id)}
+                  >
                     {num.assignedTo ? "Reassign" : "Assign"}
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Settings
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleToggleActive(num.id)}
+                  >
+                    {num.active ? "Deactivate" : "Activate"}
                   </Button>
                 </div>
               </Card>
