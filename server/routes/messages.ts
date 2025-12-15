@@ -99,15 +99,10 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     }
 
     // Determine the admin ID - either the user is admin or a team member
-    let adminId = userId;
     const user = await storage.getUserById(userId);
-    if (user?.role === "team_member") {
-      // For team members, get their admin's ID
-      const teamMemberId = await storage.getAdminIdByTeamMemberId(userId);
-      if (!teamMemberId) {
-        return res.status(400).json({ error: "Could not determine admin" });
-      }
-      adminId = teamMemberId;
+    let adminId = userId;
+    if (user?.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
     }
 
     // Verify the phone number belongs to this admin
