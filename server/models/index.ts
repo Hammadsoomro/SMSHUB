@@ -121,6 +121,7 @@ export interface IContact extends Document, Contact {}
 
 const contactSchema = new Schema<IContact>(
   {
+    id: { type: String, required: true, unique: true },
     phoneNumberId: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     name: { type: String, sparse: true },
