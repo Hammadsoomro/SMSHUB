@@ -119,7 +119,6 @@ export default function BuyNumbers() {
       }
 
       const url = `/api/admin/available-numbers?countryCode=${countryCode}`;
-      console.log("Fetching available numbers from:", url);
 
       const response = await fetch(url, {
         method: "GET",
@@ -129,7 +128,6 @@ export default function BuyNumbers() {
         },
       });
 
-      console.log("Response status:", response.status, response.statusText);
 
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -144,7 +142,6 @@ export default function BuyNumbers() {
       }
 
       const data = await response.json();
-      console.log("Received data:", data);
 
       if (!data || typeof data !== "object") {
         setError("Invalid response from server");
@@ -152,7 +149,6 @@ export default function BuyNumbers() {
       }
 
       const numbers = Array.isArray(data.numbers) ? data.numbers : [];
-      console.log("Parsed numbers:", numbers.length);
       setAvailableNumbers(numbers);
 
       if (numbers.length === 0) {
