@@ -114,6 +114,11 @@ export async function createServer() {
     handleGetConversation,
   );
   app.post("/api/messages/send", authMiddleware, handleSendMessage);
+  app.get(
+    "/api/messages/assigned-phone-number",
+    authMiddleware,
+    handleGetAssignedPhoneNumber,
+  );
 
   // Wallet routes (requires authentication)
   app.get("/api/wallet", authMiddleware, handleGetWallet);
