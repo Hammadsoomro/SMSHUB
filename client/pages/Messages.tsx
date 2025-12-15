@@ -202,14 +202,39 @@ export default function Messages() {
         <div className="w-80 border-r border-border bg-card overflow-hidden flex flex-col">
           {/* Search */}
           <div className="p-4 border-b border-border">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search contacts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10"
-              />
+            <div className="space-y-3">
+              <div className="relative flex gap-2">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search contacts or paste phone number..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && searchTerm.trim()) {
+                        handleSearchNumberSelection();
+                      }
+                    }}
+                    className="pl-10 h-10"
+                  />
+                </div>
+                {searchTerm &&
+                  !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
+                    <Button
+                      onClick={handleSearchNumberSelection}
+                      className="bg-gradient-to-r from-primary to-secondary"
+                      size="sm"
+                    >
+                      Start Chat
+                    </Button>
+                  )}
+              </div>
+              {error && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-700">{error}</p>
+                </div>
+              )}
             </div>
           </div>
 
