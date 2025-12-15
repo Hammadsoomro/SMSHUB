@@ -82,8 +82,45 @@ export default function Messages() {
   };
 
   const handleSelectContact = (contact: Contact) => {
+    setNewConversationNumber("");
+    setSearchTerm("");
     setConversation({ ...conversation, contact });
     fetchMessages(contact.id);
+  };
+
+  const handleStartNewConversation = (phoneNumber: string) => {
+    if (!phoneNumber.trim()) {
+      setError("Please enter a phone number");
+      return;
+    }
+
+    // Check if contact already exists
+    const existingContact = contacts.find((c) => c.phoneNumber === phoneNumber);
+
+    if (existingContact) {
+      handleSelectContact(existingContact);
+    } else {
+      // Create temporary contact object for new conversation
+      const tempContact: Contact = {
+        id: `temp-${Date.now()}`,
+        phoneNumberId: "",
+        phoneNumber,
+        unreadCount: 0,
+      };
+      setConversation({
+        contact: tempContact,
+        messages: [],
+      });
+      setNewConversationNumber("");
+      setSearchTerm("");
+    }
+    setError("");
+  };
+
+  const handleSearchNumberSelection = () => {
+    if (searchTerm.trim()) {
+      handleStartNewConversation(searchTerm);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -91,6 +128,7 @@ export default function Messages() {
     if (!messageText.trim() || !conversation.contact) return;
 
     setIsSending(true);
+    setError("");
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/send", {
@@ -102,15 +140,25 @@ export default function Messages() {
         body: JSON.stringify({
           to: conversation.contact.phoneNumber,
           body: messageText,
-          phoneNumberId: conversation.contact.id,
+          phoneNumberId: conversation.contact.phoneNumberId || "",
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to send message");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send message");
+      }
+
       setMessageText("");
-      fetchMessages(conversation.contact.id);
-    } catch {
-      // Error handled by user feedback
+
+      // If this was a new conversation, refresh contacts
+      if (conversation.contact.id.startsWith("temp-")) {
+        await fetchContacts();
+      } else {
+        await fetchMessages(conversation.contact.id);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send message");
     } finally {
       setIsSending(false);
     }
