@@ -83,6 +83,40 @@ export default function TeamManagement() {
     }
   };
 
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm("Are you sure you want to remove this team member?")) {
+      return;
+    }
+
+    setIsRemoving(memberId);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/team/remove", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ memberId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to remove team member");
+      }
+
+      setSuccess("Team member removed successfully!");
+      fetchTeamMembers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsRemoving(null);
+    }
+  };
+
   return (
     <AdminLayout>
       <div>
