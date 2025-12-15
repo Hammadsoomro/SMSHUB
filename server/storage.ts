@@ -160,11 +160,21 @@ class Storage {
   }
 
   async getContactById(id: string): Promise<Contact | undefined> {
-    return (await ContactModel.findOne({ id })) as Contact | null;
+    const doc = await ContactModel.findOne({ $or: [{ id }, { _id: id }] });
+    if (!doc) return undefined;
+    const data = doc.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as Contact;
   }
 
   async updateContact(contact: Contact): Promise<void> {
-    await ContactModel.findOneAndUpdate({ id: contact.id }, contact);
+    await ContactModel.findOneAndUpdate(
+      { $or: [{ id: contact.id }, { _id: contact.id }] },
+      contact,
+      { new: true },
+    );
   }
 
   // Wallet operations
