@@ -120,6 +120,12 @@ export async function createServer() {
     adminOnly,
     handleRemoveTeamMember,
   );
+  app.get(
+    "/api/admin/dashboard/stats",
+    authMiddleware,
+    adminOnly,
+    handleGetDashboardStats,
+  );
 
   // Messages routes (requires authentication)
   app.get("/api/messages/contacts", authMiddleware, handleGetContacts);
