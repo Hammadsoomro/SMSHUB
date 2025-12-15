@@ -3,7 +3,15 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, Users, Loader2, Plus, Trash2, Mail, CheckCircle2 } from "lucide-react";
+import {
+  AlertCircle,
+  Users,
+  Loader2,
+  Plus,
+  Trash2,
+  Mail,
+  CheckCircle2,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { TeamMember, CreateTeamMemberRequest } from "@shared/api";
 
@@ -17,10 +25,16 @@ export default function TeamManagement() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInviting, setIsInviting] = useState(false);
+  const [isRemoving, setIsRemoving] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showInviteForm, setShowInviteForm] = useState(false);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<InviteForm>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<InviteForm>();
 
   useEffect(() => {
     fetchTeamMembers();
@@ -82,13 +96,48 @@ export default function TeamManagement() {
     }
   };
 
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm("Are you sure you want to remove this team member?")) {
+      return;
+    }
+
+    setIsRemoving(memberId);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`/api/admin/team/${memberId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to remove team member");
+      }
+
+      setSuccess("Team member removed successfully!");
+      fetchTeamMembers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsRemoving(null);
+    }
+  };
+
   return (
     <AdminLayout>
       <div>
         <div className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Team Management</h1>
-            <p className="text-muted-foreground">Manage your team members and their access</p>
+            <p className="text-muted-foreground">
+              Manage your team members and their access
+            </p>
           </div>
           <Button
             className="bg-gradient-to-r from-primary to-secondary"
@@ -121,17 +170,23 @@ export default function TeamManagement() {
         {/* Invite Form */}
         {showInviteForm && (
           <Card className="p-8 mb-8 border-primary/20">
-            <h3 className="text-lg font-semibold mb-6">Invite New Team Member</h3>
+            <h3 className="text-lg font-semibold mb-6">
+              Invite New Team Member
+            </h3>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Full Name</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Full Name
+                </label>
                 <Input
                   {...register("name", { required: "Name is required" })}
                   placeholder="John Doe"
                   className="h-10"
                 />
                 {errors.name && (
-                  <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
+                  <p className="text-xs text-destructive mt-1">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
 
@@ -150,12 +205,16 @@ export default function TeamManagement() {
                   className="h-10"
                 />
                 {errors.email && (
-                  <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+                  <p className="text-xs text-destructive mt-1">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Password</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Password
+                </label>
                 <Input
                   {...register("password", {
                     required: "Password is required",
@@ -169,7 +228,9 @@ export default function TeamManagement() {
                   className="h-10"
                 />
                 {errors.password && (
-                  <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+                  <p className="text-xs text-destructive mt-1">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
@@ -228,11 +289,13 @@ export default function TeamManagement() {
                       </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    member.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      member.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
                     {member.status === "active" ? "Active" : "Pending"}
                   </span>
                 </div>
@@ -245,9 +308,20 @@ export default function TeamManagement() {
                   variant="outline"
                   size="sm"
                   className="w-full text-destructive hover:bg-destructive/10"
+                  onClick={() => handleRemoveMember(member.id)}
+                  disabled={isRemoving === member.id}
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Remove
+                  {isRemoving === member.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Removing...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove
+                    </>
+                  )}
                 </Button>
               </Card>
             ))}

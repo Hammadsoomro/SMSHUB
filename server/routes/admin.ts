@@ -191,7 +191,7 @@ export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   }
 };
 
-export const handleInviteTeamMember: RequestHandler = (req, res) => {
+export const handleInviteTeamMember: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
     const { email, name, password } = req.body;
@@ -200,10 +200,16 @@ export const handleInviteTeamMember: RequestHandler = (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if email already exists
-    const existingUser = storage.getUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
+    // Check if this admin already has a team member with this email
+    const existingTeamMembers = await storage.getTeamMembersByAdminId(adminId);
+    if (
+      existingTeamMembers.some(
+        (member) => member.email.toLowerCase() === email.toLowerCase(),
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ error: "This team member already exists in your team" });
     }
 
     const userId = storage.generateId();
@@ -220,7 +226,7 @@ export const handleInviteTeamMember: RequestHandler = (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    storage.createUser(user);
+    await storage.createUser(user);
 
     // Create team member record
     const teamMember: TeamMember & { password: string } = {
@@ -233,7 +239,7 @@ export const handleInviteTeamMember: RequestHandler = (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    storage.addTeamMember(teamMember);
+    await storage.addTeamMember(teamMember);
 
     const userResponse: User = {
       id: userId,
@@ -251,9 +257,24 @@ export const handleInviteTeamMember: RequestHandler = (req, res) => {
   }
 };
 
-export const handleRemoveTeamMember: RequestHandler = (req, res) => {
+export const handleRemoveTeamMember: RequestHandler = async (req, res) => {
   try {
-    // TODO: Implement team member removal
+    const adminId = req.userId!;
+    const { memberId } = req.params;
+
+    if (!memberId) {
+      return res.status(400).json({ error: "Member ID is required" });
+    }
+
+    // Verify the member belongs to this admin
+    const member = await storage.getTeamMemberById(memberId);
+    if (!member || member.adminId !== adminId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Remove from both UserModel and TeamMemberModel
+    await storage.removeTeamMember(memberId);
+
     res.json({ success: true });
   } catch (error) {
     console.error("Remove team member error:", error);

@@ -114,6 +114,11 @@ class Storage {
     return member?.adminId;
   }
 
+  async removeTeamMember(memberId: string): Promise<void> {
+    await UserModel.deleteOne({ id: memberId, role: "team_member" });
+    await TeamMemberModel.deleteOne({ id: memberId });
+  }
+
   // Messages
   async addMessage(message: Message): Promise<void> {
     const newMessage = new MessageModel(message);

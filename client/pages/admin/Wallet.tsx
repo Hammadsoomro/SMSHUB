@@ -311,9 +311,9 @@ export default function Wallet() {
             </div>
           ) : (
             <div className="space-y-3">
-              {transactions.map((transaction) => (
+              {transactions.map((transaction, index) => (
                 <div
-                  key={transaction.id}
+                  key={transaction.id || `transaction-${index}`}
                   className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 smooth-transition"
                 >
                   <div className="flex items-center gap-4 flex-1">
