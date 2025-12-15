@@ -1,7 +1,39 @@
 import { RequestHandler } from "express";
 import { storage } from "../storage";
-import { SendMessageRequest, Message, Contact } from "@shared/api";
+import { SendMessageRequest, Message, Contact, PhoneNumber } from "@shared/api";
 import { TwilioClient } from "../twilio";
+
+export const handleGetAssignedPhoneNumber: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const user = await storage.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // For team members, get their admin's phone numbers
+    let adminId = userId;
+    if (user.role === "team_member") {
+      const admin = await storage.getAdminIdByTeamMemberId(userId);
+      if (!admin) {
+        return res.status(400).json({ error: "Could not determine admin" });
+      }
+      adminId = admin;
+    }
+
+    // Get phone numbers assigned to this user
+    const allPhoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const assignedPhoneNumbers = allPhoneNumbers.filter(
+      (pn) => pn.assignedTo === userId || (!pn.assignedTo && user.role === "admin"),
+    );
+
+    res.json({ phoneNumbers: assignedPhoneNumbers });
+  } catch (error) {
+    console.error("Get assigned phone number error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
