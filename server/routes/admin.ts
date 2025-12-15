@@ -325,3 +325,83 @@ export const handleAddExistingNumber: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// Assign phone number to team member
+export const handleAssignNumber: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumberId, teamMemberId } = req.body;
+
+    if (!phoneNumberId) {
+      return res.status(400).json({ error: "Phone number ID is required" });
+    }
+
+    // Get the phone number and verify it belongs to this admin
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const phoneNumber = numbers.find((n) => n.id === phoneNumberId);
+
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    // If assigning to a team member, verify they exist and belong to this admin
+    if (teamMemberId) {
+      const members = await storage.getTeamMembersByAdminId(adminId);
+      const member = members.find((m) => m.id === teamMemberId);
+
+      if (!member) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+    }
+
+    // Update the phone number with assignment
+    const updatedNumber: PhoneNumber = {
+      ...phoneNumber,
+      assignedTo: teamMemberId,
+    };
+
+    await storage.updatePhoneNumber(updatedNumber);
+
+    res.json({ phoneNumber: updatedNumber });
+  } catch (error) {
+    console.error("Assign number error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Update phone number settings (active/inactive)
+export const handleUpdateNumberSettings: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumberId, active } = req.body;
+
+    if (!phoneNumberId) {
+      return res.status(400).json({ error: "Phone number ID is required" });
+    }
+
+    if (typeof active !== "boolean") {
+      return res.status(400).json({ error: "Active status is required" });
+    }
+
+    // Get the phone number and verify it belongs to this admin
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const phoneNumber = numbers.find((n) => n.id === phoneNumberId);
+
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    // Update the phone number settings
+    const updatedNumber: PhoneNumber = {
+      ...phoneNumber,
+      active,
+    };
+
+    await storage.updatePhoneNumber(updatedNumber);
+
+    res.json({ phoneNumber: updatedNumber });
+  } catch (error) {
+    console.error("Update number settings error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
