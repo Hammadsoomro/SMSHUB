@@ -35,8 +35,7 @@ export default function Wallet() {
         }
         await Promise.all([fetchWallet(), fetchTransactions()]);
         setIsLoading(false);
-      } catch (err) {
-        console.error("Auth check error:", err);
+      } catch {
         navigate("/login", { replace: true });
       }
     };
@@ -55,8 +54,8 @@ export default function Wallet() {
         const data = await response.json();
         setWallet(data.wallet);
       }
-    } catch (err) {
-      console.error("Error fetching wallet:", err);
+    } catch {
+      // Wallet fetch error handled silently
     }
   };
 
@@ -71,8 +70,8 @@ export default function Wallet() {
         const data = await response.json();
         setTransactions(data.transactions || []);
       }
-    } catch (err) {
-      console.error("Error fetching transactions:", err);
+    } catch {
+      // Transaction fetch error handled silently
     }
   };
 
