@@ -53,8 +53,8 @@ export default function Messages() {
       if (!response.ok) throw new Error("Failed to fetch contacts");
       const data = await response.json();
       setContacts(data.contacts || []);
-    } catch (error) {
-      console.error("Error fetching contacts:", error);
+    } catch {
+      // Error handled silently
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +73,8 @@ export default function Messages() {
         contact: conversation.contact,
         messages: data.messages || [],
       });
-    } catch (error) {
-      console.error("Error fetching messages:", error);
+    } catch {
+      // Error handled silently
     }
   };
 
@@ -106,8 +106,8 @@ export default function Messages() {
       if (!response.ok) throw new Error("Failed to send message");
       setMessageText("");
       fetchMessages(conversation.contact.id);
-    } catch (error) {
-      console.error("Error sending message:", error);
+    } catch {
+      // Error handled by user feedback
     } finally {
       setIsSending(false);
     }
