@@ -114,6 +114,106 @@ export default function Numbers() {
     }
   };
 
+  const handleAssignClick = (phoneNumberId: string) => {
+    setSelectedNumberId(phoneNumberId);
+    const number = numbers.find((n) => n.id === phoneNumberId);
+    if (number?.assignedTo) {
+      setSelectedMemberId(number.assignedTo);
+    } else {
+      setSelectedMemberId("");
+    }
+    setShowAssignModal(true);
+  };
+
+  const handleAssignNumber = async () => {
+    if (!selectedNumberId) return;
+
+    setIsAssigning(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/assign-number", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phoneNumberId: selectedNumberId,
+          teamMemberId: selectedMemberId || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to assign number");
+      }
+
+      const data = await response.json();
+      setNumbers(
+        numbers.map((n) => (n.id === selectedNumberId ? data.phoneNumber : n)),
+      );
+
+      setShowAssignModal(false);
+      setSelectedNumberId(null);
+      setSelectedMemberId("");
+
+      const actionText =
+        selectedMemberId === "" ? "unassigned from" : "assigned to";
+      setSuccess(
+        `✅ Number ${data.phoneNumber.phoneNumber} ${actionText} team member!`,
+      );
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleToggleActive = async (phoneNumberId: string) => {
+    const number = numbers.find((n) => n.id === phoneNumberId);
+    if (!number) return;
+
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/number-settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phoneNumberId,
+          active: !number.active,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update number");
+      }
+
+      const data = await response.json();
+      setNumbers(numbers.map((n) => (n.id === phoneNumberId ? data.phoneNumber : n)));
+
+      const statusText = data.phoneNumber.active ? "activated" : "deactivated";
+      setSuccess(`✅ Number ${statusText} successfully!`);
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    }
+  };
+
   const filteredNumbers = numbers.filter((num) =>
     num.phoneNumber.includes(searchTerm),
   );
