@@ -73,7 +73,15 @@ class Storage {
   }
 
   async getPhoneNumbersByAdminId(adminId: string): Promise<PhoneNumber[]> {
-    return (await PhoneNumberModel.find({ adminId })) as PhoneNumber[];
+    const numbers = await PhoneNumberModel.find({ adminId });
+    return numbers.map((doc: any) => {
+      const data = doc.toObject();
+      // If id is missing, use MongoDB's _id as fallback
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as PhoneNumber;
+    });
   }
 
   async getPhoneNumberById(id: string): Promise<PhoneNumber | undefined> {
