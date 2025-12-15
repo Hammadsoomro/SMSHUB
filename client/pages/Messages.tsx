@@ -22,6 +22,13 @@ interface ConversationState {
   messages: Message[];
 }
 
+interface PhoneNumber {
+  id: string;
+  phoneNumber: string;
+  assignedTo?: string;
+  active: boolean;
+}
+
 export default function Messages() {
   const navigate = useNavigate();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -35,6 +42,9 @@ export default function Messages() {
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState("");
   const [newConversationNumber, setNewConversationNumber] = useState("");
+  const [assignedPhoneNumbers, setAssignedPhoneNumbers] = useState<
+    PhoneNumber[]
+  >([]);
 
   useEffect(() => {
     const user = localStorage.getItem("user");
