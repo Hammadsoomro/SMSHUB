@@ -12,20 +12,16 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (req, res) => 
       return res.status(404).json({ error: "User not found" });
     }
 
-    // For team members, get their admin's phone numbers
+    // Determine the admin ID
     let adminId = userId;
-    if (user.role === "team_member") {
-      const admin = await storage.getAdminIdByTeamMemberId(userId);
-      if (!admin) {
-        return res.status(400).json({ error: "Could not determine admin" });
-      }
-      adminId = admin;
+    if (user.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
     }
 
     // Get phone numbers assigned to this user
     const allPhoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
     const assignedPhoneNumbers = allPhoneNumbers.filter(
-      (pn) => pn.assignedTo === userId || (!pn.assignedTo && user.role === "admin"),
+      (pn) => pn.assignedTo === userId,
     );
 
     res.json({ phoneNumbers: assignedPhoneNumbers });
