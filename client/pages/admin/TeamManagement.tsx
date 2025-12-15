@@ -17,6 +17,7 @@ export default function TeamManagement() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInviting, setIsInviting] = useState(false);
+  const [isRemoving, setIsRemoving] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showInviteForm, setShowInviteForm] = useState(false);
