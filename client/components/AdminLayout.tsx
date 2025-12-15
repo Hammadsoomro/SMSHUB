@@ -20,6 +20,7 @@ interface AdminLayoutProps {
 
 const ADMIN_MENU = [
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
+  { href: "/admin/conversations", label: "Conversations", icon: MessageSquare },
   { href: "/admin/credentials", label: "Credentials", icon: Settings },
   { href: "/admin/numbers", label: "Numbers", icon: Phone },
   { href: "/admin/buy-numbers", label: "Buy Numbers", icon: Phone },
@@ -29,7 +30,7 @@ const ADMIN_MENU = [
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,23 +48,35 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-sidebar border-r border-sidebar-border overflow-hidden transition-transform duration-300 lg:relative lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-sidebar border-r border-sidebar-border overflow-hidden transition-all duration-300 lg:relative lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:w-20 lg:translate-x-0"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border"
-          >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-accent flex items-center justify-center flex-shrink-0">
-              <MessageSquare className="w-5 h-5 text-sidebar-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold text-sidebar-foreground">
-              SMSHub
-            </span>
-          </Link>
+          <div className="flex items-center justify-between px-6 py-6 border-b border-sidebar-border">
+            <Link
+              to="/"
+              className="flex items-center gap-3"
+            >
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-accent flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="w-5 h-5 text-sidebar-primary-foreground" />
+              </div>
+              <span className="text-lg font-bold text-sidebar-foreground whitespace-nowrap">
+                SMSHub
+              </span>
+            </Link>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="hidden lg:block p-1 hover:bg-sidebar-accent rounded-lg ml-2"
+            >
+              {sidebarOpen ? (
+                <X className="w-4 h-4 text-sidebar-foreground" />
+              ) : (
+                <Menu className="w-4 h-4 text-sidebar-foreground" />
+              )}
+            </button>
+          </div>
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
