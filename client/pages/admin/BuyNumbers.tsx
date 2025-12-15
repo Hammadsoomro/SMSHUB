@@ -77,8 +77,7 @@ export default function BuyNumbers() {
         }
         fetchWallet();
         setIsLoadingWallet(false);
-      } catch (err) {
-        console.error("Auth check error:", err);
+      } catch {
         navigate("/login", { replace: true });
       }
     };
@@ -113,7 +112,6 @@ export default function BuyNumbers() {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.error("No token found");
         navigate("/login", { replace: true });
         return;
       }
@@ -134,8 +132,8 @@ export default function BuyNumbers() {
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorData.details || errorMessage;
-        } catch (parseError) {
-          console.warn("Could not parse error response:", parseError);
+        } catch {
+          // Error response parse failure
         }
         setError(errorMessage);
         return;
@@ -164,7 +162,6 @@ export default function BuyNumbers() {
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
-      console.error("Fetch error:", err);
       setError(errorMessage);
     } finally {
       setIsLoadingNumbers(false);
@@ -240,7 +237,6 @@ export default function BuyNumbers() {
         err instanceof Error
           ? err.message
           : "An error occurred while purchasing";
-      console.error("Purchase error:", err);
       setError(errorMessage);
     } finally {
       setPurchasingNumber(null);
