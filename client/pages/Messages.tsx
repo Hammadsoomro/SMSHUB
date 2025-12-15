@@ -279,10 +279,12 @@ export default function Messages() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <div className="text-center">
+                <div className="text-center px-4">
                   <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
                   <p className="text-muted-foreground text-sm">
-                    No contacts yet
+                    {searchTerm
+                      ? "No contacts match your search"
+                      : "No contacts yet"}
                   </p>
                 </div>
               </div>
