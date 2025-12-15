@@ -95,9 +95,11 @@ class Storage {
   }
 
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findOneAndUpdate({ id: number.id }, number, {
-      new: true,
-    });
+    await PhoneNumberModel.findOneAndUpdate(
+      { $or: [{ id: number.id }, { _id: number.id }] },
+      number,
+      { new: true },
+    );
   }
 
   // Team Members
