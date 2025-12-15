@@ -440,6 +440,13 @@ export default function Numbers() {
           </Card>
         )}
 
+        {success && !showAddForm && (
+          <Card className="p-6 bg-green-50 border-green-200 mb-8 flex items-center gap-4">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <p className="text-sm text-green-700">{success}</p>
+          </Card>
+        )}
+
         {/* Search */}
         {numbers.length > 0 && (
           <div className="mb-6">
