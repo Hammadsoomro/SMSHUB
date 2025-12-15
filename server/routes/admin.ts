@@ -251,9 +251,24 @@ export const handleInviteTeamMember: RequestHandler = async (req, res) => {
   }
 };
 
-export const handleRemoveTeamMember: RequestHandler = (req, res) => {
+export const handleRemoveTeamMember: RequestHandler = async (req, res) => {
   try {
-    // TODO: Implement team member removal
+    const adminId = req.userId!;
+    const { memberId } = req.body;
+
+    if (!memberId) {
+      return res.status(400).json({ error: "Member ID is required" });
+    }
+
+    // Verify the member belongs to this admin
+    const member = await storage.getTeamMemberById(memberId);
+    if (!member || member.adminId !== adminId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Remove from both UserModel and TeamMemberModel
+    await storage.removeTeamMember(memberId);
+
     res.json({ success: true });
   } catch (error) {
     console.error("Remove team member error:", error);
