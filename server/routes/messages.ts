@@ -34,17 +34,12 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (req, res) => 
 export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId!;
+    const user = await storage.getUserById(userId);
 
     // Determine the admin ID
     let adminId = userId;
-    const user = await storage.getUserById(userId);
-    if (user?.role === "team_member") {
-      // For team members, get their admin's ID
-      const teamMemberId = await storage.getAdminIdByTeamMemberId(userId);
-      if (!teamMemberId) {
-        return res.status(400).json({ error: "Could not determine admin" });
-      }
-      adminId = teamMemberId;
+    if (user?.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
     }
 
     // Get phone numbers for this admin
