@@ -215,8 +215,8 @@ export default function Conversations() {
                 onChange={(e) => setSelectedPhoneNumber(e.target.value)}
                 className="h-10 px-3 rounded-md border border-input bg-background text-foreground"
               >
-                {phoneNumbers.map((num) => (
-                  <option key={num.id} value={num.id}>
+                {phoneNumbers.map((num, index) => (
+                  <option key={num.id || `phone-${index}`} value={num.id}>
                     {num.phoneNumber}
                   </option>
                 ))}

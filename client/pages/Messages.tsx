@@ -13,12 +13,20 @@ import {
   Loader2,
   Phone,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { Message, Contact } from "@shared/api";
 
 interface ConversationState {
   contact: Contact | null;
   messages: Message[];
+}
+
+interface PhoneNumber {
+  id: string;
+  phoneNumber: string;
+  assignedTo?: string;
+  active: boolean;
 }
 
 export default function Messages() {
@@ -32,6 +40,11 @@ export default function Messages() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState("");
+  const [newConversationNumber, setNewConversationNumber] = useState("");
+  const [assignedPhoneNumbers, setAssignedPhoneNumbers] = useState<
+    PhoneNumber[]
+  >([]);
 
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -40,7 +53,24 @@ export default function Messages() {
       return;
     }
     fetchContacts();
+    fetchAssignedPhoneNumber();
   }, [navigate]);
+
+  const fetchAssignedPhoneNumber = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/messages/assigned-phone-number", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAssignedPhoneNumbers(data.phoneNumbers || []);
+      }
+    } catch {
+      // Error handled silently
+    }
+  };
 
   const fetchContacts = async () => {
     try {
@@ -79,8 +109,45 @@ export default function Messages() {
   };
 
   const handleSelectContact = (contact: Contact) => {
+    setNewConversationNumber("");
+    setSearchTerm("");
     setConversation({ ...conversation, contact });
     fetchMessages(contact.id);
+  };
+
+  const handleStartNewConversation = (phoneNumber: string) => {
+    if (!phoneNumber.trim()) {
+      setError("Please enter a phone number");
+      return;
+    }
+
+    // Check if contact already exists
+    const existingContact = contacts.find((c) => c.phoneNumber === phoneNumber);
+
+    if (existingContact) {
+      handleSelectContact(existingContact);
+    } else {
+      // Create temporary contact object for new conversation
+      const tempContact: Contact = {
+        id: `temp-${Date.now()}`,
+        phoneNumberId: "",
+        phoneNumber,
+        unreadCount: 0,
+      };
+      setConversation({
+        contact: tempContact,
+        messages: [],
+      });
+      setNewConversationNumber("");
+      setSearchTerm("");
+    }
+    setError("");
+  };
+
+  const handleSearchNumberSelection = () => {
+    if (searchTerm.trim()) {
+      handleStartNewConversation(searchTerm);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -88,6 +155,7 @@ export default function Messages() {
     if (!messageText.trim() || !conversation.contact) return;
 
     setIsSending(true);
+    setError("");
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/send", {
@@ -99,15 +167,25 @@ export default function Messages() {
         body: JSON.stringify({
           to: conversation.contact.phoneNumber,
           body: messageText,
-          phoneNumberId: conversation.contact.id,
+          phoneNumberId: conversation.contact.phoneNumberId || "",
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to send message");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to send message");
+      }
+
       setMessageText("");
-      fetchMessages(conversation.contact.id);
-    } catch {
-      // Error handled by user feedback
+
+      // If this was a new conversation, refresh contacts
+      if (conversation.contact.id.startsWith("temp-")) {
+        await fetchContacts();
+      } else {
+        await fetchMessages(conversation.contact.id);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send message");
     } finally {
       setIsSending(false);
     }
@@ -128,13 +206,50 @@ export default function Messages() {
   return (
     <div className="h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="border-b border-border bg-background h-16 flex items-center justify-between px-6">
+      <div className="border-b border-border bg-background px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
             <MessageSquare className="w-5 h-5 text-white" />
           </div>
           <span className="text-lg font-bold">SMSHub Messages</span>
         </div>
+
+        {/* Search Bar in Header */}
+        <div className="flex-1 max-w-md">
+          <div className="relative flex gap-2">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search or paste phone number..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && searchTerm.trim()) {
+                    handleSearchNumberSelection();
+                  }
+                }}
+                className="pl-10 h-10"
+              />
+            </div>
+            {searchTerm &&
+              !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
+                <Button
+                  onClick={handleSearchNumberSelection}
+                  className="bg-gradient-to-r from-primary to-secondary"
+                  size="sm"
+                >
+                  Start Chat
+                </Button>
+              )}
+          </div>
+          {error && (
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700">{error}</p>
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon">
             <Settings className="w-5 h-5" />
@@ -149,18 +264,20 @@ export default function Messages() {
       <div className="flex-1 flex overflow-hidden">
         {/* Contacts Sidebar */}
         <div className="w-80 border-r border-border bg-card overflow-hidden flex flex-col">
-          {/* Search */}
-          <div className="p-4 border-b border-border">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search contacts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10"
-              />
+          {/* Assigned Phone Number Display */}
+          {assignedPhoneNumbers.length > 0 && (
+            <div className="p-4 border-b border-border bg-muted/50">
+              <p className="text-xs text-muted-foreground mb-2 font-semibold">
+                Assigned Number
+              </p>
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-primary" />
+                <p className="font-semibold text-sm">
+                  {assignedPhoneNumbers[0].phoneNumber}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Contacts List */}
           <div className="flex-1 overflow-y-auto">
@@ -203,10 +320,12 @@ export default function Messages() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <div className="text-center">
+                <div className="text-center px-4">
                   <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
                   <p className="text-muted-foreground text-sm">
-                    No contacts yet
+                    {searchTerm
+                      ? "No contacts match your search"
+                      : "No contacts yet"}
                   </p>
                 </div>
               </div>
@@ -216,9 +335,9 @@ export default function Messages() {
 
         {/* Chat Area */}
         {conversation.contact ? (
-          <div className="flex-1 flex flex-col">
-            {/* Chat Header */}
-            <div className="border-b border-border bg-card h-16 flex items-center justify-between px-6">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Chat Header - Sticky */}
+            <div className="sticky top-0 z-10 border-b border-border bg-card h-16 flex items-center justify-between px-6">
               <div>
                 <p className="font-semibold">
                   {conversation.contact.name ||
@@ -265,10 +384,10 @@ export default function Messages() {
               )}
             </div>
 
-            {/* Message Input */}
+            {/* Message Input - Sticky */}
             <form
               onSubmit={handleSendMessage}
-              className="border-t border-border bg-card p-4"
+              className="sticky bottom-0 z-10 border-t border-border bg-card p-4"
             >
               <div className="flex gap-2">
                 <Input
@@ -300,10 +419,14 @@ export default function Messages() {
                 <MessageSquare className="w-8 h-8 text-muted-foreground" />
               </div>
               <p className="text-lg font-semibold mb-2">
-                No conversation selected
+                {filteredContacts.length > 0 && !searchTerm
+                  ? "Select a contact"
+                  : "Start a conversation"}
               </p>
               <p className="text-muted-foreground text-sm">
-                Select a contact to start messaging
+                {filteredContacts.length > 0
+                  ? "Choose a contact from the list or search for a phone number"
+                  : "Enter or paste a phone number to begin"}
               </p>
             </div>
           </div>

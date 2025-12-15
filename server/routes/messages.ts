@@ -1,22 +1,48 @@
 import { RequestHandler } from "express";
 import { storage } from "../storage";
-import { SendMessageRequest, Message, Contact } from "@shared/api";
+import { SendMessageRequest, Message, Contact, PhoneNumber } from "@shared/api";
 import { TwilioClient } from "../twilio";
+
+export const handleGetAssignedPhoneNumber: RequestHandler = async (
+  req,
+  res,
+) => {
+  try {
+    const userId = req.userId!;
+    const user = await storage.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Determine the admin ID
+    let adminId = userId;
+    if (user.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
+    }
+
+    // Get phone numbers assigned to this user
+    const allPhoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const assignedPhoneNumbers = allPhoneNumbers.filter(
+      (pn) => pn.assignedTo === userId,
+    );
+
+    res.json({ phoneNumbers: assignedPhoneNumbers });
+  } catch (error) {
+    console.error("Get assigned phone number error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId!;
+    const user = await storage.getUserById(userId);
 
     // Determine the admin ID
     let adminId = userId;
-    const user = await storage.getUserById(userId);
-    if (user?.role === "team_member") {
-      // For team members, get their admin's ID
-      const teamMemberId = await storage.getAdminIdByTeamMemberId(userId);
-      if (!teamMemberId) {
-        return res.status(400).json({ error: "Could not determine admin" });
-      }
-      adminId = teamMemberId;
+    if (user?.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
     }
 
     // Get phone numbers for this admin
@@ -76,15 +102,10 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     }
 
     // Determine the admin ID - either the user is admin or a team member
-    let adminId = userId;
     const user = await storage.getUserById(userId);
-    if (user?.role === "team_member") {
-      // For team members, get their admin's ID
-      const teamMemberId = await storage.getAdminIdByTeamMemberId(userId);
-      if (!teamMemberId) {
-        return res.status(400).json({ error: "Could not determine admin" });
-      }
-      adminId = teamMemberId;
+    let adminId = userId;
+    if (user?.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
     }
 
     // Verify the phone number belongs to this admin

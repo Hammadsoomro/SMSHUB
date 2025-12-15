@@ -13,11 +13,12 @@ import {
   X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { PhoneNumber } from "@shared/api";
+import { PhoneNumber, TeamMember } from "@shared/api";
 
 export default function Numbers() {
   const navigate = useNavigate();
   const [numbers, setNumbers] = useState<PhoneNumber[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -25,9 +26,14 @@ export default function Numbers() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [phoneNumberInput, setPhoneNumberInput] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedNumberId, setSelectedNumberId] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
     fetchNumbers();
+    fetchTeamMembers();
   }, []);
 
   const fetchNumbers = async () => {
@@ -45,6 +51,22 @@ export default function Numbers() {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchTeamMembers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/team", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTeamMembers(data.members || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch team members:", err);
     }
   };
 
@@ -72,8 +94,14 @@ export default function Numbers() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to add number");
+        let errorMessage = "Failed to add number";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Server error (${response.status})`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -89,6 +117,120 @@ export default function Numbers() {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsAdding(false);
+    }
+  };
+
+  const handleAssignClick = (phoneNumberId: string) => {
+    setSelectedNumberId(phoneNumberId);
+    const number = numbers.find((n) => n.id === phoneNumberId);
+    if (number?.assignedTo) {
+      setSelectedMemberId(number.assignedTo);
+    } else {
+      setSelectedMemberId("");
+    }
+    setShowAssignModal(true);
+  };
+
+  const handleAssignNumber = async () => {
+    if (!selectedNumberId) return;
+
+    setIsAssigning(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/assign-number", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phoneNumberId: selectedNumberId,
+          teamMemberId: selectedMemberId || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Failed to assign number";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Server error (${response.status})`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      setNumbers(
+        numbers.map((n) => (n.id === selectedNumberId ? data.phoneNumber : n)),
+      );
+
+      setShowAssignModal(false);
+      setSelectedNumberId(null);
+      setSelectedMemberId("");
+
+      const actionText =
+        selectedMemberId === "" ? "unassigned from" : "assigned to";
+      setSuccess(
+        `✅ Number ${data.phoneNumber.phoneNumber} ${actionText} team member!`,
+      );
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleToggleActive = async (phoneNumberId: string) => {
+    const number = numbers.find((n) => n.id === phoneNumberId);
+    if (!number) return;
+
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/number-settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phoneNumberId,
+          active: !number.active,
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Failed to update number";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Server error (${response.status})`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      setNumbers(
+        numbers.map((n) => (n.id === phoneNumberId ? data.phoneNumber : n)),
+      );
+
+      const statusText = data.phoneNumber.active ? "activated" : "deactivated";
+      setSuccess(`✅ Number ${statusText} successfully!`);
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
 
@@ -204,6 +346,100 @@ export default function Numbers() {
           </Card>
         )}
 
+        {/* Assign Number Modal */}
+        {showAssignModal && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowAssignModal(false)}
+            />
+            <Card
+              className="p-6 border-primary/30 fixed inset-0 m-auto w-96 h-fit z-50 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Assign Phone Number</h2>
+                <button
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setSelectedNumberId(null);
+                    setSelectedMemberId("");
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium block mb-2">
+                    Select Team Member
+                  </label>
+                  <select
+                    value={selectedMemberId}
+                    onChange={(e) => setSelectedMemberId(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
+                    disabled={isAssigning}
+                  >
+                    <option value="">-- Unassign Number --</option>
+                    {teamMembers.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name} ({member.email})
+                      </option>
+                    ))}
+                  </select>
+                  {teamMembers.length === 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      No team members yet. Create one in Team Management.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleAssignNumber}
+                    disabled={isAssigning}
+                    className="flex-1 bg-gradient-to-r from-primary to-secondary"
+                  >
+                    {isAssigning ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Assigning...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Confirm
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowAssignModal(false);
+                      setSelectedNumberId(null);
+                      setSelectedMemberId("");
+                    }}
+                    disabled={isAssigning}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </>
+        )}
+
         {/* Info Card */}
         {numbers.length === 0 && (
           <Card className="p-6 bg-blue-50 border-blue-200 mb-8">
@@ -228,6 +464,13 @@ export default function Numbers() {
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-700">{error}</p>
             </div>
+          </Card>
+        )}
+
+        {success && !showAddForm && (
+          <Card className="p-6 bg-green-50 border-green-200 mb-8 flex items-center gap-4">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <p className="text-sm text-green-700">{success}</p>
           </Card>
         )}
 
@@ -295,11 +538,21 @@ export default function Numbers() {
                 )}
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleAssignClick(num.id)}
+                  >
                     {num.assignedTo ? "Reassign" : "Assign"}
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Settings
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleToggleActive(num.id)}
+                  >
+                    {num.active ? "Deactivate" : "Activate"}
                   </Button>
                 </div>
               </Card>

@@ -16,6 +16,8 @@ import {
   handleInviteTeamMember,
   handleRemoveTeamMember,
   handleAddExistingNumber,
+  handleAssignNumber,
+  handleUpdateNumberSettings,
 } from "./routes/admin";
 
 // Wallet routes
@@ -36,6 +38,7 @@ import {
   handleGetContacts,
   handleGetConversation,
   handleSendMessage,
+  handleGetAssignedPhoneNumber,
 } from "./routes/messages";
 
 // Middleware
@@ -91,6 +94,18 @@ export async function createServer() {
     adminOnly,
     handleAddExistingNumber,
   );
+  app.post(
+    "/api/admin/assign-number",
+    authMiddleware,
+    adminOnly,
+    handleAssignNumber,
+  );
+  app.patch(
+    "/api/admin/number-settings",
+    authMiddleware,
+    adminOnly,
+    handleUpdateNumberSettings,
+  );
   app.get("/api/admin/team", authMiddleware, adminOnly, handleGetTeamMembers);
   app.post(
     "/api/admin/team/invite",
@@ -113,6 +128,11 @@ export async function createServer() {
     handleGetConversation,
   );
   app.post("/api/messages/send", authMiddleware, handleSendMessage);
+  app.get(
+    "/api/messages/assigned-phone-number",
+    authMiddleware,
+    handleGetAssignedPhoneNumber,
+  );
 
   // Wallet routes (requires authentication)
   app.get("/api/wallet", authMiddleware, handleGetWallet);
