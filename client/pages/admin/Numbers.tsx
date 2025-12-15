@@ -347,8 +347,11 @@ export default function Numbers() {
         {/* Assign Number Modal */}
         {showAssignModal && (
           <>
-            <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowAssignModal(false)} />
-            <Card className="p-6 border-primary/30 fixed inset-0 m-auto w-96 h-fit z-50 shadow-lg">
+            <div
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowAssignModal(false)}
+            />
+            <Card className="p-6 border-primary/30 fixed inset-0 m-auto w-96 h-fit z-50 shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Assign Phone Number</h2>
               <button
@@ -396,6 +399,7 @@ export default function Numbers() {
 
               <div className="flex gap-2">
                 <Button
+                  type="button"
                   onClick={handleAssignNumber}
                   disabled={isAssigning}
                   className="flex-1 bg-gradient-to-r from-primary to-secondary"
