@@ -335,9 +335,9 @@ export default function Messages() {
 
         {/* Chat Area */}
         {conversation.contact ? (
-          <div className="flex-1 flex flex-col">
-            {/* Chat Header */}
-            <div className="border-b border-border bg-card h-16 flex items-center justify-between px-6">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Chat Header - Sticky */}
+            <div className="sticky top-0 z-10 border-b border-border bg-card h-16 flex items-center justify-between px-6">
               <div>
                 <p className="font-semibold">
                   {conversation.contact.name ||
