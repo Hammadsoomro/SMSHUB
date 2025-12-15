@@ -280,9 +280,20 @@ export default function TeamManagement() {
                   variant="outline"
                   size="sm"
                   className="w-full text-destructive hover:bg-destructive/10"
+                  onClick={() => handleRemoveMember(member.id)}
+                  disabled={isRemoving === member.id}
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Remove
+                  {isRemoving === member.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Removing...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove
+                    </>
+                  )}
                 </Button>
               </Card>
             ))}
