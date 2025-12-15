@@ -136,6 +136,28 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
 
     await storage.addMessage(message);
 
+    // Check if contact exists, if not create it
+    const existingContact = (
+      await storage.getContactsByPhoneNumber(phoneNumberId)
+    ).find((c) => c.phoneNumber === to);
+
+    if (!existingContact) {
+      const contact: Contact = {
+        id: Math.random().toString(36).substr(2, 9),
+        phoneNumberId,
+        phoneNumber: to,
+        unreadCount: 0,
+      };
+      await storage.addContact(contact);
+    } else {
+      // Update last message info
+      await storage.updateContact({
+        ...existingContact,
+        lastMessage: body.substring(0, 50),
+        lastMessageTime: message.timestamp,
+      });
+    }
+
     res.json({ message });
   } catch (error) {
     console.error("Send message error:", error);
