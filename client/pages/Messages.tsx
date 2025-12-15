@@ -384,10 +384,10 @@ export default function Messages() {
               )}
             </div>
 
-            {/* Message Input */}
+            {/* Message Input - Sticky */}
             <form
               onSubmit={handleSendMessage}
-              className="border-t border-border bg-card p-4"
+              className="sticky bottom-0 z-10 border-t border-border bg-card p-4"
             >
               <div className="flex gap-2">
                 <Input
