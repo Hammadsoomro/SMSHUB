@@ -44,7 +44,6 @@ export function setupSocketIO(httpServer: HTTPServer): IOServer {
 
   // Connection handlers
   io.on("connection", (socket: AuthenticatedSocket) => {
-
     // Join user-specific room
     socket.join(`user:${socket.userId}`);
 
@@ -70,11 +69,14 @@ export function setupSocketIO(httpServer: HTTPServer): IOServer {
         }
 
         // Emit to admin
-        io.to(`admin:${phoneNumber?.adminId}`).emit("incoming_sms_notification", {
-          phoneNumberId,
-          from,
-          preview: body.substring(0, 50),
-        });
+        io.to(`admin:${phoneNumber?.adminId}`).emit(
+          "incoming_sms_notification",
+          {
+            phoneNumberId,
+            from,
+            preview: body.substring(0, 50),
+          },
+        );
       } catch (error) {
         console.error("Error handling incoming SMS:", error);
       }
@@ -106,18 +108,14 @@ export function setupSocketIO(httpServer: HTTPServer): IOServer {
 }
 
 // Export a function to emit messages from the API layer
-export function emitNewMessage(
-  io: IOServer,
-  userId: string,
-  data: any
-): void {
+export function emitNewMessage(io: IOServer, userId: string, data: any): void {
   io.to(`user:${userId}`).emit("new_message", data);
 }
 
 export function emitIncomingSMS(
   io: IOServer,
   adminId: string,
-  data: any
+  data: any,
 ): void {
   io.to(`admin:${adminId}`).emit("incoming_sms_notification", data);
 }

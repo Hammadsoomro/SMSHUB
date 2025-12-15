@@ -126,7 +126,6 @@ export default function BuyNumbers() {
         },
       });
 
-
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         try {

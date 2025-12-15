@@ -109,9 +109,7 @@ export default function Conversations() {
     }
 
     // Check if contact already exists
-    const existingContact = contacts.find(
-      (c) => c.phoneNumber === phoneNumber
-    );
+    const existingContact = contacts.find((c) => c.phoneNumber === phoneNumber);
 
     if (existingContact) {
       handleSelectContact(existingContact);
@@ -180,9 +178,10 @@ export default function Conversations() {
     }
   };
 
-  const filteredContacts = contacts.filter((contact) =>
-    contact.phoneNumber.includes(searchTerm) ||
-    contact.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredContacts = contacts.filter(
+    (contact) =>
+      contact.phoneNumber.includes(searchTerm) ||
+      contact.name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -222,14 +221,15 @@ export default function Conversations() {
                   </option>
                 ))}
               </select>
-              {searchTerm && !filteredContacts.some(c => c.phoneNumber === searchTerm) && (
-                <Button
-                  onClick={handleSearchNumberSelection}
-                  className="bg-gradient-to-r from-primary to-secondary"
-                >
-                  Start Chat
-                </Button>
-              )}
+              {searchTerm &&
+                !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
+                  <Button
+                    onClick={handleSearchNumberSelection}
+                    className="bg-gradient-to-r from-primary to-secondary"
+                  >
+                    Start Chat
+                  </Button>
+                )}
             </div>
 
             {error && (
@@ -279,7 +279,7 @@ export default function Conversations() {
                       {contact.lastMessageTime && (
                         <p className="text-xs opacity-50 mt-1">
                           {new Date(
-                            contact.lastMessageTime
+                            contact.lastMessageTime,
                           ).toLocaleDateString()}
                         </p>
                       )}
@@ -308,7 +308,8 @@ export default function Conversations() {
               <div className="border-b border-border bg-background h-16 flex items-center justify-between px-4 md:px-6">
                 <div className="flex-1">
                   <p className="font-semibold">
-                    {conversation.contact.name || conversation.contact.phoneNumber}
+                    {conversation.contact.name ||
+                      conversation.contact.phoneNumber}
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
                     <Phone className="w-3 h-3" />
@@ -365,7 +366,10 @@ export default function Conversations() {
               </div>
 
               {/* Message Input */}
-              <form onSubmit={handleSendMessage} className="border-t border-border bg-background p-4 md:p-6">
+              <form
+                onSubmit={handleSendMessage}
+                className="border-t border-border bg-background p-4 md:p-6"
+              >
                 <div className="flex gap-2">
                   <Input
                     value={messageText}

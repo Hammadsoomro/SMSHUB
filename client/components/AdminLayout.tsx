@@ -49,20 +49,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border/50 overflow-hidden transition-all duration-300 lg:relative lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:w-20 lg:translate-x-0"
+          sidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:w-20 lg:translate-x-0"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-sidebar-border/30">
-            <Link
-              to="/"
-              className="flex items-center gap-3 flex-1 min-w-0"
-            >
+            <Link to="/" className="flex items-center gap-3 flex-1 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-lg">
                 <MessageSquare className="w-5 h-5 text-white" />
               </div>
-              <div className={`overflow-hidden ${!sidebarOpen ? "lg:hidden" : ""}`}>
+              <div
+                className={`overflow-hidden ${!sidebarOpen ? "lg:hidden" : ""}`}
+              >
                 <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap">
                   SMSHub
                 </span>
@@ -97,10 +98,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       : "text-sidebar-foreground hover:bg-sidebar-accent/40"
                   }`}
                 >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${
-                    active ? "text-white" : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
-                  }`} />
-                  <span className={`font-medium text-sm ${!sidebarOpen ? "lg:hidden" : ""}`}>
+                  <Icon
+                    className={`w-5 h-5 flex-shrink-0 ${
+                      active
+                        ? "text-white"
+                        : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                    }`}
+                  />
+                  <span
+                    className={`font-medium text-sm ${!sidebarOpen ? "lg:hidden" : ""}`}
+                  >
                     {item.label}
                   </span>
                 </Link>
@@ -146,7 +153,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </button>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-semibold text-foreground">Admin Dashboard</p>
+              <p className="text-sm font-semibold text-foreground">
+                Admin Dashboard
+              </p>
               <p className="text-xs text-muted-foreground">
                 Manage your SMS business
               </p>

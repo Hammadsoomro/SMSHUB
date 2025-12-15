@@ -97,12 +97,10 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Twilio credentials not connected. Please have the admin connect their credentials first.",
-        });
+      return res.status(400).json({
+        error:
+          "Twilio credentials not connected. Please have the admin connect their credentials first.",
+      });
     }
 
     // Send SMS via Twilio
