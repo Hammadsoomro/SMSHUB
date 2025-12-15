@@ -264,43 +264,20 @@ export default function Messages() {
       <div className="flex-1 flex overflow-hidden">
         {/* Contacts Sidebar */}
         <div className="w-80 border-r border-border bg-card overflow-hidden flex flex-col">
-          {/* Search */}
-          <div className="p-4 border-b border-border">
-            <div className="space-y-3">
-              <div className="relative flex gap-2">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search contacts or paste phone number..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter" && searchTerm.trim()) {
-                        handleSearchNumberSelection();
-                      }
-                    }}
-                    className="pl-10 h-10"
-                  />
-                </div>
-                {searchTerm &&
-                  !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
-                    <Button
-                      onClick={handleSearchNumberSelection}
-                      className="bg-gradient-to-r from-primary to-secondary"
-                      size="sm"
-                    >
-                      Start Chat
-                    </Button>
-                  )}
+          {/* Assigned Phone Number Display */}
+          {assignedPhoneNumbers.length > 0 && (
+            <div className="p-4 border-b border-border bg-muted/50">
+              <p className="text-xs text-muted-foreground mb-2 font-semibold">
+                Assigned Number
+              </p>
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-primary" />
+                <p className="font-semibold text-sm">
+                  {assignedPhoneNumbers[0].phoneNumber}
+                </p>
               </div>
-              {error && (
-                <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-red-700">{error}</p>
-                </div>
-              )}
             </div>
-          </div>
+          )}
 
           {/* Contacts List */}
           <div className="flex-1 overflow-y-auto">
