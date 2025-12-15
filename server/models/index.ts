@@ -52,6 +52,7 @@ export interface IPhoneNumber extends Document, PhoneNumber {}
 
 const phoneNumberSchema = new Schema<IPhoneNumber>(
   {
+    id: { type: String, required: true, unique: true },
     adminId: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     assignedTo: { type: String, sparse: true },
