@@ -77,11 +77,11 @@ class Storage {
   }
 
   async getPhoneNumberById(id: string): Promise<PhoneNumber | undefined> {
-    return (await PhoneNumberModel.findById(id)) as PhoneNumber | null;
+    return (await PhoneNumberModel.findOne({ id })) as PhoneNumber | null;
   }
 
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findByIdAndUpdate(number.id, number);
+    await PhoneNumberModel.findOneAndUpdate({ id: number.id }, number);
   }
 
   // Team Members
