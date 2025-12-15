@@ -33,6 +33,7 @@ export default function Numbers() {
 
   useEffect(() => {
     fetchNumbers();
+    fetchTeamMembers();
   }, []);
 
   const fetchNumbers = async () => {
@@ -50,6 +51,22 @@ export default function Numbers() {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchTeamMembers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/team", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTeamMembers(data.members || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch team members:", err);
     }
   };
 
