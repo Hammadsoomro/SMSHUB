@@ -254,7 +254,7 @@ export const handleInviteTeamMember: RequestHandler = async (req, res) => {
 export const handleRemoveTeamMember: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const { memberId } = req.body;
+    const { memberId } = req.params;
 
     if (!memberId) {
       return res.status(400).json({ error: "Member ID is required" });
