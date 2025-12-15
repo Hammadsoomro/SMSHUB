@@ -94,6 +94,18 @@ export async function createServer() {
     adminOnly,
     handleAddExistingNumber,
   );
+  app.post(
+    "/api/admin/assign-number",
+    authMiddleware,
+    adminOnly,
+    handleAssignNumber,
+  );
+  app.patch(
+    "/api/admin/number-settings",
+    authMiddleware,
+    adminOnly,
+    handleUpdateNumberSettings,
+  );
   app.get("/api/admin/team", authMiddleware, adminOnly, handleGetTeamMembers);
   app.post(
     "/api/admin/team/invite",
