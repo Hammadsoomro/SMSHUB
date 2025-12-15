@@ -16,6 +16,8 @@ import {
   handleInviteTeamMember,
   handleRemoveTeamMember,
   handleAddExistingNumber,
+  handleAssignNumber,
+  handleUpdateNumberSettings,
 } from "./routes/admin";
 
 // Wallet routes
