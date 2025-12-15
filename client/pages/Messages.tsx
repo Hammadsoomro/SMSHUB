@@ -206,13 +206,50 @@ export default function Messages() {
   return (
     <div className="h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="border-b border-border bg-background h-16 flex items-center justify-between px-6">
+      <div className="border-b border-border bg-background px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
             <MessageSquare className="w-5 h-5 text-white" />
           </div>
           <span className="text-lg font-bold">SMSHub Messages</span>
         </div>
+
+        {/* Search Bar in Header */}
+        <div className="flex-1 max-w-md">
+          <div className="relative flex gap-2">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search or paste phone number..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && searchTerm.trim()) {
+                    handleSearchNumberSelection();
+                  }
+                }}
+                className="pl-10 h-10"
+              />
+            </div>
+            {searchTerm &&
+              !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
+                <Button
+                  onClick={handleSearchNumberSelection}
+                  className="bg-gradient-to-r from-primary to-secondary"
+                  size="sm"
+                >
+                  Start Chat
+                </Button>
+              )}
+          </div>
+          {error && (
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700">{error}</p>
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon">
             <Settings className="w-5 h-5" />
