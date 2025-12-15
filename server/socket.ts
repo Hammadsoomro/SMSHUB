@@ -44,7 +44,6 @@ export function setupSocketIO(httpServer: HTTPServer): IOServer {
 
   // Connection handlers
   io.on("connection", (socket: AuthenticatedSocket) => {
-    console.log(`User ${socket.userId} connected`);
 
     // Join user-specific room
     socket.join(`user:${socket.userId}`);
@@ -100,9 +99,7 @@ export function setupSocketIO(httpServer: HTTPServer): IOServer {
     });
 
     // Handle disconnect
-    socket.on("disconnect", () => {
-      console.log(`User ${socket.userId} disconnected`);
-    });
+    socket.on("disconnect", () => {});
   });
 
   return io;
