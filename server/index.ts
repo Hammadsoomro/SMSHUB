@@ -36,6 +36,7 @@ import {
   handleGetContacts,
   handleGetConversation,
   handleSendMessage,
+  handleGetAssignedPhoneNumber,
 } from "./routes/messages";
 
 // Middleware
