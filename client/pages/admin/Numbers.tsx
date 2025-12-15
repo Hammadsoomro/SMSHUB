@@ -256,9 +256,9 @@ export default function Numbers() {
           </Card>
         ) : filteredNumbers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredNumbers.map((num) => (
+            {filteredNumbers.map((num, index) => (
               <Card
-                key={num.id}
+                key={num.id || `phone-${index}`}
                 className="p-6 border-primary/20 hover:shadow-lg smooth-transition"
               >
                 <div className="flex items-start justify-between mb-4">
