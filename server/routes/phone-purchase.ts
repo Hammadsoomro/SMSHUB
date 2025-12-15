@@ -36,8 +36,23 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       credentials.accountSid,
       credentials.authToken,
     );
-    const availableNumbers =
-      await twilioClient.getAvailableNumbers(countryCode);
+    let availableNumbers = await twilioClient.getAvailableNumbers(countryCode);
+
+    // If no numbers found and it's US/CA, try alternative area codes
+    if (
+      (!availableNumbers.available_phone_numbers ||
+        availableNumbers.available_phone_numbers.length === 0) &&
+      (countryCode === "US" || countryCode === "CA")
+    ) {
+      const fallbackClient = new TwilioClient(
+        credentials.accountSid,
+        credentials.authToken,
+      );
+      availableNumbers = await fallbackClient.getAvailableNumbers(
+        countryCode,
+        true,
+      );
+    }
 
     // Check for Twilio API errors
     if (availableNumbers.error || availableNumbers.error_message) {
@@ -74,8 +89,31 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       // 1. Direct phone numbers in the region object (newer API)
       // 2. Nested available_phone_numbers array (older API)
 
+      const parseCapabilities = (caps: any) => {
+        if (Array.isArray(caps)) {
+          // Capabilities come as array of strings: ["SMS", "Voice", "MMS"]
+          return {
+            SMS: caps.includes("SMS"),
+            MMS: caps.includes("MMS"),
+            voice: caps.includes("Voice"),
+            fax: caps.includes("Fax"),
+          };
+        } else if (typeof caps === "object" && caps !== null) {
+          // Capabilities come as object properties
+          return {
+            SMS: caps.SMS === true,
+            MMS: caps.MMS === true,
+            voice: caps.voice === true || caps.Voice === true,
+            fax: caps.fax === true || caps.Fax === true,
+          };
+        }
+        // Default: no capabilities
+        return { SMS: false, MMS: false, voice: false, fax: false };
+      };
+
       if (region.phone_number) {
         // This is a direct phone number object
+        const caps = parseCapabilities(region.capabilities);
         allNumbers.push({
           phoneNumber: region.phone_number,
           friendlyName: region.friendly_name || region.phone_number,
@@ -84,20 +122,16 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
           postalCode: region.postal_code || "",
           countryCode: countryCode,
           cost: region.price || "1.00",
-          capabilities: {
-            SMS: region.capabilities?.SMS === true,
-            MMS: region.capabilities?.MMS === true,
-            voice: region.capabilities?.voice === true,
-            fax: false,
-          },
+          capabilities: caps,
         });
       } else if (
         region.available_phone_numbers &&
         Array.isArray(region.available_phone_numbers)
       ) {
         // This is a region object with nested phone numbers
-        const regionNumbers = region.available_phone_numbers.map(
-          (num: any) => ({
+        const regionNumbers = region.available_phone_numbers.map((num: any) => {
+          const caps = parseCapabilities(num.capabilities);
+          return {
             phoneNumber: num.phone_number,
             friendlyName: num.friendly_name || num.phone_number,
             locality: num.locality || "",
@@ -105,14 +139,9 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
             postalCode: num.postal_code || "",
             countryCode: countryCode,
             cost: num.price || "1.00",
-            capabilities: {
-              SMS: num.capabilities?.SMS === true,
-              MMS: num.capabilities?.MMS === true,
-              voice: num.capabilities?.voice === true,
-              fax: false,
-            },
-          }),
-        );
+            capabilities: caps,
+          };
+        });
         allNumbers.push(...regionNumbers);
       }
     }

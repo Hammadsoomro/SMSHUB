@@ -15,6 +15,7 @@ import {
   handleGetTeamMembers,
   handleInviteTeamMember,
   handleRemoveTeamMember,
+  handleAddExistingNumber,
 } from "./routes/admin";
 
 // Wallet routes
@@ -84,6 +85,12 @@ export async function createServer() {
     handleRemoveCredentials,
   );
   app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
+  app.post(
+    "/api/admin/add-existing-number",
+    authMiddleware,
+    adminOnly,
+    handleAddExistingNumber,
+  );
   app.get("/api/admin/team", authMiddleware, adminOnly, handleGetTeamMembers);
   app.post(
     "/api/admin/team/invite",

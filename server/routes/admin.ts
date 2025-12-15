@@ -260,3 +260,47 @@ export const handleRemoveTeamMember: RequestHandler = (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// Add existing phone number to account
+export const handleAddExistingNumber: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumber } = req.body as { phoneNumber: string };
+
+    if (!phoneNumber) {
+      return res.status(400).json({ error: "Phone number is required" });
+    }
+
+    // Validate phone number format (basic validation)
+    const cleanNumber = phoneNumber.replace(/\D/g, "");
+    if (cleanNumber.length < 10) {
+      return res.status(400).json({
+        error: "Invalid phone number format",
+      });
+    }
+
+    // Check if number already exists
+    const existingNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    if (existingNumbers.some((n) => n.phoneNumber === phoneNumber)) {
+      return res.status(400).json({
+        error: "This number is already in your account",
+      });
+    }
+
+    // Add the phone number
+    const newPhoneNumber: PhoneNumber = {
+      id: storage.generateId(),
+      adminId,
+      phoneNumber,
+      purchasedAt: new Date().toISOString(),
+      active: true,
+    };
+
+    await storage.addPhoneNumber(newPhoneNumber);
+
+    res.json({ phoneNumber: newPhoneNumber });
+  } catch (error) {
+    console.error("Add existing number error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
