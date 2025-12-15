@@ -53,7 +53,24 @@ export default function Messages() {
       return;
     }
     fetchContacts();
+    fetchAssignedPhoneNumber();
   }, [navigate]);
+
+  const fetchAssignedPhoneNumber = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/messages/assigned-phone-number", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAssignedPhoneNumbers(data.phoneNumbers || []);
+      }
+    } catch {
+      // Error handled silently
+    }
+  };
 
   const fetchContacts = async () => {
     try {
