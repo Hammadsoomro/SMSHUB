@@ -94,13 +94,12 @@ export default function TeamManagement() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/admin/team/remove", {
-        method: "POST",
+      const response = await fetch(`/api/admin/team/${memberId}`, {
+        method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ memberId }),
       });
 
       if (!response.ok) {
