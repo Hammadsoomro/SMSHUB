@@ -18,6 +18,7 @@ import {
   handleAddExistingNumber,
   handleAssignNumber,
   handleUpdateNumberSettings,
+  handleGetDashboardStats,
 } from "./routes/admin";
 
 // Wallet routes
