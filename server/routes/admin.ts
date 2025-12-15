@@ -202,8 +202,14 @@ export const handleInviteTeamMember: RequestHandler = async (req, res) => {
 
     // Check if this admin already has a team member with this email
     const existingTeamMembers = await storage.getTeamMembersByAdminId(adminId);
-    if (existingTeamMembers.some(member => member.email.toLowerCase() === email.toLowerCase())) {
-      return res.status(400).json({ error: "This team member already exists in your team" });
+    if (
+      existingTeamMembers.some(
+        (member) => member.email.toLowerCase() === email.toLowerCase(),
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ error: "This team member already exists in your team" });
     }
 
     const userId = storage.generateId();
