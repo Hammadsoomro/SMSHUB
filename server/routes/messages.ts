@@ -3,7 +3,10 @@ import { storage } from "../storage";
 import { SendMessageRequest, Message, Contact, PhoneNumber } from "@shared/api";
 import { TwilioClient } from "../twilio";
 
-export const handleGetAssignedPhoneNumber: RequestHandler = async (req, res) => {
+export const handleGetAssignedPhoneNumber: RequestHandler = async (
+  req,
+  res,
+) => {
   try {
     const userId = req.userId!;
     const user = await storage.getUserById(userId);

@@ -219,7 +219,9 @@ export default function Numbers() {
       }
 
       const data = await response.json();
-      setNumbers(numbers.map((n) => (n.id === phoneNumberId ? data.phoneNumber : n)));
+      setNumbers(
+        numbers.map((n) => (n.id === phoneNumberId ? data.phoneNumber : n)),
+      );
 
       const statusText = data.phoneNumber.active ? "activated" : "deactivated";
       setSuccess(`✅ Number ${statusText} successfully!`);
@@ -351,87 +353,90 @@ export default function Numbers() {
               className="fixed inset-0 bg-black/50 z-40"
               onClick={() => setShowAssignModal(false)}
             />
-            <Card className="p-6 border-primary/30 fixed inset-0 m-auto w-96 h-fit z-50 shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Assign Phone Number</h2>
-              <button
-                onClick={() => {
-                  setShowAssignModal(false);
-                  setSelectedNumberId(null);
-                  setSelectedMemberId("");
-                }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium block mb-2">
-                  Select Team Member
-                </label>
-                <select
-                  value={selectedMemberId}
-                  onChange={(e) => setSelectedMemberId(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
-                  disabled={isAssigning}
-                >
-                  <option value="">-- Unassign Number --</option>
-                  {teamMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name} ({member.email})
-                    </option>
-                  ))}
-                </select>
-                {teamMembers.length === 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    No team members yet. Create one in Team Management.
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  onClick={handleAssignNumber}
-                  disabled={isAssigning}
-                  className="flex-1 bg-gradient-to-r from-primary to-secondary"
-                >
-                  {isAssigning ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Assigning...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Confirm
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
+            <Card
+              className="p-6 border-primary/30 fixed inset-0 m-auto w-96 h-fit z-50 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Assign Phone Number</h2>
+                <button
                   onClick={() => {
                     setShowAssignModal(false);
                     setSelectedNumberId(null);
                     setSelectedMemberId("");
                   }}
-                  disabled={isAssigning}
-                  className="flex-1"
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  Cancel
-                </Button>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-            </div>
-          </Card>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium block mb-2">
+                    Select Team Member
+                  </label>
+                  <select
+                    value={selectedMemberId}
+                    onChange={(e) => setSelectedMemberId(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground"
+                    disabled={isAssigning}
+                  >
+                    <option value="">-- Unassign Number --</option>
+                    {teamMembers.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.name} ({member.email})
+                      </option>
+                    ))}
+                  </select>
+                  {teamMembers.length === 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      No team members yet. Create one in Team Management.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleAssignNumber}
+                    disabled={isAssigning}
+                    className="flex-1 bg-gradient-to-r from-primary to-secondary"
+                  >
+                    {isAssigning ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Assigning...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Confirm
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowAssignModal(false);
+                      setSelectedNumberId(null);
+                      setSelectedMemberId("");
+                    }}
+                    disabled={isAssigning}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </Card>
           </>
         )}
 
