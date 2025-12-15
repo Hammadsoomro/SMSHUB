@@ -36,17 +36,22 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       credentials.accountSid,
       credentials.authToken,
     );
-    let availableNumbers =
-      await twilioClient.getAvailableNumbers(countryCode);
+    let availableNumbers = await twilioClient.getAvailableNumbers(countryCode);
 
     // If no numbers found and it's US/CA, try alternative area codes
-    if ((!availableNumbers.available_phone_numbers || availableNumbers.available_phone_numbers.length === 0) &&
-        (countryCode === "US" || countryCode === "CA")) {
+    if (
+      (!availableNumbers.available_phone_numbers ||
+        availableNumbers.available_phone_numbers.length === 0) &&
+      (countryCode === "US" || countryCode === "CA")
+    ) {
       const fallbackClient = new TwilioClient(
         credentials.accountSid,
         credentials.authToken,
       );
-      availableNumbers = await fallbackClient.getAvailableNumbers(countryCode, true);
+      availableNumbers = await fallbackClient.getAvailableNumbers(
+        countryCode,
+        true,
+      );
     }
 
     // Check for Twilio API errors
@@ -124,21 +129,19 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
         Array.isArray(region.available_phone_numbers)
       ) {
         // This is a region object with nested phone numbers
-        const regionNumbers = region.available_phone_numbers.map(
-          (num: any) => {
-            const caps = parseCapabilities(num.capabilities);
-            return {
-              phoneNumber: num.phone_number,
-              friendlyName: num.friendly_name || num.phone_number,
-              locality: num.locality || "",
-              region: num.region || "",
-              postalCode: num.postal_code || "",
-              countryCode: countryCode,
-              cost: num.price || "1.00",
-              capabilities: caps,
-            };
-          },
-        );
+        const regionNumbers = region.available_phone_numbers.map((num: any) => {
+          const caps = parseCapabilities(num.capabilities);
+          return {
+            phoneNumber: num.phone_number,
+            friendlyName: num.friendly_name || num.phone_number,
+            locality: num.locality || "",
+            region: num.region || "",
+            postalCode: num.postal_code || "",
+            countryCode: countryCode,
+            cost: num.price || "1.00",
+            capabilities: caps,
+          };
+        });
         allNumbers.push(...regionNumbers);
       }
     }

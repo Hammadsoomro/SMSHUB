@@ -3,7 +3,15 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Phone, Loader2, Search, Plus, Check, X } from "lucide-react";
+import {
+  AlertCircle,
+  Phone,
+  Loader2,
+  Search,
+  Plus,
+  Check,
+  X,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneNumber } from "@shared/api";
 
@@ -123,7 +131,9 @@ export default function Numbers() {
         {showAddForm && (
           <Card className="p-6 mb-8 border-primary/30">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Add Existing Phone Number</h2>
+              <h2 className="text-lg font-semibold">
+                Add Existing Phone Number
+              </h2>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="text-muted-foreground hover:text-foreground"

@@ -86,7 +86,10 @@ export class TwilioClient {
    * @param countryCode - ISO country code (US, CA, GB, AU, etc)
    * @param useFallback - If true, use alternative search parameters for fallback
    */
-  async getAvailableNumbers(countryCode: string = "US", useFallback: boolean = false): Promise<any> {
+  async getAvailableNumbers(
+    countryCode: string = "US",
+    useFallback: boolean = false,
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
       const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
         "base64",
