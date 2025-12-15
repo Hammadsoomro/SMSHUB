@@ -13,11 +13,12 @@ import {
   X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { PhoneNumber } from "@shared/api";
+import { PhoneNumber, TeamMember } from "@shared/api";
 
 export default function Numbers() {
   const navigate = useNavigate();
   const [numbers, setNumbers] = useState<PhoneNumber[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -25,6 +26,10 @@ export default function Numbers() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [phoneNumberInput, setPhoneNumberInput] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedNumberId, setSelectedNumberId] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
     fetchNumbers();
