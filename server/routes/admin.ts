@@ -405,3 +405,34 @@ export const handleUpdateNumberSettings: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// Dashboard Statistics
+export const handleGetDashboardStats: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+
+    const [numbers, teamMembers] = await Promise.all([
+      storage.getPhoneNumbersByAdminId(adminId),
+      storage.getTeamMembersByAdminId(adminId),
+    ]);
+
+    const activeNumbers = numbers.filter((n) => n.active).length;
+
+    res.json({
+      stats: {
+        activeNumbers,
+        teamMembersCount: teamMembers.length,
+        teamMembers: teamMembers.map((member) => ({
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          createdAt: member.createdAt,
+          status: member.status,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Get dashboard stats error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
