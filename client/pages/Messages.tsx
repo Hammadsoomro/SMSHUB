@@ -13,6 +13,7 @@ import {
   Loader2,
   Phone,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { Message, Contact } from "@shared/api";
 
@@ -32,6 +33,8 @@ export default function Messages() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState("");
+  const [newConversationNumber, setNewConversationNumber] = useState("");
 
   useEffect(() => {
     const user = localStorage.getItem("user");
