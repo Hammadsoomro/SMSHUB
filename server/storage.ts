@@ -95,11 +95,29 @@ class Storage {
   }
 
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findOneAndUpdate(
-      { $or: [{ id: number.id }, { _id: number.id }] },
-      number,
-      { new: true },
-    );
+    // If assignedTo is undefined, we need to unset it from the document
+    if (number.assignedTo === undefined) {
+      await PhoneNumberModel.findOneAndUpdate(
+        { $or: [{ id: number.id }, { _id: number.id }] },
+        {
+          $set: {
+            id: number.id,
+            adminId: number.adminId,
+            phoneNumber: number.phoneNumber,
+            purchasedAt: number.purchasedAt,
+            active: number.active,
+          },
+          $unset: { assignedTo: 1 },
+        },
+        { new: true },
+      );
+    } else {
+      await PhoneNumberModel.findOneAndUpdate(
+        { $or: [{ id: number.id }, { _id: number.id }] },
+        number,
+        { new: true },
+      );
+    }
   }
 
   // Team Members
