@@ -73,8 +73,13 @@ export default function Messages() {
           // Check for new unread messages and show notification
           setContacts((prevContacts) => {
             prevContacts.forEach((oldContact) => {
-              const newContact = newContacts.find((c) => c.id === oldContact.id);
-              if (newContact && newContact.unreadCount > oldContact.unreadCount) {
+              const newContact = newContacts.find(
+                (c) => c.id === oldContact.id,
+              );
+              if (
+                newContact &&
+                newContact.unreadCount > oldContact.unreadCount
+              ) {
                 toast.message(`📱 New message from ${newContact.phoneNumber}`, {
                   description: newContact.lastMessage || "New message",
                 });

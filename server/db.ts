@@ -15,12 +15,12 @@ async function cleanupPhoneNumbers() {
     // Fix phone numbers with empty string assignedTo - convert to null
     const result = await PhoneNumberModel.updateMany(
       { assignedTo: "" },
-      { $unset: { assignedTo: 1 } }
+      { $unset: { assignedTo: 1 } },
     );
 
     if (result.modifiedCount > 0) {
       console.log(
-        `Cleaned up ${result.modifiedCount} phone numbers with empty assignedTo`
+        `Cleaned up ${result.modifiedCount} phone numbers with empty assignedTo`,
       );
     }
   } catch (error) {
