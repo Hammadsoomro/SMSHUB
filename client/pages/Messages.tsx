@@ -369,67 +369,8 @@ export default function Messages() {
           )}
         </div>
 
-        {/* Main Content */}
+        {/* Main Content - No sidebar, just chat area */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Contacts Sidebar */}
-          <div className="w-72 border-r border-border bg-card flex flex-col overflow-hidden flex-shrink-0">
-            {/* Contacts List */}
-            <div className="flex-1 overflow-y-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : filteredContacts.length > 0 ? (
-                <div className="space-y-1 p-2">
-                  {filteredContacts.map((contact) => (
-                    <button
-                      key={contact.id}
-                      onClick={() => handleSelectContact(contact)}
-                      className={`w-full text-left p-3 rounded-lg smooth-transition relative ${
-                        conversation.contact?.id === contact.id
-                          ? "bg-primary text-white"
-                          : "hover:bg-muted"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-1">
-                        <p className="font-semibold text-sm flex-1">
-                          {contact.name || contact.phoneNumber}
-                        </p>
-                        {contact.unreadCount > 0 && (
-                          <span className="ml-2 inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-destructive text-white text-xs font-bold flex-shrink-0">
-                            {contact.unreadCount}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs opacity-75 truncate">
-                        {contact.lastMessage || "No messages yet"}
-                      </p>
-                      {contact.lastMessageTime && (
-                        <p className="text-xs opacity-50 mt-1">
-                          {new Date(
-                            contact.lastMessageTime,
-                          ).toLocaleDateString()}
-                        </p>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center px-4">
-                    <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
-                    <p className="text-muted-foreground text-sm">
-                      {searchTerm
-                        ? "No contacts match your search"
-                        : "No contacts yet"}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Chat Area */}
           {conversation.contact ? (
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Chat Header - Sticky Top */}
