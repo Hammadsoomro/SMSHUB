@@ -197,8 +197,33 @@ export class TwilioClient {
         query.append("NearLatLong", "51.5074,-0.1278");
         query.append("Distance", useFallback ? "100" : "50");
       } else if (countryCode === "AU") {
-        // For Australia, use latitude/longitude for Sydney
-        query.append("NearLatLong", "-33.8688,151.2093");
+        // For Australia, use latitude/longitude based on selected state
+        // NSW (Sydney): -33.8688, 151.2093
+        // VIC (Melbourne): -37.8136, 144.9631
+        // QLD (Brisbane): -27.4698, 153.0251
+        // WA (Perth): -31.9505, 115.8605
+        // SA (Adelaide): -34.9285, 138.6007
+        // TAS (Hobart): -42.8821, 147.3272
+        // ACT (Canberra): -35.2809, 149.1300
+        // NT (Darwin): -12.4634, 130.8456
+
+        const AU_STATE_COORDS: Record<string, { lat: string; lng: string }> = {
+          NSW: { lat: "-33.8688", lng: "151.2093" }, // Sydney
+          VIC: { lat: "-37.8136", lng: "144.9631" }, // Melbourne
+          QLD: { lat: "-27.4698", lng: "153.0251" }, // Brisbane
+          WA: { lat: "-31.9505", lng: "115.8605" }, // Perth
+          SA: { lat: "-34.9285", lng: "138.6007" }, // Adelaide
+          TAS: { lat: "-42.8821", lng: "147.3272" }, // Hobart
+          ACT: { lat: "-35.2809", lng: "149.1300" }, // Canberra
+          NT: { lat: "-12.4634", lng: "130.8456" }, // Darwin
+        };
+
+        let coords = AU_STATE_COORDS.NSW; // Default to Sydney
+        if (state && AU_STATE_COORDS[state]) {
+          coords = AU_STATE_COORDS[state];
+        }
+
+        query.append("NearLatLong", `${coords.lat},${coords.lng}`);
         query.append("Distance", useFallback ? "100" : "50");
       } else if (countryCode === "DE") {
         // For Germany, use latitude/longitude for Berlin
