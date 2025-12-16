@@ -547,15 +547,7 @@ export default function Numbers() {
                     className="flex-1"
                     onClick={() => handleAssignClick(num.id)}
                   >
-                    {num.assignedTo ? "Reassign" : "Assign"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleToggleActive(num.id)}
-                  >
-                    {num.active ? "Deactivate" : "Activate"}
+                    {num.assignedTo ? "Unassign" : "Assign"}
                   </Button>
                 </div>
               </Card>
