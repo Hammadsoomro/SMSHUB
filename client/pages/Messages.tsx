@@ -372,7 +372,7 @@ export default function Messages() {
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Contacts Sidebar */}
-          <div className="hidden md:flex w-72 border-r border-border bg-card flex-col overflow-hidden flex-shrink-0">
+          <div className="w-72 border-r border-border bg-card flex flex-col overflow-hidden flex-shrink-0">
             {/* Contacts List */}
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (
