@@ -157,6 +157,14 @@ export default function Messages() {
     setIsSending(true);
     setError("");
     try {
+      // Use the assigned phone number ID, or the contact's phone number ID
+      const phoneNumberId =
+        conversation.contact.phoneNumberId || assignedPhoneNumbers[0]?.id;
+
+      if (!phoneNumberId) {
+        throw new Error("No phone number assigned. Please contact your admin.");
+      }
+
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/send", {
         method: "POST",
@@ -167,7 +175,7 @@ export default function Messages() {
         body: JSON.stringify({
           to: conversation.contact.phoneNumber,
           body: messageText,
-          phoneNumberId: conversation.contact.phoneNumberId || "",
+          phoneNumberId,
         }),
       });
 
