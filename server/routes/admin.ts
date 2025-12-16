@@ -372,11 +372,13 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     const updatedNumber: PhoneNumber = {
       ...phoneNumber,
       assignedTo: teamMemberId || undefined,
-    };
+    } as PhoneNumber;
 
     await storage.updatePhoneNumber(updatedNumber);
 
-    res.json({ phoneNumber: updatedNumber });
+    // Fetch fresh data to ensure we return the correct state
+    const freshNumber = await storage.getPhoneNumberById(phoneNumberId);
+    res.json({ phoneNumber: freshNumber });
   } catch (error) {
     console.error("Assign number error:", error);
     res.status(500).json({ error: "Internal server error" });
