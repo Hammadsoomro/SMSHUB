@@ -261,9 +261,17 @@ export default function BuyNumbers() {
 
   const handleCountryChange = (value: string) => {
     setSelectedCountry(value);
+    setSelectedState(""); // Reset state when country changes
     setAvailableNumbers([]);
     setSearchTerm("");
     fetchAvailableNumbers(value);
+  };
+
+  const handleStateChange = (value: string) => {
+    setSelectedState(value);
+    setAvailableNumbers([]);
+    setSearchTerm("");
+    fetchAvailableNumbers(selectedCountry, value);
   };
 
   const handlePurchaseNumber = async (number: AvailablePhoneNumber) => {
