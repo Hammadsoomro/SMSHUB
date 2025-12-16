@@ -85,10 +85,12 @@ export class TwilioClient {
    * Get available phone numbers from Twilio
    * @param countryCode - ISO country code (US, CA, GB, AU, etc)
    * @param useFallback - If true, use alternative search parameters for fallback
+   * @param state - State/region code (e.g., CA, NY, BC, ON)
    */
   async getAvailableNumbers(
     countryCode: string = "US",
     useFallback: boolean = false,
+    state?: string,
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
