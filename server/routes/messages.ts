@@ -135,6 +135,13 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
         .json({ error: "Unauthorized to use this phone number" });
     }
 
+    // If user is a team member, verify the phone number is assigned to them
+    if (user?.role === "team_member" && phoneNumber.assignedTo !== userId) {
+      return res.status(403).json({
+        error: "This phone number is not assigned to you",
+      });
+    }
+
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
