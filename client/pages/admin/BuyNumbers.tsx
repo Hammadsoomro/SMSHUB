@@ -188,7 +188,7 @@ export default function BuyNumbers() {
     }
   };
 
-  const fetchAvailableNumbers = async (countryCode: string) => {
+  const fetchAvailableNumbers = async (countryCode: string, state?: string) => {
     if (!countryCode) return;
 
     setIsLoadingNumbers(true);
@@ -203,7 +203,12 @@ export default function BuyNumbers() {
         return;
       }
 
-      const url = `/api/admin/available-numbers?countryCode=${countryCode}`;
+      const params = new URLSearchParams({ countryCode });
+      if (state) {
+        params.append("state", state);
+      }
+
+      const url = `/api/admin/available-numbers?${params.toString()}`;
 
       const response = await fetch(url, {
         method: "GET",
