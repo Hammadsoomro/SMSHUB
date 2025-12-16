@@ -154,7 +154,88 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       console.warn("No phone numbers found for country:", countryCode);
     }
 
-    res.json({ numbers: allNumbers });
+    // Filter numbers by state/province if specified
+    let filteredNumbers = allNumbers;
+    if (state) {
+      // Create a mapping of state codes to their region abbreviations
+      const STATE_REGION_MAP: Record<string, string[]> = {
+        // US states - use state abbreviation
+        AL: ["AL"],
+        AK: ["AK"],
+        AZ: ["AZ"],
+        AR: ["AR"],
+        CA: ["CA"],
+        CO: ["CO"],
+        CT: ["CT"],
+        DE: ["DE"],
+        FL: ["FL"],
+        GA: ["GA"],
+        HI: ["HI"],
+        ID: ["ID"],
+        IL: ["IL"],
+        IN: ["IN"],
+        IA: ["IA"],
+        KS: ["KS"],
+        KY: ["KY"],
+        LA: ["LA"],
+        ME: ["ME"],
+        MD: ["MD"],
+        MA: ["MA"],
+        MI: ["MI"],
+        MN: ["MN"],
+        MS: ["MS"],
+        MO: ["MO"],
+        MT: ["MT"],
+        NE: ["NE"],
+        NV: ["NV"],
+        NH: ["NH"],
+        NJ: ["NJ"],
+        NM: ["NM"],
+        NY: ["NY"],
+        NC: ["NC"],
+        ND: ["ND"],
+        OH: ["OH"],
+        OK: ["OK"],
+        OR: ["OR"],
+        PA: ["PA"],
+        RI: ["RI"],
+        SC: ["SC"],
+        SD: ["SD"],
+        TN: ["TN"],
+        TX: ["TX"],
+        UT: ["UT"],
+        VT: ["VT"],
+        VA: ["VA"],
+        WA: ["WA"],
+        WV: ["WV"],
+        WI: ["WI"],
+        WY: ["WY"],
+        // Canadian provinces
+        AB: ["AB", "Alberta"],
+        BC: ["BC", "British Columbia"],
+        MB: ["MB", "Manitoba"],
+        NB: ["NB", "New Brunswick"],
+        NL: ["NL", "Newfoundland and Labrador"],
+        NS: ["NS", "Nova Scotia"],
+        ON: ["ON", "Ontario"],
+        PE: ["PE", "Prince Edward Island"],
+        QC: ["QC", "Quebec"],
+        SK: ["SK", "Saskatchewan"],
+      };
+
+      const regionCodes = STATE_REGION_MAP[state] || [state];
+      filteredNumbers = allNumbers.filter((num) => {
+        // Check if the number's region matches the requested state
+        const numberRegion = num.region?.toUpperCase() || "";
+        return regionCodes.some((code) => numberRegion.includes(code));
+      });
+
+      console.log(
+        `Filtered ${allNumbers.length} numbers to ${filteredNumbers.length} for state ${state}`,
+      );
+    }
+
+    res.json({ numbers: filteredNumbers });
   } catch (error) {
     console.error("Get available numbers error:", error);
     const errorMessage =
