@@ -8,7 +8,7 @@ Get your SMS management platform up and running in 5 minutes!
 pnpm dev
 ```
 
-The app will be available at `http://localhost:3000`
+The app will be available at `http://localhost:8080`
 
 ## Step 2: Create Your Admin Account
 
