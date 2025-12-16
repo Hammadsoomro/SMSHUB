@@ -194,10 +194,6 @@ export class TwilioClient {
         // Use the specified area code index, or fallback to first one
         const areaCode = areaCodes[Math.min(areaCodeIndex, areaCodes.length - 1)];
         query.append("AreaCode", areaCode);
-      } else if (countryCode === "GB") {
-        // For UK, use latitude/longitude for London
-        query.append("NearLatLong", "51.5074,-0.1278");
-        query.append("Distance", useFallback ? "100" : "50");
       } else if (countryCode === "AU") {
         // For Australia, use latitude/longitude based on selected state
         // NSW (Sydney): -33.8688, 151.2093
