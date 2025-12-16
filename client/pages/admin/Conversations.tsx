@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,10 @@ import {
   Phone,
   AlertCircle,
   X,
+  Bell,
 } from "lucide-react";
 import { Message, Contact, PhoneNumber } from "@shared/api";
+import { toast } from "sonner";
 
 interface ConversationState {
   contact: Contact | null;
@@ -35,6 +37,17 @@ export default function Conversations() {
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string>("");
   const [error, setError] = useState("");
   const [newConversationNumber, setNewConversationNumber] = useState("");
+  const [totalUnread, setTotalUnread] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [conversation.messages]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -43,11 +56,32 @@ export default function Conversations() {
       return;
     }
     fetchData();
-  }, [navigate]);
+
+    // Start polling for new messages
+    const interval = setInterval(() => {
+      if (conversation.contact) {
+        fetchMessages(conversation.contact.id);
+      }
+      fetchData();
+    }, 3000); // Poll every 3 seconds
+
+    pollIntervalRef.current = interval;
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [navigate, conversation.contact?.id]);
+
+  useEffect(() => {
+    // Calculate total unread
+    const unread = contacts.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+    setTotalUnread(unread);
+  }, [contacts]);
 
   const fetchData = async () => {
     try {
-      setIsLoading(true);
       const token = localStorage.getItem("token");
 
       // Fetch contacts
@@ -56,7 +90,24 @@ export default function Conversations() {
       });
       if (contactsRes.ok) {
         const data = await contactsRes.json();
-        setContacts(data.contacts || []);
+        const newContacts = data.contacts || [];
+        
+        // Check for new unread messages and show notification
+        const oldContacts = contacts;
+        newContacts.forEach((newContact) => {
+          const oldContact = oldContacts.find((c) => c.id === newContact.id);
+          if (
+            oldContact &&
+            newContact.unreadCount > oldContact.unreadCount &&
+            conversation.contact?.id !== newContact.id
+          ) {
+            toast.message(`📱 New message from ${newContact.phoneNumber}`, {
+              description: newContact.lastMessage || "New message",
+            });
+          }
+        });
+
+        setContacts(newContacts);
       }
 
       // Fetch phone numbers
@@ -66,14 +117,12 @@ export default function Conversations() {
       if (numbersRes.ok) {
         const data = await numbersRes.json();
         setPhoneNumbers(data.numbers || []);
-        if (data.numbers && data.numbers.length > 0) {
+        if (data.numbers && data.numbers.length > 0 && !selectedPhoneNumber) {
           setSelectedPhoneNumber(data.numbers[0].id);
         }
       }
-    } catch {
-      setError("Failed to load data");
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      console.error("Error fetching data:", err);
     }
   };
 
@@ -86,12 +135,29 @@ export default function Conversations() {
 
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
+      const newMessages = data.messages || [];
+
+      // Check if we have new messages
+      if (
+        conversation.messages.length > 0 &&
+        newMessages.length > conversation.messages.length
+      ) {
+        const lastOldMessage =
+          conversation.messages[conversation.messages.length - 1];
+        const newMsg = newMessages.find((m) => m.timestamp > lastOldMessage.timestamp);
+        if (newMsg && newMsg.direction === "inbound") {
+          toast("🔔 New message received!", {
+            description: newMsg.body.substring(0, 50),
+          });
+        }
+      }
+
       setConversation({
         contact: conversation.contact,
-        messages: data.messages || [],
+        messages: newMessages,
       });
-    } catch {
-      // Error handled silently
+    } catch (err) {
+      console.error("Error fetching messages:", err);
     }
   };
 
@@ -158,6 +224,9 @@ export default function Conversations() {
       }
 
       setMessageText("");
+      toast.success("Message sent!", {
+        description: `Message sent to ${conversation.contact.phoneNumber}`,
+      });
 
       // If this was a new conversation, add it to contacts
       if (conversation.contact.id.startsWith("temp-")) {
@@ -166,7 +235,11 @@ export default function Conversations() {
         await fetchMessages(conversation.contact.id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send message");
+      const errMsg = err instanceof Error ? err.message : "Failed to send message";
+      setError(errMsg);
+      toast.error("Failed to send message", {
+        description: errMsg,
+      });
     } finally {
       setIsSending(false);
     }
@@ -187,12 +260,23 @@ export default function Conversations() {
   return (
     <AdminLayout>
       <div className="h-screen -m-4 md:-m-8 flex flex-col bg-card">
-        {/* Header with Search */}
-        <div className="border-b border-border bg-background p-4 md:p-6">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-40 border-b border-border bg-background p-4 md:p-6 shadow-sm">
           <div className="max-w-7xl mx-auto">
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">
-              Conversations
-            </h1>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl md:text-3xl font-bold">Conversations</h1>
+              {/* Notification Bell */}
+              <div className="relative">
+                <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                  <Bell className="w-6 h-6" />
+                  {totalUnread > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-destructive rounded-full">
+                      {totalUnread > 99 ? "99+" : totalUnread}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
 
             {/* Phone Number Selection and Search */}
             <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
@@ -257,18 +341,18 @@ export default function Conversations() {
                     <button
                       key={contact.id}
                       onClick={() => handleSelectContact(contact)}
-                      className={`w-full text-left p-3 rounded-lg smooth-transition ${
+                      className={`w-full text-left p-3 rounded-lg smooth-transition relative ${
                         conversation.contact?.id === contact.id
                           ? "bg-primary text-white"
                           : "hover:bg-muted"
                       }`}
                     >
                       <div className="flex items-start justify-between mb-1">
-                        <p className="font-semibold text-sm">
+                        <p className="font-semibold text-sm flex-1">
                           {contact.name || contact.phoneNumber}
                         </p>
                         {contact.unreadCount > 0 && (
-                          <span className="px-2 py-1 rounded-full bg-destructive text-white text-xs font-semibold">
+                          <span className="ml-2 inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-destructive text-white text-xs font-bold flex-shrink-0">
                             {contact.unreadCount}
                           </span>
                         )}
@@ -304,8 +388,8 @@ export default function Conversations() {
           {/* Chat Area */}
           {conversation.contact ? (
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Chat Header */}
-              <div className="border-b border-border bg-background h-16 flex items-center justify-between px-4 md:px-6">
+              {/* Chat Header - Sticky */}
+              <div className="sticky top-0 z-30 border-b border-border bg-background h-16 flex items-center justify-between px-4 md:px-6 shadow-sm">
                 <div className="flex-1">
                   <p className="font-semibold">
                     {conversation.contact.name ||
@@ -327,32 +411,35 @@ export default function Conversations() {
                 </button>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              {/* Messages - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-background/50">
                 {conversation.messages.length > 0 ? (
-                  conversation.messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${
-                        msg.direction === "outbound"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
+                  <>
+                    {conversation.messages.map((msg) => (
                       <div
-                        className={`max-w-xs px-4 py-2 rounded-lg ${
+                        key={msg.id}
+                        className={`flex ${
                           msg.direction === "outbound"
-                            ? "bg-primary text-white"
-                            : "bg-muted text-foreground"
+                            ? "justify-end"
+                            : "justify-start"
                         }`}
                       >
-                        <p className="text-sm break-words">{msg.body}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {new Date(msg.timestamp).toLocaleTimeString()}
-                        </p>
+                        <div
+                          className={`max-w-xs px-4 py-2 rounded-lg ${
+                            msg.direction === "outbound"
+                              ? "bg-primary text-white"
+                              : "bg-muted text-foreground"
+                          }`}
+                        >
+                          <p className="text-sm break-words">{msg.body}</p>
+                          <p className="text-xs opacity-70 mt-1">
+                            {new Date(msg.timestamp).toLocaleTimeString()}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </>
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
@@ -365,10 +452,10 @@ export default function Conversations() {
                 )}
               </div>
 
-              {/* Message Input */}
+              {/* Message Input - Sticky */}
               <form
                 onSubmit={handleSendMessage}
-                className="border-t border-border bg-background p-4 md:p-6"
+                className="sticky bottom-0 z-30 border-t border-border bg-background p-4 md:p-6 shadow-sm"
               >
                 <div className="flex gap-2">
                   <Input
