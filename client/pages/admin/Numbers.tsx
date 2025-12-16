@@ -187,53 +187,6 @@ export default function Numbers() {
     }
   };
 
-  const handleToggleActive = async (phoneNumberId: string) => {
-    const number = numbers.find((n) => n.id === phoneNumberId);
-    if (!number) return;
-
-    setError("");
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/admin/number-settings", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          phoneNumberId,
-          active: !number.active,
-        }),
-      });
-
-      if (!response.ok) {
-        let errorMessage = "Failed to update number";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          errorMessage = `Server error (${response.status})`;
-        }
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
-      setNumbers(
-        numbers.map((n) => (n.id === phoneNumberId ? data.phoneNumber : n)),
-      );
-
-      const statusText = data.phoneNumber.active ? "activated" : "deactivated";
-      setSuccess(`✅ Number ${statusText} successfully!`);
-
-      setTimeout(() => {
-        setSuccess("");
-      }, 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    }
-  };
-
   const filteredNumbers = numbers.filter((num) =>
     num.phoneNumber.includes(searchTerm),
   );
@@ -533,7 +486,10 @@ export default function Numbers() {
                 {num.assignedTo && (
                   <div className="mb-4 p-3 bg-muted rounded">
                     <p className="text-xs text-muted-foreground">Assigned to</p>
-                    <p className="font-medium">Team Member</p>
+                    <p className="font-medium">
+                      {teamMembers.find((m) => m.id === num.assignedTo)?.name ||
+                        "Unknown Member"}
+                    </p>
                   </div>
                 )}
 
@@ -544,15 +500,7 @@ export default function Numbers() {
                     className="flex-1"
                     onClick={() => handleAssignClick(num.id)}
                   >
-                    {num.assignedTo ? "Reassign" : "Assign"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleToggleActive(num.id)}
-                  >
-                    {num.active ? "Deactivate" : "Activate"}
+                    {num.assignedTo ? "Unassign" : "Assign"}
                   </Button>
                 </div>
               </Card>
