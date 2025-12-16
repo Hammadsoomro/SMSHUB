@@ -62,44 +62,55 @@ export default function Messages() {
       if (!token) return;
 
       // Fetch contacts
-      const contactsRes = await fetch("/api/messages/contacts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (contactsRes.ok) {
-        const data = await contactsRes.json();
-        const newContacts = data.contacts || [];
-
-        // Check for new unread messages and show notification
-        setContacts((prevContacts) => {
-          prevContacts.forEach((oldContact) => {
-            const newContact = newContacts.find((c) => c.id === oldContact.id);
-            if (newContact && newContact.unreadCount > oldContact.unreadCount) {
-              toast.message(`📱 New message from ${newContact.phoneNumber}`, {
-                description: newContact.lastMessage || "New message",
-              });
-            }
-          });
-          return newContacts;
+      try {
+        const contactsRes = await fetch("/api/messages/contacts", {
+          headers: { Authorization: `Bearer ${token}` },
         });
+        if (contactsRes.ok) {
+          const data = await contactsRes.json();
+          const newContacts = data.contacts || [];
+
+          // Check for new unread messages and show notification
+          setContacts((prevContacts) => {
+            prevContacts.forEach((oldContact) => {
+              const newContact = newContacts.find((c) => c.id === oldContact.id);
+              if (newContact && newContact.unreadCount > oldContact.unreadCount) {
+                toast.message(`📱 New message from ${newContact.phoneNumber}`, {
+                  description: newContact.lastMessage || "New message",
+                });
+              }
+            });
+            return newContacts;
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching contacts:", err);
       }
 
       // Fetch assigned phone numbers
-      const numbersRes = await fetch("/api/messages/assigned-phone-number", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (numbersRes.ok) {
-        const data = await numbersRes.json();
-        setAssignedPhoneNumbers(data.phoneNumbers || []);
-        if (
-          data.phoneNumbers &&
-          data.phoneNumbers.length > 0 &&
-          !selectedPhoneNumber
-        ) {
-          setSelectedPhoneNumber(data.phoneNumbers[0].id);
+      try {
+        const numbersRes = await fetch("/api/messages/assigned-phone-number", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (numbersRes.ok) {
+          const data = await numbersRes.json();
+          setAssignedPhoneNumbers(data.phoneNumbers || []);
+          if (
+            data.phoneNumbers &&
+            data.phoneNumbers.length > 0 &&
+            !selectedPhoneNumber
+          ) {
+            setSelectedPhoneNumber(data.phoneNumbers[0].id);
+          }
+        } else {
+          console.error(
+            "Failed to fetch assigned phone numbers:",
+            numbersRes.status,
+          );
         }
+      } catch (err) {
+        console.error("Error fetching assigned phone numbers:", err);
       }
-    } catch (err) {
-      console.error("Error fetching data:", err);
     } finally {
       setIsLoading(false);
     }
