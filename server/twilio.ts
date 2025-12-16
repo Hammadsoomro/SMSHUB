@@ -179,7 +179,8 @@ export class TwilioClient {
           // Fallback to general area codes
           areaCodes = ["415", "310"];
         }
-        const areaCode = useFallback && areaCodes.length > 1 ? areaCodes[1] : areaCodes[0];
+        // Use the specified area code index, or fallback to first one
+        const areaCode = areaCodes[Math.min(areaCodeIndex, areaCodes.length - 1)];
         query.append("AreaCode", areaCode);
       } else if (countryCode === "CA") {
         // For Canada, use province-specific area codes
@@ -190,7 +191,8 @@ export class TwilioClient {
           // Fallback to general area codes
           areaCodes = ["604", "416"];
         }
-        const areaCode = useFallback && areaCodes.length > 1 ? areaCodes[1] : areaCodes[0];
+        // Use the specified area code index, or fallback to first one
+        const areaCode = areaCodes[Math.min(areaCodeIndex, areaCodes.length - 1)];
         query.append("AreaCode", areaCode);
       } else if (countryCode === "GB") {
         // For UK, use latitude/longitude for London
