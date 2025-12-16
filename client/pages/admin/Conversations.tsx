@@ -67,10 +67,7 @@ export default function Conversations() {
         setContacts((prevContacts) => {
           prevContacts.forEach((oldContact) => {
             const newContact = newContacts.find((c) => c.id === oldContact.id);
-            if (
-              newContact &&
-              newContact.unreadCount > oldContact.unreadCount
-            ) {
+            if (newContact && newContact.unreadCount > oldContact.unreadCount) {
               toast.message(`📱 New message from ${newContact.phoneNumber}`, {
                 description: newContact.lastMessage || "New message",
               });
@@ -98,43 +95,40 @@ export default function Conversations() {
     }
   }, [selectedPhoneNumber]);
 
-  const memoizedFetchMessages = useCallback(
-    async (contactId: string) => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-        const response = await fetch(`/api/messages/conversation/${contactId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const memoizedFetchMessages = useCallback(async (contactId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const response = await fetch(`/api/messages/conversation/${contactId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error(
-            `Failed to fetch messages: ${response.status}`,
-            errorData,
-          );
-          if (response.status === 404) {
-            setError("Contact not found. Please select another contact.");
-          } else {
-            setError("Failed to load conversation. Please try again.");
-          }
-          return;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(
+          `Failed to fetch messages: ${response.status}`,
+          errorData,
+        );
+        if (response.status === 404) {
+          setError("Contact not found. Please select another contact.");
+        } else {
+          setError("Failed to load conversation. Please try again.");
         }
-        const data = await response.json();
-        const newMessages = data.messages || [];
-
-        setConversation((prev) => ({
-          ...prev,
-          messages: newMessages,
-        }));
-        setError("");
-      } catch (err) {
-        console.error("Error fetching messages:", err);
-        setError("Error loading conversation. Please try again.");
+        return;
       }
-    },
-    [],
-  );
+      const data = await response.json();
+      const newMessages = data.messages || [];
+
+      setConversation((prev) => ({
+        ...prev,
+        messages: newMessages,
+      }));
+      setError("");
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+      setError("Error loading conversation. Please try again.");
+    }
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -150,7 +144,10 @@ export default function Conversations() {
     const interval = setInterval(() => {
       memoizedFetchData();
       // Refresh current conversation if one is selected
-      if (conversation.contact?.id && !conversation.contact.id.startsWith("temp-")) {
+      if (
+        conversation.contact?.id &&
+        !conversation.contact.id.startsWith("temp-")
+      ) {
         memoizedFetchMessages(conversation.contact.id);
       }
     }, 3000); // Poll every 3 seconds
@@ -162,14 +159,18 @@ export default function Conversations() {
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [navigate, memoizedFetchData, memoizedFetchMessages, conversation.contact?.id]);
+  }, [
+    navigate,
+    memoizedFetchData,
+    memoizedFetchMessages,
+    conversation.contact?.id,
+  ]);
 
   useEffect(() => {
     // Calculate total unread
     const unread = contacts.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
     setTotalUnread(unread);
   }, [contacts]);
-
 
   const handleSelectContact = (contact: Contact) => {
     setNewConversationNumber("");
@@ -245,7 +246,8 @@ export default function Conversations() {
         await memoizedFetchMessages(conversation.contact.id);
       }
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Failed to send message";
+      const errMsg =
+        err instanceof Error ? err.message : "Failed to send message";
       setError(errMsg);
       toast.error("Failed to send message", {
         description: errMsg,

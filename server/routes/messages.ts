@@ -82,7 +82,7 @@ export const handleGetConversation: RequestHandler = async (req, res) => {
       console.warn("Contact not found with ID:", contactId);
       return res.status(404).json({
         error: "Contact not found",
-        contactId
+        contactId,
       });
     }
 

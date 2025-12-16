@@ -78,19 +78,19 @@ export default function AdminDashboard() {
       month: "short",
       day: "numeric",
     }),
-  })) || [
-    { name: "Team", status: 0, joinDate: "N/A" },
-  ];
+  })) || [{ name: "Team", status: 0, joinDate: "N/A" }];
 
   const teamMemberCountByStatus = [
     {
       name: "Active",
-      value: stats?.teamMembers.filter((m) => m.status === "active").length || 0,
+      value:
+        stats?.teamMembers.filter((m) => m.status === "active").length || 0,
       color: "#3b82f6",
     },
     {
       name: "Pending",
-      value: stats?.teamMembers.filter((m) => m.status === "pending").length || 0,
+      value:
+        stats?.teamMembers.filter((m) => m.status === "pending").length || 0,
       color: "#f59e0b",
     },
   ];
@@ -122,11 +122,7 @@ export default function AdminDashboard() {
         <div>
           <p className="text-sm text-muted-foreground mb-2">{title}</p>
           <p className="text-3xl font-bold">
-            {isLoading ? (
-              <span className="animate-pulse">...</span>
-            ) : (
-              value
-            )}
+            {isLoading ? <span className="animate-pulse">...</span> : value}
           </p>
         </div>
         <div className={`p-3 rounded-lg ${bgColor}`}>
@@ -232,15 +228,16 @@ export default function AdminDashboard() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-[300px] w-full">
-                  <p className="text-muted-foreground">
-                    No team members yet
-                  </p>
+                  <p className="text-muted-foreground">No team members yet</p>
                 </div>
               )}
             </div>
             <div className="mt-6 space-y-2">
               {teamMemberCountByStatus.map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-sm">
+                <div
+                  key={item.name}
+                  className="flex items-center justify-between text-sm"
+                >
                   <div className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded-full"
@@ -267,7 +264,10 @@ export default function AdminDashboard() {
             </div>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={timelineData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border))"
+                />
                 <XAxis
                   dataKey="name"
                   stroke="hsl(var(--muted-foreground))"
@@ -337,11 +337,14 @@ export default function AdminDashboard() {
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground">Joined</p>
                       <p className="text-sm font-medium">
-                        {new Date(member.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {new Date(member.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          },
+                        )}
                       </p>
                     </div>
                     <div
@@ -377,16 +380,16 @@ export default function AdminDashboard() {
             <div>
               <h2 className="text-2xl font-bold mb-4">Getting Started</h2>
               <p className="text-muted-foreground mb-6">
-                Start by connecting your Twilio credentials to begin managing SMS
-                messages. Once connected, you can purchase phone numbers and invite
-                team members to manage conversations.
+                Start by connecting your Twilio credentials to begin managing
+                SMS messages. Once connected, you can purchase phone numbers and
+                invite team members to manage conversations.
               </p>
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
                   <span>
-                    First, go to <strong>Credentials</strong> and add your Twilio
-                    Account SID and Auth Token
+                    First, go to <strong>Credentials</strong> and add your
+                    Twilio Account SID and Auth Token
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
@@ -399,15 +402,15 @@ export default function AdminDashboard() {
                 <li className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0"></span>
                   <span>
-                    Use <strong>Team Management</strong> to invite and manage team
-                    members
+                    Use <strong>Team Management</strong> to invite and manage
+                    team members
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
                   <span>
-                    Check <strong>Account Info</strong> for your account details and
-                    settings
+                    Check <strong>Account Info</strong> for your account details
+                    and settings
                   </span>
                 </li>
               </ul>
