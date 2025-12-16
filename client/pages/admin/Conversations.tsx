@@ -161,7 +161,7 @@ export default function Conversations() {
     setNewConversationNumber("");
     setSearchTerm("");
     setConversation({ ...conversation, contact });
-    fetchMessages(contact.id);
+    memoizedFetchMessages(contact.id);
   };
 
   const handleStartNewConversation = (phoneNumber: string) => {
