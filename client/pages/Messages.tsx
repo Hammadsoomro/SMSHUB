@@ -304,9 +304,23 @@ export default function Messages() {
           {assignedPhoneNumbers.length > 0 && (
             <div className="flex items-center gap-2 pl-4 border-l border-border">
               <Phone className="w-4 h-4 text-primary" />
-              <p className="font-semibold text-sm">
-                {assignedPhoneNumbers[0].phoneNumber}
-              </p>
+              {assignedPhoneNumbers.length === 1 ? (
+                <p className="font-semibold text-sm">
+                  {assignedPhoneNumbers[0].phoneNumber}
+                </p>
+              ) : (
+                <select
+                  value={selectedPhoneNumber}
+                  onChange={(e) => setSelectedPhoneNumber(e.target.value)}
+                  className="h-8 px-2 rounded-md border border-input bg-background text-foreground text-sm font-semibold"
+                >
+                  {assignedPhoneNumbers.map((num, index) => (
+                    <option key={num.id || `phone-${index}`} value={num.id}>
+                      {num.phoneNumber}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
         </div>
