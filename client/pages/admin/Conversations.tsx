@@ -49,20 +49,81 @@ export default function Conversations() {
     scrollToBottom();
   }, [conversation.messages]);
 
+  // Memoized fetch functions to prevent infinite loops
+  const memoizedFetchData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // Fetch contacts
+      const contactsRes = await fetch("/api/messages/contacts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (contactsRes.ok) {
+        const data = await contactsRes.json();
+        const newContacts = data.contacts || [];
+        setContacts(newContacts);
+      }
+
+      // Fetch phone numbers
+      const numbersRes = await fetch("/api/admin/numbers", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (numbersRes.ok) {
+        const data = await numbersRes.json();
+        setPhoneNumbers(data.numbers || []);
+        if (data.numbers && data.numbers.length > 0 && !selectedPhoneNumber) {
+          setSelectedPhoneNumber(data.numbers[0].id);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedPhoneNumber]);
+
+  const memoizedFetchMessages = useCallback(
+    async (contactId: string) => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const response = await fetch(`/api/messages/conversation/${contactId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch messages");
+        const data = await response.json();
+        const newMessages = data.messages || [];
+
+        setConversation((prev) => ({
+          ...prev,
+          messages: newMessages,
+        }));
+      } catch (err) {
+        console.error("Error fetching messages:", err);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
     }
-    fetchData();
+
+    // Initial fetch
+    memoizedFetchData();
 
     // Start polling for new messages
     const interval = setInterval(() => {
-      if (conversation.contact) {
-        fetchMessages(conversation.contact.id);
+      memoizedFetchData();
+      // Refresh current conversation if one is selected
+      if (conversation.contact?.id && !conversation.contact.id.startsWith("temp-")) {
+        memoizedFetchMessages(conversation.contact.id);
       }
-      fetchData();
     }, 3000); // Poll every 3 seconds
 
     pollIntervalRef.current = interval;
@@ -72,7 +133,7 @@ export default function Conversations() {
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [navigate, conversation.contact?.id]);
+  }, [navigate, memoizedFetchData, memoizedFetchMessages, conversation.contact?.id]);
 
   useEffect(() => {
     // Calculate total unread
