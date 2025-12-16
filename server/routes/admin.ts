@@ -371,7 +371,7 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     // Update the phone number with assignment
     const updatedNumber: PhoneNumber = {
       ...phoneNumber,
-      assignedTo: teamMemberId,
+      assignedTo: teamMemberId || undefined,
     };
 
     await storage.updatePhoneNumber(updatedNumber);
