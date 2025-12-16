@@ -39,7 +39,11 @@ class Storage {
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    const user = (await UserModel.findById(id)) as any;
+    // Try to find by custom id field first, then fallback to MongoDB _id
+    let user = (await UserModel.findOne({ id })) as any;
+    if (!user) {
+      user = (await UserModel.findById(id)) as any;
+    }
     if (!user) return undefined;
     const { password, ...userWithoutPassword } = user.toObject();
     return userWithoutPassword as User;
@@ -95,11 +99,29 @@ class Storage {
   }
 
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findOneAndUpdate(
-      { $or: [{ id: number.id }, { _id: number.id }] },
-      number,
-      { new: true },
-    );
+    // If assignedTo is undefined, we need to unset it from the document
+    if (number.assignedTo === undefined) {
+      await PhoneNumberModel.findOneAndUpdate(
+        { $or: [{ id: number.id }, { _id: number.id }] },
+        {
+          $set: {
+            id: number.id,
+            adminId: number.adminId,
+            phoneNumber: number.phoneNumber,
+            purchasedAt: number.purchasedAt,
+            active: number.active,
+          },
+          $unset: { assignedTo: 1 },
+        },
+        { new: true },
+      );
+    } else {
+      await PhoneNumberModel.findOneAndUpdate(
+        { $or: [{ id: number.id }, { _id: number.id }] },
+        number,
+        { new: true },
+      );
+    }
   }
 
   // Team Members

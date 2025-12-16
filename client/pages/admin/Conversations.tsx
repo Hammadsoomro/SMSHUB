@@ -38,6 +38,9 @@ export default function Conversations() {
   const [error, setError] = useState("");
   const [newConversationNumber, setNewConversationNumber] = useState("");
   const [totalUnread, setTotalUnread] = useState(0);
+  const [assignedPhoneNumbers, setAssignedPhoneNumbers] = useState<
+    PhoneNumber[]
+  >([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -87,6 +90,15 @@ export default function Conversations() {
         if (data.numbers && data.numbers.length > 0 && !selectedPhoneNumber) {
           setSelectedPhoneNumber(data.numbers[0].id);
         }
+      }
+
+      // Fetch assigned phone numbers for team members
+      const assignedRes = await fetch("/api/messages/assigned-phone-number", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (assignedRes.ok) {
+        const data = await assignedRes.json();
+        setAssignedPhoneNumbers(data.phoneNumbers || []);
       }
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -275,7 +287,28 @@ export default function Conversations() {
         {/* Header - Sticky */}
         <div className="sticky top-0 z-40 border-b border-border bg-background px-4 md:px-6 py-4 shadow-sm flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold">Conversations</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl md:text-3xl font-bold">Conversations</h1>
+              {/* Assigned Number Dropdown - Only show if team member has assigned numbers */}
+              {assignedPhoneNumbers.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Assigned to:
+                  </span>
+                  <select
+                    value={selectedPhoneNumber}
+                    onChange={(e) => setSelectedPhoneNumber(e.target.value)}
+                    className="h-10 px-3 rounded-md border border-input bg-background text-foreground text-sm"
+                  >
+                    {assignedPhoneNumbers.map((num, index) => (
+                      <option key={num.id || `phone-${index}`} value={num.id}>
+                        {num.phoneNumber}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
             {/* Notification Bell */}
             <div className="relative">
               <button className="p-2 hover:bg-muted rounded-lg transition-colors">
