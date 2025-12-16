@@ -64,6 +64,14 @@ export async function createServer() {
     res.json({ message: ping });
   });
 
+  app.get("/api/db-status", (_req, res) => {
+    const isConnected = getDBStatus();
+    res.json({
+      connected: isConnected,
+      message: isConnected ? "✅ Database connected" : "❌ Database not connected"
+    });
+  });
+
   app.get("/api/demo", handleDemo);
 
   // Auth routes (public)
