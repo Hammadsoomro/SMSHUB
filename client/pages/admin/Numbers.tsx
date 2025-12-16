@@ -147,7 +147,7 @@ export default function Numbers() {
         },
         body: JSON.stringify({
           phoneNumberId: selectedNumberId,
-          teamMemberId: selectedMemberId || undefined,
+          teamMemberId: selectedMemberId || null,
         }),
       });
 
