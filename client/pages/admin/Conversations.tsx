@@ -107,7 +107,19 @@ export default function Conversations() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) throw new Error("Failed to fetch messages");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error(
+            `Failed to fetch messages: ${response.status}`,
+            errorData,
+          );
+          if (response.status === 404) {
+            setError("Contact not found. Please select another contact.");
+          } else {
+            setError("Failed to load conversation. Please try again.");
+          }
+          return;
+        }
         const data = await response.json();
         const newMessages = data.messages || [];
 
@@ -115,8 +127,10 @@ export default function Conversations() {
           ...prev,
           messages: newMessages,
         }));
+        setError("");
       } catch (err) {
         console.error("Error fetching messages:", err);
+        setError("Error loading conversation. Please try again.");
       }
     },
     [],
