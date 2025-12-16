@@ -364,6 +364,19 @@ export default function Messages() {
                 className="pl-10 h-10"
               />
             </div>
+            {assignedPhoneNumbers.length > 1 && (
+              <select
+                value={selectedPhoneNumber}
+                onChange={(e) => setSelectedPhoneNumber(e.target.value)}
+                className="h-10 px-3 rounded-md border border-input bg-background text-foreground"
+              >
+                {assignedPhoneNumbers.map((num, index) => (
+                  <option key={num.id || `phone-${index}`} value={num.id}>
+                    {num.phoneNumber}
+                  </option>
+                ))}
+              </select>
+            )}
             {searchTerm &&
               !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
                 <Button
