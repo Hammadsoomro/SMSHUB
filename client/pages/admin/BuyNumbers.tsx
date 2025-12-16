@@ -448,19 +448,47 @@ export default function BuyNumbers() {
 
         {/* Country Selection */}
         <Card className="p-8 mb-8 border-2">
-          <h2 className="text-lg font-semibold mb-4">Select Country</h2>
-          <Select value={selectedCountry} onValueChange={handleCountryChange}>
-            <SelectTrigger className="w-full max-w-sm">
-              <SelectValue placeholder="Choose a country..." />
-            </SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map((country) => (
-                <SelectItem key={country.code} value={country.code}>
-                  {country.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <h2 className="text-lg font-semibold mb-6">Select Location</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                Country
+              </label>
+              <Select value={selectedCountry} onValueChange={handleCountryChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a country..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map((country) => (
+                    <SelectItem key={country.code} value={country.code}>
+                      {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* State Selection - Show only if country is selected and has states */}
+            {selectedCountry && STATES_BY_COUNTRY[selectedCountry]?.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  {selectedCountry === "US" ? "State" : selectedCountry === "CA" ? "Province" : "Region"}
+                </label>
+                <Select value={selectedState} onValueChange={handleStateChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={`Choose a ${selectedCountry === "US" ? "state" : selectedCountry === "CA" ? "province" : "region"}...`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATES_BY_COUNTRY[selectedCountry].map((state) => (
+                      <SelectItem key={state.code} value={state.code}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </Card>
 
         {/* Search */}
