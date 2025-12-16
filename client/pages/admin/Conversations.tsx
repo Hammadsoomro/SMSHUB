@@ -83,6 +83,7 @@ export default function Conversations() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) return;
 
       // Fetch contacts
       const contactsRes = await fetch("/api/messages/contacts", {
@@ -91,7 +92,7 @@ export default function Conversations() {
       if (contactsRes.ok) {
         const data = await contactsRes.json();
         const newContacts = data.contacts || [];
-        
+
         // Check for new unread messages and show notification
         const oldContacts = contacts;
         newContacts.forEach((newContact) => {
@@ -123,6 +124,8 @@ export default function Conversations() {
       }
     } catch (err) {
       console.error("Error fetching data:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
