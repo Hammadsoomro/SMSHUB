@@ -17,7 +17,10 @@ const COUNTRY_CODES: Record<string, { code: string; name: string }> = {
 export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const { countryCode } = req.query as { countryCode: string };
+    const { countryCode, state } = req.query as {
+      countryCode: string;
+      state?: string;
+    };
 
     if (!countryCode || !COUNTRY_CODES[countryCode]) {
       return res.status(400).json({ error: "Invalid country code" });
