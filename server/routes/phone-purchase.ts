@@ -35,26 +35,43 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     }
 
     // Fetch available numbers from Twilio
-    const twilioClient = new TwilioClient(
-      credentials.accountSid,
-      credentials.authToken,
-    );
-    let availableNumbers = await twilioClient.getAvailableNumbers(countryCode, false, state);
+    // Try multiple area codes if the first attempt doesn't return any numbers
+    let availableNumbers: any = null;
+    let areaCodeIndex = 0;
+    const maxRetries = 5; // Try up to 5 different area codes
 
-    // If no numbers found and it's US/CA, try alternative area codes
-    if (
-      (!availableNumbers.available_phone_numbers ||
-        availableNumbers.available_phone_numbers.length === 0) &&
-      (countryCode === "US" || countryCode === "CA")
-    ) {
-      const fallbackClient = new TwilioClient(
+    for (areaCodeIndex = 0; areaCodeIndex < maxRetries; areaCodeIndex++) {
+      const twilioClient = new TwilioClient(
         credentials.accountSid,
         credentials.authToken,
       );
-      availableNumbers = await fallbackClient.getAvailableNumbers(
+      availableNumbers = await twilioClient.getAvailableNumbers(
         countryCode,
-        true,
+        areaCodeIndex,
         state,
+      );
+
+      // If we got numbers or got an actual error, stop retrying
+      if (
+        availableNumbers.available_phone_numbers &&
+        availableNumbers.available_phone_numbers.length > 0
+      ) {
+        console.log(
+          `Found ${availableNumbers.available_phone_numbers.length} numbers for ${countryCode}/${state} using area code index ${areaCodeIndex}`,
+        );
+        break;
+      }
+
+      // If we got an API error, don't retry
+      if (availableNumbers.error || availableNumbers.error_message) {
+        console.warn(
+          `API error on retry ${areaCodeIndex}: ${availableNumbers.error_message}`,
+        );
+        break;
+      }
+
+      console.log(
+        `No numbers found for ${countryCode}/${state} with area code index ${areaCodeIndex}, retrying...`,
       );
     }
 
