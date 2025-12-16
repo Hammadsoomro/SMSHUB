@@ -226,9 +226,9 @@ export default function Conversations() {
 
       // If this was a new conversation, add it to contacts
       if (conversation.contact.id.startsWith("temp-")) {
-        await fetchData();
+        await memoizedFetchData();
       } else {
-        await fetchMessages(conversation.contact.id);
+        await memoizedFetchMessages(conversation.contact.id);
       }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Failed to send message";
