@@ -228,21 +228,27 @@ export class TwilioClient {
         query.append("NearLatLong", `${coords.lat},${coords.lng}`);
         // Increase distance on fallback attempts
         query.append("Distance", areaCodeIndex > 0 ? "100" : "50");
+      } else if (countryCode === "GB") {
+        // For UK, use latitude/longitude for London
+        query.append("NearLatLong", "51.5074,-0.1278");
+        query.append("Distance", areaCodeIndex > 0 ? "100" : "50");
       } else if (countryCode === "DE") {
         // For Germany, use latitude/longitude for Berlin
         query.append("NearLatLong", "52.5200,13.4050");
-        query.append("Distance", useFallback ? "100" : "50");
+        query.append("Distance", areaCodeIndex > 0 ? "100" : "50");
       } else if (countryCode === "FR") {
         // For France, use latitude/longitude for Paris
         query.append("NearLatLong", "48.8566,2.3522");
-        query.append("Distance", useFallback ? "100" : "50");
+        query.append("Distance", areaCodeIndex > 0 ? "100" : "50");
       } else if (countryCode === "ES") {
         // For Spain, use latitude/longitude for Madrid
         query.append("NearLatLong", "40.4168,-3.7038");
-        query.append("Distance", useFallback ? "100" : "50");
+        query.append("Distance", areaCodeIndex > 0 ? "100" : "50");
       } else {
         // Default fallback
-        query.append("AreaCode", useFallback ? "310" : "415");
+        const areaCodes = ["415", "310"];
+        const areaCode = areaCodes[Math.min(areaCodeIndex, areaCodes.length - 1)];
+        query.append("AreaCode", areaCode);
       }
 
       query.append("Limit", "50");
