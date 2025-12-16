@@ -90,7 +90,11 @@ export default function Messages() {
       if (numbersRes.ok) {
         const data = await numbersRes.json();
         setAssignedPhoneNumbers(data.phoneNumbers || []);
-        if (data.phoneNumbers && data.phoneNumbers.length > 0 && !selectedPhoneNumber) {
+        if (
+          data.phoneNumbers &&
+          data.phoneNumbers.length > 0 &&
+          !selectedPhoneNumber
+        ) {
           setSelectedPhoneNumber(data.phoneNumbers[0].id);
         }
       }
@@ -306,11 +310,7 @@ export default function Messages() {
             </div>
           )}
         </div>
-        <Button
-          onClick={handleLogout}
-          variant="ghost"
-          size="sm"
-        >
+        <Button onClick={handleLogout} variant="ghost" size="sm">
           <LogOut className="w-4 h-4 mr-2" />
           Logout
         </Button>

@@ -187,7 +187,6 @@ export default function Numbers() {
     }
   };
 
-
   const filteredNumbers = numbers.filter((num) =>
     num.phoneNumber.includes(searchTerm),
   );
