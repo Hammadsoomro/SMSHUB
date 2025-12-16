@@ -53,9 +53,18 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
       const phoneContacts = await storage.getContactsByPhoneNumber(
         phoneNumber.id,
       );
-      contacts = contacts.concat(phoneContacts);
+      // Ensure all contacts have IDs
+      const contactsWithIds = phoneContacts.map((contact) => {
+        if (!contact.id) {
+          console.warn("Contact missing ID:", contact);
+          contact.id = `contact-${Math.random().toString(36).substr(2, 9)}`;
+        }
+        return contact;
+      });
+      contacts = contacts.concat(contactsWithIds);
     }
 
+    console.log(`Returning ${contacts.length} contacts`);
     res.json({ contacts });
   } catch (error) {
     console.error("Get contacts error:", error);
