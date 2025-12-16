@@ -35,7 +35,10 @@ const COUNTRIES = [
   { code: "FR", name: "France" },
 ];
 
-const STATES_BY_COUNTRY: Record<string, Array<{ code: string; name: string }>> = {
+const STATES_BY_COUNTRY: Record<
+  string,
+  Array<{ code: string; name: string }>
+> = {
   US: [
     { code: "AL", name: "Alabama" },
     { code: "AK", name: "Alaska" },
@@ -454,7 +457,10 @@ export default function BuyNumbers() {
               <label className="text-sm font-medium text-muted-foreground mb-2 block">
                 Country
               </label>
-              <Select value={selectedCountry} onValueChange={handleCountryChange}>
+              <Select
+                value={selectedCountry}
+                onValueChange={handleCountryChange}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Choose a country..." />
                 </SelectTrigger>
@@ -469,25 +475,35 @@ export default function BuyNumbers() {
             </div>
 
             {/* State Selection - Show only if country is selected and has states */}
-            {selectedCountry && STATES_BY_COUNTRY[selectedCountry]?.length > 0 && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                  {selectedCountry === "US" ? "State" : selectedCountry === "CA" ? "Province" : "Region"}
-                </label>
-                <Select value={selectedState} onValueChange={handleStateChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={`Choose a ${selectedCountry === "US" ? "state" : selectedCountry === "CA" ? "province" : "region"}...`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATES_BY_COUNTRY[selectedCountry].map((state) => (
-                      <SelectItem key={state.code} value={state.code}>
-                        {state.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            {selectedCountry &&
+              STATES_BY_COUNTRY[selectedCountry]?.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                    {selectedCountry === "US"
+                      ? "State"
+                      : selectedCountry === "CA"
+                        ? "Province"
+                        : "Region"}
+                  </label>
+                  <Select
+                    value={selectedState}
+                    onValueChange={handleStateChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue
+                        placeholder={`Choose a ${selectedCountry === "US" ? "state" : selectedCountry === "CA" ? "province" : "region"}...`}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATES_BY_COUNTRY[selectedCountry].map((state) => (
+                        <SelectItem key={state.code} value={state.code}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
           </div>
         </Card>
 
