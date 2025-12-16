@@ -68,7 +68,9 @@ export async function createServer() {
     const isConnected = getDBStatus();
     res.json({
       connected: isConnected,
-      message: isConnected ? "✅ Database connected" : "❌ Database not connected"
+      message: isConnected
+        ? "✅ Database connected"
+        : "❌ Database not connected",
     });
   });
 
