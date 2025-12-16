@@ -101,6 +101,7 @@ export interface IMessage extends Document, Message {}
 
 const messageSchema = new Schema<IMessage>(
   {
+    id: { type: String, required: true, unique: true },
     phoneNumberId: { type: String, required: true },
     from: { type: String, required: true },
     to: { type: String, required: true },
