@@ -287,48 +287,33 @@ export default function Messages() {
   );
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <div className="w-64 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border/50 flex flex-col">
-        {/* Logo Section */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-sidebar-border/30">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+    <div className="flex h-screen bg-background flex-col">
+      {/* Header with Assigned Number and Logout */}
+      <div className="border-b border-border bg-background px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap">
-              SMSHub
-            </span>
+            <span className="text-lg font-bold">SMSHub</span>
           </div>
-        </div>
-
-        {/* Assigned Phone Number */}
-        {assignedPhoneNumbers.length > 0 && (
-          <div className="px-6 py-4 border-b border-sidebar-border/30 bg-sidebar-accent/10">
-            <p className="text-xs text-sidebar-foreground/70 mb-2 font-semibold">
-              Assigned Number
-            </p>
-            <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-sidebar-primary" />
-              <p className="font-semibold text-sm text-sidebar-foreground">
+          {assignedPhoneNumbers.length > 0 && (
+            <div className="flex items-center gap-2 pl-4 border-l border-border">
+              <Phone className="w-4 h-4 text-primary" />
+              <p className="font-semibold text-sm">
                 {assignedPhoneNumbers[0].phoneNumber}
               </p>
             </div>
-          </div>
-        )}
-
-        {/* Logout */}
-        <div className="mt-auto px-6 py-4 border-t border-sidebar-border/30">
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full"
-            size="sm"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
+          )}
         </div>
+        <Button
+          onClick={handleLogout}
+          variant="ghost"
+          size="sm"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </Button>
       </div>
 
       {/* Main Content Area */}
