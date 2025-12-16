@@ -465,14 +465,10 @@ export default function Messages() {
                   <MessageSquare className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <p className="text-lg font-semibold mb-2">
-                  {filteredContacts.length > 0 && !searchTerm
-                    ? "Select a contact"
-                    : "Start a conversation"}
+                  Start a conversation
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {filteredContacts.length > 0
-                    ? "Choose a contact from the list or search for a phone number"
-                    : "Enter or paste a phone number to begin"}
+                  Search for or paste a phone number to begin messaging
                 </p>
               </div>
             </div>
