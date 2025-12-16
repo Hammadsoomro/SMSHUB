@@ -225,9 +225,13 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
 
       const regionCodes = STATE_REGION_MAP[state] || [state];
       filteredNumbers = allNumbers.filter((num) => {
-        // Check if the number's region matches the requested state
-        const numberRegion = num.region?.toUpperCase() || "";
-        return regionCodes.some((code) => numberRegion.includes(code));
+        // For countries that use state codes, filter strictly
+        if (countryCode === "US" || countryCode === "CA") {
+          const numberRegion = num.region?.toUpperCase() || "";
+          return regionCodes.some((code) => numberRegion.includes(code));
+        }
+        // For other countries (AU, GB, etc), return all numbers since they're already filtered by location
+        return true;
       });
 
       console.log(
