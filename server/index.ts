@@ -45,6 +45,7 @@ import {
 // Middleware
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
 import { handleDemo } from "./routes/demo";
+import { getDBStatus } from "./db";
 
 export async function createServer() {
   // Connect to MongoDB BEFORE creating the app
