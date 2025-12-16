@@ -2,14 +2,22 @@
   command = "npm run build:client"
   functions = "netlify/functions"
   publish = "dist/spa"
-
+  node_version = "22"
 
 [functions]
-  external_node_modules = ["express"]
+  external_node_modules = ["express", "cors", "mongoose", "socket.io", "dotenv"]
   node_bundler = "esbuild"
-  
+
 [[redirects]]
   force = true
   from = "/api/*"
   status = 200
   to = "/.netlify/functions/api/:splat"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production.environment]
+  NODE_ENV = "production"

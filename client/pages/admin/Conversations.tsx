@@ -271,76 +271,74 @@ export default function Conversations() {
 
   return (
     <AdminLayout>
-      <div className="h-screen -m-4 md:-m-8 flex flex-col bg-card">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-40 border-b border-border bg-background p-4 md:p-6 shadow-sm">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl md:text-3xl font-bold">Conversations</h1>
-              {/* Notification Bell */}
-              <div className="relative">
-                <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-                  <Bell className="w-6 h-6" />
-                  {totalUnread > 0 && (
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-destructive rounded-full">
-                      {totalUnread > 99 ? "99+" : totalUnread}
-                    </span>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Phone Number Selection and Search */}
-            <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search contacts or paste phone number..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter" && searchTerm.trim()) {
-                      handleSearchNumberSelection();
-                    }
-                  }}
-                  className="pl-10 h-10"
-                />
-              </div>
-              <select
-                value={selectedPhoneNumber}
-                onChange={(e) => setSelectedPhoneNumber(e.target.value)}
-                className="h-10 px-3 rounded-md border border-input bg-background text-foreground"
-              >
-                {phoneNumbers.map((num, index) => (
-                  <option key={num.id || `phone-${index}`} value={num.id}>
-                    {num.phoneNumber}
-                  </option>
-                ))}
-              </select>
-              {searchTerm &&
-                !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
-                  <Button
-                    onClick={handleSearchNumberSelection}
-                    className="bg-gradient-to-r from-primary to-secondary"
-                  >
-                    Start Chat
-                  </Button>
+      <div className="flex flex-col h-[calc(100vh-80px)] bg-card">
+        {/* Header - Sticky */}
+        <div className="sticky top-0 z-40 border-b border-border bg-background px-4 md:px-6 py-4 shadow-sm flex-shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold">Conversations</h1>
+            {/* Notification Bell */}
+            <div className="relative">
+              <button className="p-2 hover:bg-muted rounded-lg transition-colors">
+                <Bell className="w-6 h-6" />
+                {totalUnread > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-destructive rounded-full">
+                    {totalUnread > 99 ? "99+" : totalUnread}
+                  </span>
                 )}
+              </button>
             </div>
-
-            {error && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            )}
           </div>
+
+          {/* Phone Number Selection and Search */}
+          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search contacts or paste phone number..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter" && searchTerm.trim()) {
+                    handleSearchNumberSelection();
+                  }
+                }}
+                className="pl-10 h-10"
+              />
+            </div>
+            <select
+              value={selectedPhoneNumber}
+              onChange={(e) => setSelectedPhoneNumber(e.target.value)}
+              className="h-10 px-3 rounded-md border border-input bg-background text-foreground"
+            >
+              {phoneNumbers.map((num, index) => (
+                <option key={num.id || `phone-${index}`} value={num.id}>
+                  {num.phoneNumber}
+                </option>
+              ))}
+            </select>
+            {searchTerm &&
+              !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
+                <Button
+                  onClick={handleSearchNumberSelection}
+                  className="bg-gradient-to-r from-primary to-secondary"
+                >
+                  Start Chat
+                </Button>
+              )}
+          </div>
+
+          {error && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
         </div>
 
-        {/* Main Content */}
+        {/* Main Content Area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Contacts Sidebar */}
-          <div className="hidden md:flex w-72 border-r border-border bg-card flex-col overflow-hidden">
+          <div className="hidden md:flex w-72 border-r border-border bg-card flex-col overflow-hidden flex-shrink-0">
             {/* Contacts List */}
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (
@@ -400,16 +398,18 @@ export default function Conversations() {
           {/* Chat Area */}
           {conversation.contact ? (
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Chat Header - Sticky */}
-              <div className="sticky top-0 z-30 border-b border-border bg-background h-16 flex items-center justify-between px-4 md:px-6 shadow-sm">
-                <div className="flex-1">
-                  <p className="font-semibold">
+              {/* Chat Header - Sticky Top */}
+              <div className="sticky top-0 z-30 border-b border-border bg-background h-16 flex items-center justify-between px-4 md:px-6 shadow-sm flex-shrink-0">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">
                     {conversation.contact.name ||
                       conversation.contact.phoneNumber}
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                    <Phone className="w-3 h-3" />
-                    {conversation.contact.phoneNumber}
+                    <Phone className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">
+                      {conversation.contact.phoneNumber}
+                    </span>
                   </p>
                 </div>
                 <button
@@ -417,13 +417,13 @@ export default function Conversations() {
                     setConversation({ contact: null, messages: [] });
                     setSearchTerm("");
                   }}
-                  className="md:hidden p-2 hover:bg-muted rounded-lg"
+                  className="md:hidden p-2 hover:bg-muted rounded-lg flex-shrink-0 ml-2"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Messages - Scrollable */}
+              {/* Messages - Scrollable Middle Section */}
               <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-background/50">
                 {conversation.messages.length > 0 ? (
                   <>
@@ -464,10 +464,10 @@ export default function Conversations() {
                 )}
               </div>
 
-              {/* Message Input - Sticky */}
+              {/* Message Input - Sticky Bottom */}
               <form
                 onSubmit={handleSendMessage}
-                className="sticky bottom-0 z-30 border-t border-border bg-background p-4 md:p-6 shadow-sm"
+                className="sticky bottom-0 z-30 border-t border-border bg-background px-4 md:px-6 py-4 shadow-sm flex-shrink-0"
               >
                 <div className="flex gap-2">
                   <Input
