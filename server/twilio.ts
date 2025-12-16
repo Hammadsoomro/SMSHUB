@@ -226,7 +226,8 @@ export class TwilioClient {
         }
 
         query.append("NearLatLong", `${coords.lat},${coords.lng}`);
-        query.append("Distance", useFallback ? "100" : "50");
+        // Increase distance on fallback attempts
+        query.append("Distance", areaCodeIndex > 0 ? "100" : "50");
       } else if (countryCode === "DE") {
         // For Germany, use latitude/longitude for Berlin
         query.append("NearLatLong", "52.5200,13.4050");
