@@ -116,12 +116,6 @@ const STATES_BY_COUNTRY: Record<string, Array<{ code: string; name: string }>> =
     { code: "ACT", name: "Australian Capital Territory" },
     { code: "NT", name: "Northern Territory" },
   ],
-  GB: [
-    { code: "LONDON", name: "London" },
-    { code: "MANCHESTER", name: "Manchester" },
-    { code: "LIVERPOOL", name: "Liverpool" },
-    { code: "BIRMINGHAM", name: "Birmingham" },
-  ],
   DE: [],
   ES: [],
   FR: [],
