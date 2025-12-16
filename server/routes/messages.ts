@@ -66,12 +66,18 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
 export const handleGetConversation: RequestHandler = async (req, res) => {
   try {
     const { contactId } = req.params;
+    console.log("Looking for contact with ID:", contactId);
 
     const contact = await storage.getContactById(contactId);
     if (!contact) {
-      return res.status(404).json({ error: "Contact not found" });
+      console.warn("Contact not found with ID:", contactId);
+      return res.status(404).json({
+        error: "Contact not found",
+        contactId
+      });
     }
 
+    console.log("Found contact:", contact.phoneNumber);
     const messages = await storage.getMessagesByPhoneNumber(
       contact.phoneNumberId,
     );
