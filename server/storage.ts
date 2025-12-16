@@ -174,11 +174,26 @@ class Storage {
   }
 
   async getContactById(id: string): Promise<Contact | undefined> {
-    const doc = await ContactModel.findOne({ $or: [{ id }, { _id: id }] });
+    // Try multiple search methods
+    let doc = await ContactModel.findOne({ id });
+
+    if (!doc) {
+      doc = await ContactModel.findById(id);
+    }
+
+    if (!doc) {
+      doc = await ContactModel.findOne({ _id: id });
+    }
+
     if (!doc) return undefined;
+
     const data = doc.toObject() as any;
-    if (!data.id && data._id) {
-      data.id = data._id.toString();
+    if (!data.id) {
+      if (data._id) {
+        data.id = data._id.toString();
+      } else {
+        console.warn("Contact has no ID field:", data);
+      }
     }
     return data as Contact;
   }
