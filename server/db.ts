@@ -34,12 +34,15 @@ export async function connectDB() {
   }
 
   try {
+    console.log("📱 Connecting to MongoDB...");
     await mongoose.connect(MONGODB_URI);
     isConnected = true;
+    console.log("✅ MongoDB connected successfully!");
 
     // Clean up any invalid data
     await cleanupPhoneNumbers();
   } catch (error) {
+    console.error("❌ MongoDB connection failed:", error);
     throw error;
   }
 }
