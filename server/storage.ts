@@ -39,7 +39,11 @@ class Storage {
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    const user = (await UserModel.findById(id)) as any;
+    // Try to find by custom id field first, then fallback to MongoDB _id
+    let user = (await UserModel.findOne({ id })) as any;
+    if (!user) {
+      user = (await UserModel.findById(id)) as any;
+    }
     if (!user) return undefined;
     const { password, ...userWithoutPassword } = user.toObject();
     return userWithoutPassword as User;
