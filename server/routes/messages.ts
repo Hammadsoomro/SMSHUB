@@ -53,9 +53,18 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
       const phoneContacts = await storage.getContactsByPhoneNumber(
         phoneNumber.id,
       );
-      contacts = contacts.concat(phoneContacts);
+      // Ensure all contacts have IDs
+      const contactsWithIds = phoneContacts.map((contact) => {
+        if (!contact.id) {
+          console.warn("Contact missing ID:", contact);
+          contact.id = `contact-${Math.random().toString(36).substr(2, 9)}`;
+        }
+        return contact;
+      });
+      contacts = contacts.concat(contactsWithIds);
     }
 
+    console.log(`Returning ${contacts.length} contacts`);
     res.json({ contacts });
   } catch (error) {
     console.error("Get contacts error:", error);
@@ -66,12 +75,18 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
 export const handleGetConversation: RequestHandler = async (req, res) => {
   try {
     const { contactId } = req.params;
+    console.log("Looking for contact with ID:", contactId);
 
     const contact = await storage.getContactById(contactId);
     if (!contact) {
-      return res.status(404).json({ error: "Contact not found" });
+      console.warn("Contact not found with ID:", contactId);
+      return res.status(404).json({
+        error: "Contact not found",
+        contactId,
+      });
     }
 
+    console.log("Found contact:", contact.phoneNumber);
     const messages = await storage.getMessagesByPhoneNumber(
       contact.phoneNumberId,
     );

@@ -73,15 +73,33 @@ class Storage {
   }
 
   async getPhoneNumbersByAdminId(adminId: string): Promise<PhoneNumber[]> {
-    return (await PhoneNumberModel.find({ adminId })) as PhoneNumber[];
+    const numbers = await PhoneNumberModel.find({ adminId });
+    return numbers.map((doc: any) => {
+      const data = doc.toObject();
+      // If id is missing, use MongoDB's _id as fallback
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as PhoneNumber;
+    });
   }
 
   async getPhoneNumberById(id: string): Promise<PhoneNumber | undefined> {
-    return (await PhoneNumberModel.findById(id)) as PhoneNumber | null;
+    const doc = await PhoneNumberModel.findOne({ $or: [{ id }, { _id: id }] });
+    if (!doc) return undefined;
+    const data = doc.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as PhoneNumber;
   }
 
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findByIdAndUpdate(number.id, number);
+    await PhoneNumberModel.findOneAndUpdate(
+      { $or: [{ id: number.id }, { _id: number.id }] },
+      number,
+      { new: true },
+    );
   }
 
   // Team Members
@@ -126,9 +144,16 @@ class Storage {
   }
 
   async getMessagesByPhoneNumber(phoneNumberId: string): Promise<Message[]> {
-    return (await MessageModel.find({ phoneNumberId }).sort({
-      timestamp: -1,
-    })) as Message[];
+    const messages = await MessageModel.find({ phoneNumberId }).sort({
+      timestamp: 1,
+    });
+    return messages.map((doc: any) => {
+      const data = doc.toObject();
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as Message;
+    });
   }
 
   // Contacts
@@ -138,15 +163,47 @@ class Storage {
   }
 
   async getContactsByPhoneNumber(phoneNumberId: string): Promise<Contact[]> {
-    return (await ContactModel.find({ phoneNumberId })) as Contact[];
+    const contacts = await ContactModel.find({ phoneNumberId });
+    return contacts.map((doc: any) => {
+      const data = doc.toObject();
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as Contact;
+    });
   }
 
   async getContactById(id: string): Promise<Contact | undefined> {
-    return (await ContactModel.findById(id)) as Contact | null;
+    // Try multiple search methods
+    let doc = await ContactModel.findOne({ id });
+
+    if (!doc) {
+      doc = await ContactModel.findById(id);
+    }
+
+    if (!doc) {
+      doc = await ContactModel.findOne({ _id: id });
+    }
+
+    if (!doc) return undefined;
+
+    const data = doc.toObject() as any;
+    if (!data.id) {
+      if (data._id) {
+        data.id = data._id.toString();
+      } else {
+        console.warn("Contact has no ID field:", data);
+      }
+    }
+    return data as Contact;
   }
 
   async updateContact(contact: Contact): Promise<void> {
-    await ContactModel.findByIdAndUpdate(contact.id, contact);
+    await ContactModel.findOneAndUpdate(
+      { $or: [{ id: contact.id }, { _id: contact.id }] },
+      contact,
+      { new: true },
+    );
   }
 
   // Wallet operations

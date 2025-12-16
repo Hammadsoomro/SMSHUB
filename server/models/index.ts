@@ -52,6 +52,7 @@ export interface IPhoneNumber extends Document, PhoneNumber {}
 
 const phoneNumberSchema = new Schema<IPhoneNumber>(
   {
+    id: { type: String, required: true, unique: true },
     adminId: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     assignedTo: { type: String, sparse: true },
@@ -100,6 +101,7 @@ export interface IMessage extends Document, Message {}
 
 const messageSchema = new Schema<IMessage>(
   {
+    id: { type: String, required: true, unique: true },
     phoneNumberId: { type: String, required: true },
     from: { type: String, required: true },
     to: { type: String, required: true },
@@ -120,6 +122,7 @@ export interface IContact extends Document, Contact {}
 
 const contactSchema = new Schema<IContact>(
   {
+    id: { type: String, required: true, unique: true },
     phoneNumberId: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     name: { type: String, sparse: true },

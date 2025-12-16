@@ -18,6 +18,7 @@ import {
   handleAddExistingNumber,
   handleAssignNumber,
   handleUpdateNumberSettings,
+  handleGetDashboardStats,
 } from "./routes/admin";
 
 // Wallet routes
@@ -118,6 +119,12 @@ export async function createServer() {
     authMiddleware,
     adminOnly,
     handleRemoveTeamMember,
+  );
+  app.get(
+    "/api/admin/dashboard/stats",
+    authMiddleware,
+    adminOnly,
+    handleGetDashboardStats,
   );
 
   // Messages routes (requires authentication)
