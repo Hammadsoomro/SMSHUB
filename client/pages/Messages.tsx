@@ -94,13 +94,18 @@ export default function Messages() {
         });
         if (numbersRes.ok) {
           const data = await numbersRes.json();
-          setAssignedPhoneNumbers(data.phoneNumbers || []);
-          if (
-            data.phoneNumbers &&
-            data.phoneNumbers.length > 0 &&
-            !selectedPhoneNumber
-          ) {
-            setSelectedPhoneNumber(data.phoneNumbers[0].id);
+          const phoneNumbers = data.phoneNumbers || [];
+          setAssignedPhoneNumbers(phoneNumbers);
+
+          // Update selectedPhoneNumber based on fetched data
+          if (phoneNumbers.length > 0) {
+            // If current selection is not in the list, select first one
+            if (!phoneNumbers.some((pn) => pn.id === selectedPhoneNumber)) {
+              setSelectedPhoneNumber(phoneNumbers[0].id);
+            }
+          } else {
+            // If no numbers assigned, clear selection
+            setSelectedPhoneNumber("");
           }
         } else {
           console.error(
@@ -114,7 +119,7 @@ export default function Messages() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedPhoneNumber]);
+  }, []);
 
   const memoizedFetchMessages = useCallback(async (contactId: string) => {
     try {
