@@ -144,9 +144,16 @@ class Storage {
   }
 
   async getMessagesByPhoneNumber(phoneNumberId: string): Promise<Message[]> {
-    return (await MessageModel.find({ phoneNumberId }).sort({
-      timestamp: -1,
-    })) as Message[];
+    const messages = await MessageModel.find({ phoneNumberId }).sort({
+      timestamp: 1,
+    });
+    return messages.map((doc: any) => {
+      const data = doc.toObject();
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as Message;
+    });
   }
 
   // Contacts
