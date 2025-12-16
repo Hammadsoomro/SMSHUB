@@ -39,7 +39,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       credentials.accountSid,
       credentials.authToken,
     );
-    let availableNumbers = await twilioClient.getAvailableNumbers(countryCode);
+    let availableNumbers = await twilioClient.getAvailableNumbers(countryCode, false, state);
 
     // If no numbers found and it's US/CA, try alternative area codes
     if (
@@ -54,6 +54,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       availableNumbers = await fallbackClient.getAvailableNumbers(
         countryCode,
         true,
+        state,
       );
     }
 
