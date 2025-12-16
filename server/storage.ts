@@ -156,7 +156,14 @@ class Storage {
   }
 
   async getContactsByPhoneNumber(phoneNumberId: string): Promise<Contact[]> {
-    return (await ContactModel.find({ phoneNumberId })) as Contact[];
+    const contacts = await ContactModel.find({ phoneNumberId });
+    return contacts.map((doc: any) => {
+      const data = doc.toObject();
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as Contact;
+    });
   }
 
   async getContactById(id: string): Promise<Contact | undefined> {
