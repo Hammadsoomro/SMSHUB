@@ -107,11 +107,9 @@ class Storage {
   }
 
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findOneAndUpdate(
-      { id: number.id },
-      number,
-      { new: true },
-    );
+    await PhoneNumberModel.findOneAndUpdate({ id: number.id }, number, {
+      new: true,
+    });
   }
 
   // Team Members
@@ -211,11 +209,9 @@ class Storage {
   }
 
   async updateContact(contact: Contact): Promise<void> {
-    await ContactModel.findOneAndUpdate(
-      { id: contact.id },
-      contact,
-      { new: true },
-    );
+    await ContactModel.findOneAndUpdate({ id: contact.id }, contact, {
+      new: true,
+    });
   }
 
   // Wallet operations

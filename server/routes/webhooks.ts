@@ -22,7 +22,6 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
   console.log("🔔 ===== WEBHOOK RECEIVED ===== 🔔\n\n");
 
   try {
-
     const { From, To, Body, MessageSid } = req.body;
 
     // Validate required fields
@@ -41,10 +40,14 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     const phoneNumber = await storage.getPhoneNumberByPhoneNumber(To);
     if (!phoneNumber) {
       console.error(`❌ Phone number ${To} not found in database`);
-      console.error("This means the Twilio number hasn't been added to your account");
+      console.error(
+        "This means the Twilio number hasn't been added to your account",
+      );
       return res.status(404).send("Phone number not found");
     }
-    console.log(`✅ Found phone number: ${phoneNumber.phoneNumber} (ID: ${phoneNumber.id})`);
+    console.log(
+      `✅ Found phone number: ${phoneNumber.phoneNumber} (ID: ${phoneNumber.id})`,
+    );
 
     // Store the message
     const message: Message = {
@@ -84,7 +87,9 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
         lastMessageTime: message.timestamp,
         unreadCount: (existingContact.unreadCount || 0) + 1,
       });
-      console.log(`✅ Contact updated: ${From}, unread count: ${(existingContact.unreadCount || 0) + 1}`);
+      console.log(
+        `✅ Contact updated: ${From}, unread count: ${(existingContact.unreadCount || 0) + 1}`,
+      );
     }
 
     // Return TwiML response to Twilio
