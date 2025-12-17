@@ -59,6 +59,7 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     };
 
     await storage.addMessage(message);
+    console.log(`✅ Message saved to database: ${message.id}`);
 
     // Get or create contact
     const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
@@ -74,6 +75,7 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
         unreadCount: 1,
       };
       await storage.addContact(contact);
+      console.log(`✅ New contact created: ${From}`);
     } else {
       // Update last message info and increment unread count
       await storage.updateContact({
@@ -82,6 +84,7 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
         lastMessageTime: message.timestamp,
         unreadCount: (existingContact.unreadCount || 0) + 1,
       });
+      console.log(`✅ Contact updated: ${From}, unread count: ${(existingContact.unreadCount || 0) + 1}`);
     }
 
     // Return TwiML response to Twilio
