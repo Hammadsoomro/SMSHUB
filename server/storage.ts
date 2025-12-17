@@ -94,12 +94,22 @@ class Storage {
     return data as PhoneNumber;
   }
 
+  async getPhoneNumberByPhoneNumber(
+    phoneNumber: string,
+  ): Promise<PhoneNumber | undefined> {
+    const doc = await PhoneNumberModel.findOne({ phoneNumber });
+    if (!doc) return undefined;
+    const data = doc.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as PhoneNumber;
+  }
+
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findOneAndUpdate(
-      { $or: [{ id: number.id }, { _id: number.id }] },
-      number,
-      { new: true },
-    );
+    await PhoneNumberModel.findOneAndUpdate({ id: number.id }, number, {
+      new: true,
+    });
   }
 
   // Team Members
@@ -199,11 +209,9 @@ class Storage {
   }
 
   async updateContact(contact: Contact): Promise<void> {
-    await ContactModel.findOneAndUpdate(
-      { $or: [{ id: contact.id }, { _id: contact.id }] },
-      contact,
-      { new: true },
-    );
+    await ContactModel.findOneAndUpdate({ id: contact.id }, contact, {
+      new: true,
+    });
   }
 
   // Wallet operations

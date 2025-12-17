@@ -176,6 +176,10 @@ export default function Conversations() {
     setNewConversationNumber("");
     setSearchTerm("");
     setConversation({ ...conversation, contact });
+    // Update selected phone number to match the contact's phone number
+    if (contact.phoneNumberId) {
+      setSelectedPhoneNumber(contact.phoneNumberId);
+    }
     memoizedFetchMessages(contact.id);
   };
 
@@ -265,8 +269,9 @@ export default function Conversations() {
 
   const filteredContacts = contacts.filter(
     (contact) =>
-      contact.phoneNumber.includes(searchTerm) ||
-      contact.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      contact.phoneNumberId === selectedPhoneNumber &&
+      (contact.phoneNumber.includes(searchTerm) ||
+        contact.name?.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   return (
