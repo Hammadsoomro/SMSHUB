@@ -265,8 +265,9 @@ export default function Conversations() {
 
   const filteredContacts = contacts.filter(
     (contact) =>
-      contact.phoneNumber.includes(searchTerm) ||
-      contact.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      contact.phoneNumberId === selectedPhoneNumber &&
+      (contact.phoneNumber.includes(searchTerm) ||
+        contact.name?.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   return (
