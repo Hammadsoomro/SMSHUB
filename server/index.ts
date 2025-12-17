@@ -43,7 +43,7 @@ import {
 } from "./routes/messages";
 
 // Webhooks
-import { handleInboundSMS } from "./routes/webhooks";
+import { handleInboundSMS, handleWebhookHealth } from "./routes/webhooks";
 
 // Middleware
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
