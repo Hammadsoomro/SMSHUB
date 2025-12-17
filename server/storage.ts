@@ -94,6 +94,18 @@ class Storage {
     return data as PhoneNumber;
   }
 
+  async getPhoneNumberByPhoneNumber(
+    phoneNumber: string,
+  ): Promise<PhoneNumber | undefined> {
+    const doc = await PhoneNumberModel.findOne({ phoneNumber });
+    if (!doc) return undefined;
+    const data = doc.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as PhoneNumber;
+  }
+
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
     await PhoneNumberModel.findOneAndUpdate(
       { $or: [{ id: number.id }, { _id: number.id }] },
