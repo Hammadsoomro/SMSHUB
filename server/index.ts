@@ -72,6 +72,9 @@ export async function createServer() {
   app.post("/api/auth/signup", handleSignup);
   app.post("/api/auth/login", handleLogin);
 
+  // Webhook routes (public - for Twilio callbacks)
+  app.post("/api/webhooks/inbound-sms", handleInboundSMS);
+
   // Admin routes (requires admin role)
   app.post(
     "/api/admin/credentials",
