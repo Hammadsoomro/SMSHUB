@@ -92,9 +92,14 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response></Response>`;
 
+    console.log(`✅✅✅ WEBHOOK PROCESSED SUCCESSFULLY ✅✅✅`);
     res.type("application/xml").send(twimlResponse);
   } catch (error) {
-    console.error("Inbound SMS webhook error:", error);
+    console.error("❌ Inbound SMS webhook error:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     res.status(500).send("Internal server error");
   }
 };
