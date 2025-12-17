@@ -176,6 +176,10 @@ export default function Conversations() {
     setNewConversationNumber("");
     setSearchTerm("");
     setConversation({ ...conversation, contact });
+    // Update selected phone number to match the contact's phone number
+    if (contact.phoneNumberId) {
+      setSelectedPhoneNumber(contact.phoneNumberId);
+    }
     memoizedFetchMessages(contact.id);
   };
 
