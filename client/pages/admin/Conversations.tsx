@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Message, Contact, PhoneNumber } from "@shared/api";
 import { toast } from "sonner";
+import { onNewMessage, initializeSocket } from "@/lib/socket";
 
 interface ConversationState {
   contact: Contact | null;
