@@ -212,7 +212,7 @@ class Storage {
 
   async updateContact(contact: Contact): Promise<void> {
     await ContactModel.findOneAndUpdate(
-      { $or: [{ id: contact.id }, { _id: contact.id }] },
+      { id: contact.id },
       contact,
       { new: true },
     );
