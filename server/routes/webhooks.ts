@@ -8,6 +8,9 @@ import { Message, Contact } from "@shared/api";
  */
 export const handleInboundSMS: RequestHandler = async (req, res) => {
   try {
+    console.log("=== WEBHOOK HIT ===");
+    console.log("Full request body:", JSON.stringify(req.body, null, 2));
+
     const { From, To, Body, MessageSid } = req.body;
 
     // Validate required fields
@@ -20,7 +23,7 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
       return res.status(400).send("Missing required fields");
     }
 
-    console.log(`Received inbound SMS from ${From} to ${To}: ${Body}`);
+    console.log(`✅ Received inbound SMS from ${From} to ${To}: ${Body}`);
 
     // Find the phone number in the database
     const phoneNumber = await storage.getPhoneNumberByPhoneNumber(To);
