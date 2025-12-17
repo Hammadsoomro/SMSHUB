@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Message, Contact, PhoneNumber } from "@shared/api";
 import { toast } from "sonner";
+import { onNewMessage, initializeSocket } from "@/lib/socket";
 
 interface ConversationState {
   contact: Contact | null;
@@ -140,7 +141,57 @@ export default function Conversations() {
     // Initial fetch
     memoizedFetchData();
 
-    // Start polling for new messages
+    // Initialize socket.io for real-time updates
+    const socket = initializeSocket();
+
+    // Listen for new messages
+    const unsubscribeNewMessage = onNewMessage((data) => {
+      console.log("📱 Real-time new message received:", data);
+
+      // If this message is for the current conversation, add it immediately
+      if (
+        conversation.contact &&
+        (data.from === conversation.contact.phoneNumber ||
+          data.to === conversation.contact.phoneNumber)
+      ) {
+        const newMessage: Message = {
+          id: data.id,
+          phoneNumberId: data.phoneNumberId,
+          from: data.from,
+          to: data.to,
+          body: data.body,
+          direction: data.direction,
+          timestamp: data.timestamp,
+          sid: data.sid,
+        };
+
+        setConversation((prev) => ({
+          ...prev,
+          messages: [...prev.messages, newMessage],
+        }));
+
+        // Show toast notification
+        toast.message(`📱 New message from ${data.from}`, {
+          description: data.body.substring(0, 50),
+        });
+      }
+
+      // Refresh contacts list to update last message and unread count
+      memoizedFetchData();
+    });
+
+    // Listen for contact updates (for unread count changes)
+    socket?.on("contact_updated", (data) => {
+      console.log("👥 Contact updated:", data);
+      setContacts((prevContacts) => {
+        const updated = prevContacts.map((c) =>
+          c.id === data.id ? { ...c, ...data } : c,
+        );
+        return updated;
+      });
+    });
+
+    // Start polling for new messages as fallback
     const interval = setInterval(() => {
       memoizedFetchData();
       // Refresh current conversation if one is selected
@@ -158,6 +209,8 @@ export default function Conversations() {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
+      unsubscribeNewMessage();
+      socket?.off("contact_updated");
     };
   }, [
     navigate,

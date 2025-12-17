@@ -1,7 +1,8 @@
 import "dotenv/config";
-import express from "express";
+import express, { Express } from "express";
 import cors from "cors";
 import { connectDB } from "./db";
+import { Server as IOServer } from "socket.io";
 
 // Auth routes
 import { handleSignup, handleLogin } from "./routes/auth";
@@ -49,11 +50,22 @@ import { handleInboundSMS, handleWebhookHealth } from "./routes/webhooks";
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
 import { handleDemo } from "./routes/demo";
 
+// Global socket.io instance for webhook access
+let globalIO: IOServer | null = null;
+
+export function setSocketIOInstance(io: IOServer) {
+  globalIO = io;
+}
+
+export function getSocketIOInstance(): IOServer | null {
+  return globalIO;
+}
+
 export async function createServer() {
   // Connect to MongoDB BEFORE creating the app
   await connectDB();
 
-  const app = express();
+  const app = express() as Express;
 
   // Middleware
   app.use(cors());
