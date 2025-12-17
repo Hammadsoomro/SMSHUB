@@ -7,9 +7,12 @@ import { Message, Contact } from "@shared/api";
  * Receives form data from Twilio and stores the message in the database
  */
 export const handleInboundSMS: RequestHandler = async (req, res) => {
+  console.log("\n\n🔔 ===== WEBHOOK HIT ===== 🔔");
+  console.log("Timestamp:", new Date().toISOString());
+  console.log("Full request body:", JSON.stringify(req.body, null, 2));
+  console.log("🔔 ===== END WEBHOOK ===== 🔔\n\n");
+
   try {
-    console.log("=== WEBHOOK HIT ===");
-    console.log("Full request body:", JSON.stringify(req.body, null, 2));
 
     const { From, To, Body, MessageSid } = req.body;
 
