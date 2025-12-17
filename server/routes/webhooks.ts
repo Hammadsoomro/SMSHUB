@@ -40,9 +40,11 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     // Find the phone number in the database
     const phoneNumber = await storage.getPhoneNumberByPhoneNumber(To);
     if (!phoneNumber) {
-      console.warn(`Phone number ${To} not found in database`);
+      console.error(`❌ Phone number ${To} not found in database`);
+      console.error("This means the Twilio number hasn't been added to your account");
       return res.status(404).send("Phone number not found");
     }
+    console.log(`✅ Found phone number: ${phoneNumber.phoneNumber} (ID: ${phoneNumber.id})`);
 
     // Store the message
     const message: Message = {
