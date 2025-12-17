@@ -149,7 +149,11 @@ export default function Conversations() {
       console.log("📱 Real-time new message received:", data);
 
       // If this message is for the current conversation, add it immediately
-      if (conversation.contact && (data.from === conversation.contact.phoneNumber || data.to === conversation.contact.phoneNumber)) {
+      if (
+        conversation.contact &&
+        (data.from === conversation.contact.phoneNumber ||
+          data.to === conversation.contact.phoneNumber)
+      ) {
         const newMessage: Message = {
           id: data.id,
           phoneNumberId: data.phoneNumberId,
@@ -181,7 +185,7 @@ export default function Conversations() {
       console.log("👥 Contact updated:", data);
       setContacts((prevContacts) => {
         const updated = prevContacts.map((c) =>
-          c.id === data.id ? { ...c, ...data } : c
+          c.id === data.id ? { ...c, ...data } : c,
         );
         return updated;
       });

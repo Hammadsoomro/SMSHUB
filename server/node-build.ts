@@ -1,6 +1,9 @@
 import path from "path";
 import { createServer } from "http";
-import { createServer as createExpressServer, setSocketIOInstance } from "./index";
+import {
+  createServer as createExpressServer,
+  setSocketIOInstance,
+} from "./index";
 import { setupSocketIO } from "./socket";
 import * as express from "express";
 

@@ -100,7 +100,9 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     // Emit socket.io events to notify connected clients in real-time
     const io = getSocketIOInstance();
     if (io && phoneNumber.assignedTo) {
-      console.log(`📡 Emitting socket.io event to user ${phoneNumber.assignedTo}`);
+      console.log(
+        `📡 Emitting socket.io event to user ${phoneNumber.assignedTo}`,
+      );
       io.to(`user:${phoneNumber.assignedTo}`).emit("new_message", {
         id: message.id,
         phoneNumberId: phoneNumber.id,
