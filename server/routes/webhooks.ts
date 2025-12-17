@@ -3,14 +3,23 @@ import { storage } from "../storage";
 import { Message, Contact } from "@shared/api";
 
 /**
+ * Health check endpoint - verify webhook is reachable
+ */
+export const handleWebhookHealth: RequestHandler = async (req, res) => {
+  console.log("✅ Webhook health check - endpoint is reachable");
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+};
+
+/**
  * Handle inbound SMS from Twilio webhook
  * Receives form data from Twilio and stores the message in the database
  */
 export const handleInboundSMS: RequestHandler = async (req, res) => {
-  console.log("\n\n🔔 ===== WEBHOOK HIT ===== 🔔");
-  console.log("Timestamp:", new Date().toISOString());
-  console.log("Full request body:", JSON.stringify(req.body, null, 2));
-  console.log("🔔 ===== END WEBHOOK ===== 🔔\n\n");
+  console.log("\n\n🔔 ===== TWILIO WEBHOOK HIT ===== 🔔");
+  console.log("⏰ Timestamp:", new Date().toISOString());
+  console.log("📤 Request Method:", req.method);
+  console.log("📨 Full request body:", JSON.stringify(req.body, null, 2));
+  console.log("🔔 ===== WEBHOOK RECEIVED ===== 🔔\n\n");
 
   try {
 
