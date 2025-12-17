@@ -69,6 +69,7 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
     const existingContact = contacts.find((c) => c.phoneNumber === From);
 
+    let savedContact: Contact;
     if (!existingContact) {
       const contact: Contact = {
         id: Math.random().toString(36).substr(2, 9),
@@ -79,18 +80,73 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
         unreadCount: 1,
       };
       await storage.addContact(contact);
+      savedContact = contact;
       console.log(`✅ New contact created: ${From}`);
     } else {
       // Update last message info and increment unread count
-      await storage.updateContact({
+      const updatedContact = {
         ...existingContact,
         lastMessage: Body.substring(0, 50),
         lastMessageTime: message.timestamp,
         unreadCount: (existingContact.unreadCount || 0) + 1,
-      });
+      };
+      await storage.updateContact(updatedContact);
+      savedContact = updatedContact;
       console.log(
         `✅ Contact updated: ${From}, unread count: ${(existingContact.unreadCount || 0) + 1}`,
       );
+    }
+
+    // Emit socket.io events to notify connected clients in real-time
+    const io = getSocketIOInstance();
+    if (io && phoneNumber.assignedTo) {
+      console.log(`📡 Emitting socket.io event to user ${phoneNumber.assignedTo}`);
+      io.to(`user:${phoneNumber.assignedTo}`).emit("new_message", {
+        id: message.id,
+        phoneNumberId: phoneNumber.id,
+        from: From,
+        to: To,
+        body: Body,
+        direction: "inbound",
+        timestamp: message.timestamp,
+        sid: MessageSid,
+      });
+
+      // Also emit contact update event
+      io.to(`user:${phoneNumber.assignedTo}`).emit("contact_updated", {
+        id: savedContact.id,
+        phoneNumberId: savedContact.phoneNumberId,
+        phoneNumber: savedContact.phoneNumber,
+        name: savedContact.name,
+        lastMessage: savedContact.lastMessage,
+        lastMessageTime: savedContact.lastMessageTime,
+        unreadCount: savedContact.unreadCount,
+      });
+    } else if (io && phoneNumber.adminId) {
+      // If no assignee, emit to admin
+      console.log(`📡 No assignee, emitting to admin ${phoneNumber.adminId}`);
+      io.to(`admin:${phoneNumber.adminId}`).emit("new_message", {
+        id: message.id,
+        phoneNumberId: phoneNumber.id,
+        from: From,
+        to: To,
+        body: Body,
+        direction: "inbound",
+        timestamp: message.timestamp,
+        sid: MessageSid,
+      });
+
+      io.to(`admin:${phoneNumber.adminId}`).emit("contact_updated", {
+        id: savedContact.id,
+        phoneNumberId: savedContact.phoneNumberId,
+        phoneNumber: savedContact.phoneNumber,
+        name: savedContact.name,
+        lastMessage: savedContact.lastMessage,
+        lastMessageTime: savedContact.lastMessageTime,
+        unreadCount: savedContact.unreadCount,
+      });
+    } else {
+      console.warn(`⚠️ No socket.io instance available or no assignee/admin`);
     }
 
     // Return TwiML response to Twilio
