@@ -42,6 +42,9 @@ import {
   handleGetAssignedPhoneNumber,
 } from "./routes/messages";
 
+// Webhooks
+import { handleInboundSMS } from "./routes/webhooks";
+
 // Middleware
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
 import { handleDemo } from "./routes/demo";
