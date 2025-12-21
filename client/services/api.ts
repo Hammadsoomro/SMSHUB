@@ -12,7 +12,7 @@ interface ApiResponse<T> {
 
 class ApiService {
   private getAuthHeader() {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("token");
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
