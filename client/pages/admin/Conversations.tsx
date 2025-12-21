@@ -47,6 +47,7 @@ import {
   Check,
   Loader2,
   Home,
+  ChevronDown,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
@@ -447,26 +448,57 @@ export default function Conversations() {
   };
 
   const addContactFromDialog = async (name: string, phoneNumber: string) => {
-    // Get the active phone number ID
-    let currentActivePhoneId = phoneNumbers.find(
-      (p) => p.phoneNumber === activePhoneNumber,
-    )?.id;
+    try {
+      // Get the active phone number ID
+      let currentActivePhoneId = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      )?.id;
 
-    // If no active number, try to select the first available one
-    if (!currentActivePhoneId && phoneNumbers.length > 0) {
-      currentActivePhoneId = phoneNumbers[0].id;
-      setActivePhoneNumber(phoneNumbers[0].phoneNumber);
+      // If no active number, try to select the first available one
+      if (!currentActivePhoneId && phoneNumbers.length > 0) {
+        currentActivePhoneId = phoneNumbers[0].id;
+        setActivePhoneNumber(phoneNumbers[0].phoneNumber);
+      }
+
+      // If still no phone number available, show helpful error
+      if (!currentActivePhoneId) {
+        throw new Error(
+          "No phone numbers available. Please purchase a phone number first.",
+        );
+      }
+
+      try {
+        await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
+        toast({
+          title: "Success",
+          description: `Contact "${name || phoneNumber}" added successfully`,
+        });
+      } catch (addError) {
+        // If contact already exists, just reload the list (it should appear there)
+        if (
+          addError instanceof Error &&
+          addError.message.includes("already exists")
+        ) {
+          toast({
+            title: "Info",
+            description: "Contact already exists",
+          });
+        } else {
+          throw addError;
+        }
+      }
+
+      // Always reload contacts regardless of add success/failure
+      await loadContactsForPhoneNumber(currentActivePhoneId);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to add contact",
+        variant: "destructive",
+      });
+      throw error;
     }
-
-    // If still no phone number available, show helpful error
-    if (!currentActivePhoneId) {
-      throw new Error(
-        "No phone numbers available. Please purchase a phone number first.",
-      );
-    }
-
-    await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
-    await loadContactsForPhoneNumber(currentActivePhoneId);
   };
 
   const editContact = async () => {
@@ -703,12 +735,12 @@ export default function Conversations() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/admin")}
                 className="flex items-center gap-2 text-primary hover:text-primary/80"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <Home className="w-4 h-4" />
-                Home
+                Dashboard
               </Button>
 
               <div className="flex items-center gap-1">
@@ -945,6 +977,90 @@ export default function Conversations() {
 
         {/* Right Side - Chat Area */}
         <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl">
+          {/* Top Navigation Bar with Phone Selector */}
+          <div className="p-4 border-b border-border bg-card/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-primary" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <span className="font-mono">
+                        {activePhoneNumber || "Select number"}
+                      </span>
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    {profile.role === "admin" ? (
+                      phoneNumbers.length > 0 ? (
+                        phoneNumbers.map((num) => (
+                          <DropdownMenuItem
+                            key={num.id}
+                            onClick={() => switchPhoneNumber(num.phoneNumber)}
+                            className={
+                              activePhoneNumber === num.phoneNumber
+                                ? "bg-primary/10"
+                                : ""
+                            }
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="flex-1">
+                                <div className="font-mono">
+                                  {num.phoneNumber}
+                                </div>
+                                {num.assignedTo && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Assigned
+                                  </div>
+                                )}
+                              </div>
+                              {activePhoneNumber === num.phoneNumber && (
+                                <Check className="w-4 h-4 text-primary" />
+                              )}
+                            </div>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <DropdownMenuItem disabled>
+                          No phone numbers available
+                        </DropdownMenuItem>
+                      )
+                    ) : phoneNumbers.length > 0 ? (
+                      phoneNumbers.map((num) => (
+                        <DropdownMenuItem
+                          key={num.id}
+                          onClick={() => switchPhoneNumber(num.phoneNumber)}
+                          className={
+                            activePhoneNumber === num.phoneNumber
+                              ? "bg-primary/10"
+                              : ""
+                          }
+                        >
+                          <div className="flex items-center gap-2 w-full">
+                            <div className="flex-1">
+                              <div className="font-mono">{num.phoneNumber}</div>
+                              <div className="text-xs text-muted-foreground">
+                                Assigned to you
+                              </div>
+                            </div>
+                            {activePhoneNumber === num.phoneNumber && (
+                              <Check className="w-4 h-4 text-primary" />
+                            )}
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <DropdownMenuItem disabled>
+                        No phone numbers assigned to you
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+
           {selectedContact ? (
             <>
               {/* Chat Header */}

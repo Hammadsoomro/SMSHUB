@@ -37,6 +37,7 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (
 export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId!;
+    const { phoneNumber: phoneNumberParam } = req.query;
     const user = await storage.getUserById(userId);
 
     // Determine the admin ID
@@ -49,7 +50,17 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
     const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
 
     let contacts: Contact[] = [];
-    for (const phoneNumber of phoneNumbers) {
+
+    // If a specific phone number is requested, filter to just that one
+    let targetPhoneNumbers = phoneNumbers;
+    if (phoneNumberParam) {
+      const paramStr = String(phoneNumberParam).toLowerCase().trim();
+      targetPhoneNumbers = phoneNumbers.filter(
+        (pn) => pn.phoneNumber === paramStr || pn.id === paramStr,
+      );
+    }
+
+    for (const phoneNumber of targetPhoneNumbers) {
       const phoneContacts = await storage.getContactsByPhoneNumber(
         phoneNumber.id,
       );
@@ -64,7 +75,9 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
       contacts = contacts.concat(contactsWithIds);
     }
 
-    console.log(`Returning ${contacts.length} contacts`);
+    console.log(
+      `Returning ${contacts.length} contacts for phoneNumber: ${phoneNumberParam}`,
+    );
     res.json({ contacts });
   } catch (error) {
     console.error("Get contacts error:", error);
@@ -180,6 +193,7 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
         id: Math.random().toString(36).substr(2, 9),
         phoneNumberId,
         phoneNumber: to,
+        name: to,
         unreadCount: 0,
       };
       await storage.addContact(contact);

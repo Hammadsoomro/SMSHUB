@@ -84,7 +84,7 @@ class ApiService {
   async sendSMS(
     contactId: string,
     message: string,
-    phoneNumber: string,
+    phoneNumberId: string,
   ): Promise<Message> {
     const response = await this.request<{ message: Message }>(
       "/api/messages/send",
@@ -93,7 +93,7 @@ class ApiService {
         body: JSON.stringify({
           to: contactId,
           body: message,
-          phoneNumber,
+          phoneNumberId,
         }),
       },
     );

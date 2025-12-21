@@ -11,13 +11,17 @@ export async function connectDB() {
     return;
   }
 
+  if (!MONGODB_URI) {
+    console.warn("MONGODB_URI environment variable not set. Database features will not be available.");
+    return;
+  }
+
   try {
     await mongoose.connect(MONGODB_URI);
     isConnected = true;
     console.log("Connected to MongoDB successfully");
   } catch (error) {
-    console.error("Failed to connect to MongoDB:", error);
-    throw error;
+    console.warn("Failed to connect to MongoDB:", error);
   }
 }
 
