@@ -43,15 +43,7 @@ export default function AddContactDialog({
       setPhoneNumber("");
       onOpenChange(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to add contact";
-      // Close dialog even if there's an error (e.g., contact already exists)
-      if (errorMessage.includes("already exists")) {
-        onOpenChange(false);
-        setName("");
-        setPhoneNumber("");
-      } else {
-        setError(errorMessage);
-      }
+      setError(err instanceof Error ? err.message : "Failed to add contact");
     } finally {
       setIsLoading(false);
     }
