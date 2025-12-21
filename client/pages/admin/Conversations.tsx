@@ -110,8 +110,10 @@ export default function Conversations() {
   const [showAddContact, setShowAddContact] = useState(false);
   const [showEditContact, setShowEditContact] = useState(false);
   const [showDeleteContact, setShowDeleteContact] = useState(false);
-  const [editingContact, setEditingContact] = useState<ConversationContact | null>(null);
-  const [deletingContact, setDeletingContact] = useState<ConversationContact | null>(null);
+  const [editingContact, setEditingContact] =
+    useState<ConversationContact | null>(null);
+  const [deletingContact, setDeletingContact] =
+    useState<ConversationContact | null>(null);
   const [newContactName, setNewContactName] = useState("");
 
   // Initialize everything
@@ -147,8 +149,7 @@ export default function Conversations() {
         switchPhoneNumber(foundPhone.phoneNumber);
       }
     } else if (phoneNumbers.length > 0 && !activePhoneNumber) {
-      const activePhone =
-        phoneNumbers.find((p) => p.active) || phoneNumbers[0];
+      const activePhone = phoneNumbers.find((p) => p.active) || phoneNumbers[0];
       setActivePhoneNumber(activePhone.phoneNumber);
       loadContactsForPhoneNumber(activePhone.id);
     }
@@ -157,7 +158,9 @@ export default function Conversations() {
   // Load contacts when active phone number changes
   useEffect(() => {
     if (activePhoneNumber) {
-      const phoneNum = phoneNumbers.find((p) => p.phoneNumber === activePhoneNumber);
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
       if (phoneNum) {
         loadContactsForPhoneNumber(phoneNum.id);
         socketService.joinPhoneNumber(activePhoneNumber);
@@ -248,7 +251,9 @@ export default function Conversations() {
 
         // Update contacts list
         if (activePhoneNumber) {
-          const phoneNum = phoneNumbers.find((p) => p.phoneNumber === activePhoneNumber);
+          const phoneNum = phoneNumbers.find(
+            (p) => p.phoneNumber === activePhoneNumber,
+          );
           if (phoneNum) {
             loadContactsForPhoneNumber(phoneNum.id);
           }
@@ -281,7 +286,9 @@ export default function Conversations() {
       socketService.on("contact_updated", (data: any) => {
         console.log("👥 Contacts updated:", data);
         if (activePhoneNumber) {
-          const phoneNum = phoneNumbers.find((p) => p.phoneNumber === activePhoneNumber);
+          const phoneNum = phoneNumbers.find(
+            (p) => p.phoneNumber === activePhoneNumber,
+          );
           if (phoneNum) {
             loadContactsForPhoneNumber(phoneNum.id);
           }
@@ -349,7 +356,10 @@ export default function Conversations() {
   const loadMessages = async (contactId: string) => {
     try {
       setIsLoadingMessages(true);
-      const messagesData = await ApiService.getMessages(contactId, activePhoneNumber || undefined);
+      const messagesData = await ApiService.getMessages(
+        contactId,
+        activePhoneNumber || undefined,
+      );
       setMessages(messagesData || []);
     } catch (error) {
       console.error("Error loading messages:", error);
@@ -381,7 +391,12 @@ export default function Conversations() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedContactId || !activePhoneNumber || isSending) {
+    if (
+      !newMessage.trim() ||
+      !selectedContactId ||
+      !activePhoneNumber ||
+      isSending
+    ) {
       return;
     }
 
@@ -393,12 +408,18 @@ export default function Conversations() {
         throw new Error("Selected contact not found");
       }
 
-      const phoneNum = phoneNumbers.find((p) => p.phoneNumber === activePhoneNumber);
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
       if (!phoneNum) {
         throw new Error("Phone number not found");
       }
 
-      await ApiService.sendSMS(selectedContactId, newMessage.trim(), phoneNum.id);
+      await ApiService.sendSMS(
+        selectedContactId,
+        newMessage.trim(),
+        phoneNum.id,
+      );
 
       setNewMessage("");
 
@@ -416,7 +437,8 @@ export default function Conversations() {
       console.error("Error sending message:", error);
       toast({
         title: "Failed to Send",
-        description: error.message || "Failed to send message. Please try again.",
+        description:
+          error.message || "Failed to send message. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -461,7 +483,9 @@ export default function Conversations() {
       setShowEditContact(false);
       setEditingContact(null);
 
-      const phoneNum = phoneNumbers.find((p) => p.phoneNumber === activePhoneNumber);
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
       if (phoneNum) {
         await loadContactsForPhoneNumber(phoneNum.id);
       }
@@ -474,7 +498,8 @@ export default function Conversations() {
       console.error("Error editing contact:", error);
       toast({
         title: "Failed to Update",
-        description: error.message || "Failed to update contact. Please try again.",
+        description:
+          error.message || "Failed to update contact. Please try again.",
         variant: "destructive",
       });
     }
@@ -507,7 +532,9 @@ export default function Conversations() {
       await ApiService.deleteContact(contactId);
 
       // Reload contacts to sync with server
-      const phoneNum = phoneNumbers.find((p) => p.phoneNumber === activePhoneNumber);
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
       if (phoneNum) {
         await loadContactsForPhoneNumber(phoneNum.id);
       }
@@ -518,7 +545,8 @@ export default function Conversations() {
       console.error("Error deleting contact:", error);
       toast({
         title: "Failed to Delete",
-        description: error.message || "Failed to delete contact. Please try again.",
+        description:
+          error.message || "Failed to delete contact. Please try again.",
         variant: "destructive",
       });
     }
@@ -526,7 +554,9 @@ export default function Conversations() {
 
   const switchPhoneNumber = async (phoneNumber: string) => {
     try {
-      const phoneNumberObj = phoneNumbers.find((p) => p.phoneNumber === phoneNumber);
+      const phoneNumberObj = phoneNumbers.find(
+        (p) => p.phoneNumber === phoneNumber,
+      );
       if (phoneNumberObj) {
         await ApiService.setActiveNumber(phoneNumberObj.id);
 
@@ -628,7 +658,8 @@ export default function Conversations() {
   // Filter contacts based on search term
   const filteredContacts = contacts.filter(
     (contact) =>
-      (contact.name && contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (contact.name &&
+        contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       contact.phoneNumber.includes(searchTerm),
   );
 
@@ -726,7 +757,9 @@ export default function Conversations() {
                     </DropdownMenuItem>
                     {profile.role === "admin" && (
                       <>
-                        <DropdownMenuItem onClick={() => navigate("/buy-numbers")}>
+                        <DropdownMenuItem
+                          onClick={() => navigate("/buy-numbers")}
+                        >
                           <Phone className="w-4 h-4 mr-2" />
                           Buy Phone Numbers
                         </DropdownMenuItem>
@@ -1007,7 +1040,10 @@ export default function Conversations() {
                                 </p>
                                 <div className="flex items-center justify-between mt-2 gap-2">
                                   <span className="text-xs opacity-70">
-                                    {format(new Date(message.timestamp), "HH:mm")}
+                                    {format(
+                                      new Date(message.timestamp),
+                                      "HH:mm",
+                                    )}
                                   </span>
                                 </div>
                               </div>
@@ -1228,8 +1264,11 @@ export default function Conversations() {
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 Are you sure you want to delete{" "}
-                <strong>{deletingContact?.name || deletingContact?.phoneNumber}</strong>? This will permanently
-                delete the contact and all message history.
+                <strong>
+                  {deletingContact?.name || deletingContact?.phoneNumber}
+                </strong>
+                ? This will permanently delete the contact and all message
+                history.
               </p>
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
                 <p className="text-sm text-destructive font-medium">

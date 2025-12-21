@@ -58,7 +58,10 @@ class ApiService {
     return response.contacts || [];
   }
 
-  async getMessages(contactId: string, phoneNumber?: string): Promise<Message[]> {
+  async getMessages(
+    contactId: string,
+    phoneNumber?: string,
+  ): Promise<Message[]> {
     const params = new URLSearchParams();
     if (phoneNumber) {
       params.append("phoneNumber", phoneNumber);
@@ -102,17 +105,14 @@ class ApiService {
     phoneNumber: string,
     phoneNumberId: string,
   ): Promise<Contact> {
-    const response = await this.request<{ contact: Contact }>(
-      "/api/contacts",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          name,
-          phoneNumber,
-          phoneNumberId,
-        }),
-      },
-    );
+    const response = await this.request<{ contact: Contact }>("/api/contacts", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        phoneNumber,
+        phoneNumberId,
+      }),
+    });
     return response.contact;
   }
 

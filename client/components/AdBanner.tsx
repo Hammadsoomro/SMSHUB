@@ -12,7 +12,8 @@ export default function AdBanner({ width, height }: AdBannerProps) {
     // Try to load Google AdSense if available
     const script = document.createElement("script");
     script.async = true;
-    script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+    script.src =
+      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
     script.onload = () => {
       if (window.adsbygoogle) {
         try {

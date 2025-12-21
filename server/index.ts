@@ -114,7 +114,12 @@ export async function createServer() {
     handleRemoveCredentials,
   );
   app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
-  app.post("/api/admin/numbers/set-active", authMiddleware, adminOnly, handleSetActiveNumber);
+  app.post(
+    "/api/admin/numbers/set-active",
+    authMiddleware,
+    adminOnly,
+    handleSetActiveNumber,
+  );
   app.post(
     "/api/admin/add-existing-number",
     authMiddleware,
@@ -161,7 +166,11 @@ export async function createServer() {
     handleGetConversation,
   );
   app.post("/api/messages/send", authMiddleware, handleSendMessage);
-  app.post("/api/messages/mark-read/:contactId", authMiddleware, handleMarkAsRead);
+  app.post(
+    "/api/messages/mark-read/:contactId",
+    authMiddleware,
+    handleMarkAsRead,
+  );
   app.post("/api/contacts", authMiddleware, handleAddContact);
   app.patch("/api/contacts/:contactId", authMiddleware, handleUpdateContact);
   app.delete("/api/contacts/:contactId", authMiddleware, handleDeleteContact);

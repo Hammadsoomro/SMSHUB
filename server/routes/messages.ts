@@ -227,7 +227,9 @@ export const handleAddContact: RequestHandler = async (req, res) => {
     const { name, phoneNumber, phoneNumberId } = req.body;
 
     if (!phoneNumber || !phoneNumberId) {
-      return res.status(400).json({ error: "Phone number and phone number ID are required" });
+      return res
+        .status(400)
+        .json({ error: "Phone number and phone number ID are required" });
     }
 
     // Verify phone number belongs to user's admin
@@ -243,7 +245,8 @@ export const handleAddContact: RequestHandler = async (req, res) => {
     }
 
     // Check if contact already exists
-    const existingContacts = await storage.getContactsByPhoneNumber(phoneNumberId);
+    const existingContacts =
+      await storage.getContactsByPhoneNumber(phoneNumberId);
     if (existingContacts.some((c) => c.phoneNumber === phoneNumber)) {
       return res.status(400).json({ error: "Contact already exists" });
     }
