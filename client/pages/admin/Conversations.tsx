@@ -959,6 +959,72 @@ export default function Conversations() {
 
         {/* Right Side - Chat Area */}
         <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl">
+          {/* Top Navigation Bar with Phone Selector */}
+          <div className="p-4 border-b border-border bg-card/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-primary" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <span className="font-mono">{activePhoneNumber || "Select number"}</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    {profile.role === "admin" ? (
+                      phoneNumbers.length > 0 ? (
+                        phoneNumbers.map((num) => (
+                          <DropdownMenuItem
+                            key={num.id}
+                            onClick={() => switchPhoneNumber(num.phoneNumber)}
+                            className={activePhoneNumber === num.phoneNumber ? "bg-primary/10" : ""}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="flex-1">
+                                <div className="font-mono">{num.phoneNumber}</div>
+                                {num.assignedTo && (
+                                  <div className="text-xs text-muted-foreground">Assigned</div>
+                                )}
+                              </div>
+                              {activePhoneNumber === num.phoneNumber && (
+                                <Check className="w-4 h-4 text-primary" />
+                              )}
+                            </div>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <DropdownMenuItem disabled>No phone numbers available</DropdownMenuItem>
+                      )
+                    ) : (
+                      phoneNumbers.length > 0 ? (
+                        phoneNumbers.map((num) => (
+                          <DropdownMenuItem
+                            key={num.id}
+                            onClick={() => switchPhoneNumber(num.phoneNumber)}
+                            className={activePhoneNumber === num.phoneNumber ? "bg-primary/10" : ""}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="flex-1">
+                                <div className="font-mono">{num.phoneNumber}</div>
+                                <div className="text-xs text-muted-foreground">Assigned to you</div>
+                              </div>
+                              {activePhoneNumber === num.phoneNumber && (
+                                <Check className="w-4 h-4 text-primary" />
+                              )}
+                            </div>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <DropdownMenuItem disabled>No phone numbers assigned to you</DropdownMenuItem>
+                      )
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </div>
+
           {selectedContact ? (
             <>
               {/* Chat Header */}
