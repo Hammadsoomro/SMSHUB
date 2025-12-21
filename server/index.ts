@@ -158,6 +158,10 @@ export async function createServer() {
     handleGetConversation,
   );
   app.post("/api/messages/send", authMiddleware, handleSendMessage);
+  app.post("/api/messages/mark-read/:contactId", authMiddleware, handleMarkAsRead);
+  app.post("/api/contacts", authMiddleware, handleAddContact);
+  app.patch("/api/contacts/:contactId", authMiddleware, handleUpdateContact);
+  app.delete("/api/contacts/:contactId", authMiddleware, handleDeleteContact);
   app.get(
     "/api/messages/assigned-phone-number",
     authMiddleware,
