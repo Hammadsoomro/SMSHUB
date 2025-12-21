@@ -180,6 +180,7 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
         id: Math.random().toString(36).substr(2, 9),
         phoneNumberId,
         phoneNumber: to,
+        name: to,
         unreadCount: 0,
       };
       await storage.addContact(contact);
