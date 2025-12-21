@@ -179,6 +179,38 @@ export const handleGetNumbers: RequestHandler = async (req, res) => {
   }
 };
 
+export const handleSetActiveNumber: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumberId } = req.body;
+
+    if (!phoneNumberId) {
+      return res.status(400).json({ error: "Phone number ID is required" });
+    }
+
+    // Get the phone number and verify it belongs to this admin
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const phoneNumber = numbers.find((n) => n.id === phoneNumberId);
+
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    // Update all numbers to set active: false, then set the selected one to true
+    for (const number of numbers) {
+      await storage.updatePhoneNumber({
+        ...number,
+        active: number.id === phoneNumberId,
+      });
+    }
+
+    res.json({ number: { ...phoneNumber, active: true } });
+  } catch (error) {
+    console.error("Set active number error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // Team Management
 export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   try {
