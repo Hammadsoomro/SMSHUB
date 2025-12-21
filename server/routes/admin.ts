@@ -170,9 +170,28 @@ export const handleRemoveCredentials: RequestHandler = async (req, res) => {
 // Phone Numbers
 export const handleGetNumbers: RequestHandler = async (req, res) => {
   try {
-    const adminId = req.userId!;
+    const userId = req.userId!;
+    const user = await storage.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Determine the admin ID
+    let adminId = userId;
+    if (user.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
+    }
+
     const numbers = await storage.getPhoneNumbersByAdminId(adminId);
-    res.json({ numbers });
+
+    // If team member, filter to only show assigned numbers
+    let filteredNumbers = numbers;
+    if (user.role === "team_member") {
+      filteredNumbers = numbers.filter((n) => n.assignedTo === userId);
+    }
+
+    res.json({ numbers: filteredNumbers });
   } catch (error) {
     console.error("Get numbers error:", error);
     res.status(500).json({ error: "Internal server error" });
