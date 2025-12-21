@@ -214,6 +214,10 @@ class Storage {
     });
   }
 
+  async deleteContact(id: string): Promise<void> {
+    await ContactModel.deleteOne({ $or: [{ id }, { _id: id }] });
+  }
+
   // Wallet operations
   async getOrCreateWallet(adminId: string): Promise<Wallet> {
     let wallet = (await WalletModel.findOne({ adminId })) as Wallet | null;
