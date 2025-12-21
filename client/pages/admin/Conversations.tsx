@@ -467,13 +467,26 @@ export default function Conversations() {
         );
       }
 
-      await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
-      await loadContactsForPhoneNumber(currentActivePhoneId);
+      try {
+        await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
+        toast({
+          title: "Success",
+          description: `Contact "${name || phoneNumber}" added successfully`,
+        });
+      } catch (addError) {
+        // If contact already exists, just reload the list (it should appear there)
+        if (addError instanceof Error && addError.message.includes("already exists")) {
+          toast({
+            title: "Info",
+            description: "Contact already exists",
+          });
+        } else {
+          throw addError;
+        }
+      }
 
-      toast({
-        title: "Success",
-        description: `Contact "${name || phoneNumber}" added successfully`,
-      });
+      // Always reload contacts regardless of add success/failure
+      await loadContactsForPhoneNumber(currentActivePhoneId);
     } catch (error) {
       toast({
         title: "Error",
