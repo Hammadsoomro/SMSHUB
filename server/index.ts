@@ -41,6 +41,10 @@ import {
   handleGetConversation,
   handleSendMessage,
   handleGetAssignedPhoneNumber,
+  handleMarkAsRead,
+  handleAddContact,
+  handleUpdateContact,
+  handleDeleteContact,
 } from "./routes/messages";
 
 // Webhooks
