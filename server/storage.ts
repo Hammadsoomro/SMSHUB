@@ -215,7 +215,7 @@ class Storage {
   }
 
   async deleteContact(id: string): Promise<void> {
-    await ContactModel.deleteOne({ $or: [{ id }, { _id: id }] });
+    await ContactModel.deleteOne({ id });
   }
 
   // Wallet operations
