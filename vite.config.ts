@@ -50,7 +50,9 @@ function expressPlugin(): Plugin {
       // Middleware for authentication
       io.use((socket: any, next) => {
         try {
-          const token = extractTokenFromHeader(socket.handshake.auth.authorization);
+          const token = extractTokenFromHeader(
+            socket.handshake.auth.authorization,
+          );
 
           if (!token) {
             return next(new Error("Missing authorization token"));
@@ -96,14 +98,13 @@ function expressPlugin(): Plugin {
             }
 
             // Emit to admin
-            io!.to(`admin:${phoneNumber?.adminId}`).emit(
-              "incoming_sms_notification",
-              {
+            io!
+              .to(`admin:${phoneNumber?.adminId}`)
+              .emit("incoming_sms_notification", {
                 phoneNumberId,
                 from,
                 preview: body.substring(0, 50),
-              },
-            );
+              });
           } catch (error) {
             console.error("Error handling incoming SMS:", error);
           }
