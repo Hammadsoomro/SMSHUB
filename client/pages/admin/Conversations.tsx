@@ -475,7 +475,10 @@ export default function Conversations() {
         });
       } catch (addError) {
         // If contact already exists, just reload the list (it should appear there)
-        if (addError instanceof Error && addError.message.includes("already exists")) {
+        if (
+          addError instanceof Error &&
+          addError.message.includes("already exists")
+        ) {
           toast({
             title: "Info",
             description: "Contact already exists",
@@ -490,7 +493,8 @@ export default function Conversations() {
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to add contact",
+        description:
+          error instanceof Error ? error.message : "Failed to add contact",
         variant: "destructive",
       });
       throw error;
@@ -981,7 +985,9 @@ export default function Conversations() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
-                      <span className="font-mono">{activePhoneNumber || "Select number"}</span>
+                      <span className="font-mono">
+                        {activePhoneNumber || "Select number"}
+                      </span>
                       <ChevronDown className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -992,13 +998,21 @@ export default function Conversations() {
                           <DropdownMenuItem
                             key={num.id}
                             onClick={() => switchPhoneNumber(num.phoneNumber)}
-                            className={activePhoneNumber === num.phoneNumber ? "bg-primary/10" : ""}
+                            className={
+                              activePhoneNumber === num.phoneNumber
+                                ? "bg-primary/10"
+                                : ""
+                            }
                           >
                             <div className="flex items-center gap-2 w-full">
                               <div className="flex-1">
-                                <div className="font-mono">{num.phoneNumber}</div>
+                                <div className="font-mono">
+                                  {num.phoneNumber}
+                                </div>
                                 {num.assignedTo && (
-                                  <div className="text-xs text-muted-foreground">Assigned</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Assigned
+                                  </div>
                                 )}
                               </div>
                               {activePhoneNumber === num.phoneNumber && (
@@ -1008,30 +1022,38 @@ export default function Conversations() {
                           </DropdownMenuItem>
                         ))
                       ) : (
-                        <DropdownMenuItem disabled>No phone numbers available</DropdownMenuItem>
+                        <DropdownMenuItem disabled>
+                          No phone numbers available
+                        </DropdownMenuItem>
                       )
-                    ) : (
-                      phoneNumbers.length > 0 ? (
-                        phoneNumbers.map((num) => (
-                          <DropdownMenuItem
-                            key={num.id}
-                            onClick={() => switchPhoneNumber(num.phoneNumber)}
-                            className={activePhoneNumber === num.phoneNumber ? "bg-primary/10" : ""}
-                          >
-                            <div className="flex items-center gap-2 w-full">
-                              <div className="flex-1">
-                                <div className="font-mono">{num.phoneNumber}</div>
-                                <div className="text-xs text-muted-foreground">Assigned to you</div>
+                    ) : phoneNumbers.length > 0 ? (
+                      phoneNumbers.map((num) => (
+                        <DropdownMenuItem
+                          key={num.id}
+                          onClick={() => switchPhoneNumber(num.phoneNumber)}
+                          className={
+                            activePhoneNumber === num.phoneNumber
+                              ? "bg-primary/10"
+                              : ""
+                          }
+                        >
+                          <div className="flex items-center gap-2 w-full">
+                            <div className="flex-1">
+                              <div className="font-mono">{num.phoneNumber}</div>
+                              <div className="text-xs text-muted-foreground">
+                                Assigned to you
                               </div>
-                              {activePhoneNumber === num.phoneNumber && (
-                                <Check className="w-4 h-4 text-primary" />
-                              )}
                             </div>
-                          </DropdownMenuItem>
-                        ))
-                      ) : (
-                        <DropdownMenuItem disabled>No phone numbers assigned to you</DropdownMenuItem>
-                      )
+                            {activePhoneNumber === num.phoneNumber && (
+                              <Check className="w-4 h-4 text-primary" />
+                            )}
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <DropdownMenuItem disabled>
+                        No phone numbers assigned to you
+                      </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
