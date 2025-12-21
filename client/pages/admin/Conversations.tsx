@@ -342,7 +342,14 @@ export default function Conversations() {
 
   const loadContactsForPhoneNumber = async (phoneNumberId: string) => {
     try {
-      const contactsData = await ApiService.getContacts(phoneNumberId);
+      // Find the phone number object to get the actual phone number string
+      const phoneNumber = phoneNumbers.find((p) => p.id === phoneNumberId);
+      if (!phoneNumber) {
+        console.warn("Phone number not found for ID:", phoneNumberId);
+        return;
+      }
+
+      const contactsData = await ApiService.getContacts(phoneNumber.phoneNumber);
       setContacts(contactsData || []);
     } catch (error) {
       console.error("Error loading contacts:", error);
