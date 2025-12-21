@@ -54,7 +54,10 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
     // If a specific phone number is requested, filter to just that one
     let targetPhoneNumbers = phoneNumbers;
     if (phoneNumberParam) {
-      targetPhoneNumbers = phoneNumbers.filter((pn) => pn.phoneNumber === phoneNumberParam);
+      const paramStr = String(phoneNumberParam).toLowerCase().trim();
+      targetPhoneNumbers = phoneNumbers.filter((pn) =>
+        pn.phoneNumber === paramStr || pn.id === paramStr
+      );
     }
 
     for (const phoneNumber of targetPhoneNumbers) {
@@ -72,7 +75,7 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
       contacts = contacts.concat(contactsWithIds);
     }
 
-    console.log(`Returning ${contacts.length} contacts`);
+    console.log(`Returning ${contacts.length} contacts for phoneNumber: ${phoneNumberParam}`);
     res.json({ contacts });
   } catch (error) {
     console.error("Get contacts error:", error);
