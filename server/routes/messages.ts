@@ -37,6 +37,7 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (
 export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId!;
+    const { phoneNumber: phoneNumberParam } = req.query;
     const user = await storage.getUserById(userId);
 
     // Determine the admin ID
@@ -49,7 +50,14 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
     const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
 
     let contacts: Contact[] = [];
-    for (const phoneNumber of phoneNumbers) {
+
+    // If a specific phone number is requested, filter to just that one
+    let targetPhoneNumbers = phoneNumbers;
+    if (phoneNumberParam) {
+      targetPhoneNumbers = phoneNumbers.filter((pn) => pn.phoneNumber === phoneNumberParam);
+    }
+
+    for (const phoneNumber of targetPhoneNumbers) {
       const phoneContacts = await storage.getContactsByPhoneNumber(
         phoneNumber.id,
       );
