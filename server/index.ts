@@ -13,6 +13,7 @@ import {
   handleGetCredentials,
   handleRemoveCredentials,
   handleGetNumbers,
+  handleSetActiveNumber,
   handleGetTeamMembers,
   handleInviteTeamMember,
   handleRemoveTeamMember,
