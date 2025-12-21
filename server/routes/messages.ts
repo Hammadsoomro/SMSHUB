@@ -198,3 +198,109 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const handleMarkAsRead: RequestHandler = async (req, res) => {
+  try {
+    const { contactId } = req.params;
+
+    const contact = await storage.getContactById(contactId);
+    if (!contact) {
+      return res.status(404).json({ error: "Contact not found" });
+    }
+
+    // Update contact to mark as read
+    await storage.updateContact({
+      ...contact,
+      unreadCount: 0,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Mark as read error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const handleAddContact: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const { name, phoneNumber, phoneNumberId } = req.body;
+
+    if (!phoneNumber || !phoneNumberId) {
+      return res.status(400).json({ error: "Phone number and phone number ID are required" });
+    }
+
+    // Verify phone number belongs to user's admin
+    const user = await storage.getUserById(userId);
+    let adminId = userId;
+    if (user?.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
+    }
+
+    const phoneNum = await storage.getPhoneNumberById(phoneNumberId);
+    if (!phoneNum || phoneNum.adminId !== adminId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Check if contact already exists
+    const existingContacts = await storage.getContactsByPhoneNumber(phoneNumberId);
+    if (existingContacts.some((c) => c.phoneNumber === phoneNumber)) {
+      return res.status(400).json({ error: "Contact already exists" });
+    }
+
+    const contact: Contact = {
+      id: Math.random().toString(36).substr(2, 9),
+      phoneNumberId,
+      phoneNumber,
+      name: name || phoneNumber,
+      unreadCount: 0,
+    };
+
+    await storage.addContact(contact);
+    res.json({ contact });
+  } catch (error) {
+    console.error("Add contact error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const handleUpdateContact: RequestHandler = async (req, res) => {
+  try {
+    const { contactId } = req.params;
+    const { name } = req.body;
+
+    const contact = await storage.getContactById(contactId);
+    if (!contact) {
+      return res.status(404).json({ error: "Contact not found" });
+    }
+
+    const updatedContact: Contact = {
+      ...contact,
+      ...(name && { name }),
+    };
+
+    await storage.updateContact(updatedContact);
+    res.json({ contact: updatedContact });
+  } catch (error) {
+    console.error("Update contact error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const handleDeleteContact: RequestHandler = async (req, res) => {
+  try {
+    const { contactId } = req.params;
+
+    const contact = await storage.getContactById(contactId);
+    if (!contact) {
+      return res.status(404).json({ error: "Contact not found" });
+    }
+
+    // Delete contact from storage
+    await storage.deleteContact(contactId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Delete contact error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
