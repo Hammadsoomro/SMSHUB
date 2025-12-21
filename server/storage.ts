@@ -184,15 +184,16 @@ class Storage {
   }
 
   async getContactById(id: string): Promise<Contact | undefined> {
-    // Try multiple search methods
+    // Try to find by custom id field first
     let doc = await ContactModel.findOne({ id });
 
-    if (!doc) {
-      doc = await ContactModel.findById(id);
-    }
-
-    if (!doc) {
-      doc = await ContactModel.findOne({ _id: id });
+    // If not found by custom id, try MongoDB's _id as fallback (only if it's a valid ObjectId)
+    if (!doc && /^[0-9a-f]{24}$/i.test(id)) {
+      try {
+        doc = await ContactModel.findById(id);
+      } catch (error) {
+        // findById will throw if id is not a valid ObjectId, ignore it
+      }
     }
 
     if (!doc) return undefined;
@@ -215,7 +216,7 @@ class Storage {
   }
 
   async deleteContact(id: string): Promise<void> {
-    await ContactModel.deleteOne({ $or: [{ id }, { _id: id }] });
+    await ContactModel.deleteOne({ id });
   }
 
   // Wallet operations
