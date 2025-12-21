@@ -447,26 +447,40 @@ export default function Conversations() {
   };
 
   const addContactFromDialog = async (name: string, phoneNumber: string) => {
-    // Get the active phone number ID
-    let currentActivePhoneId = phoneNumbers.find(
-      (p) => p.phoneNumber === activePhoneNumber,
-    )?.id;
+    try {
+      // Get the active phone number ID
+      let currentActivePhoneId = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      )?.id;
 
-    // If no active number, try to select the first available one
-    if (!currentActivePhoneId && phoneNumbers.length > 0) {
-      currentActivePhoneId = phoneNumbers[0].id;
-      setActivePhoneNumber(phoneNumbers[0].phoneNumber);
+      // If no active number, try to select the first available one
+      if (!currentActivePhoneId && phoneNumbers.length > 0) {
+        currentActivePhoneId = phoneNumbers[0].id;
+        setActivePhoneNumber(phoneNumbers[0].phoneNumber);
+      }
+
+      // If still no phone number available, show helpful error
+      if (!currentActivePhoneId) {
+        throw new Error(
+          "No phone numbers available. Please purchase a phone number first.",
+        );
+      }
+
+      await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
+      await loadContactsForPhoneNumber(currentActivePhoneId);
+
+      toast({
+        title: "Success",
+        description: `Contact "${name || phoneNumber}" added successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to add contact",
+        variant: "destructive",
+      });
+      throw error;
     }
-
-    // If still no phone number available, show helpful error
-    if (!currentActivePhoneId) {
-      throw new Error(
-        "No phone numbers available. Please purchase a phone number first.",
-      );
-    }
-
-    await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
-    await loadContactsForPhoneNumber(currentActivePhoneId);
   };
 
   const editContact = async () => {
