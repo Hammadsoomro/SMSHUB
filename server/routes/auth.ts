@@ -135,3 +135,19 @@ export const handleVerifySession: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const handleGetProfile: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const user = await storage.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Get profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
