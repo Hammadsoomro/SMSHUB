@@ -100,7 +100,7 @@ class ApiService {
   async addContact(
     name: string,
     phoneNumber: string,
-    activePhoneNumber: string,
+    phoneNumberId: string,
   ): Promise<Contact> {
     const response = await this.request<{ contact: Contact }>(
       "/api/contacts",
@@ -109,7 +109,7 @@ class ApiService {
         body: JSON.stringify({
           name,
           phoneNumber,
-          activePhoneNumber,
+          phoneNumberId,
         }),
       },
     );
@@ -138,9 +138,10 @@ class ApiService {
 
   async setActiveNumber(phoneNumberId: string): Promise<PhoneNumber> {
     const response = await this.request<{ number: PhoneNumber }>(
-      `/api/admin/numbers/${phoneNumberId}/active`,
+      "/api/admin/numbers/set-active",
       {
         method: "POST",
+        body: JSON.stringify({ phoneNumberId }),
       },
     );
     return response.number;
