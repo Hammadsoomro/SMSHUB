@@ -183,7 +183,7 @@ export default function Conversations() {
         socketService.joinPhoneNumber(activePhoneNumber);
       }
     }
-  }, [activePhoneNumber]);
+  }, [activePhoneNumber, phoneNumbers]);
 
   // Load messages when contact is selected
   useEffect(() => {
