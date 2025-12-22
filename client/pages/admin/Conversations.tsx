@@ -463,7 +463,7 @@ export default function Conversations() {
       }
 
       await ApiService.sendSMS(
-        selectedContactId,
+        selectedContact.phoneNumber,
         newMessage.trim(),
         phoneNum.id,
       );
