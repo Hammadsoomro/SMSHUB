@@ -25,28 +25,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  ArrowLeft,
   Send,
   Plus,
   MoreVertical,
   Edit,
   Trash2,
   Phone,
-  DollarSign,
-  Sun,
-  Moon,
-  Settings,
-  User,
   Search,
-  Bell,
-  BellOff,
   MessageSquare,
   Users,
-  RefreshCw,
-  CheckCircle2,
-  Check,
   Loader2,
-  Home,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
@@ -54,6 +42,7 @@ import socketService from "@/services/socketService";
 import AdBanner from "@/components/AdBanner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
+import ConversationsTopBar from "@/components/ConversationsTopBar";
 import { Message, Contact, PhoneNumber, User as UserType } from "@shared/api";
 
 interface ConversationContact extends Contact {
