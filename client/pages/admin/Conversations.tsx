@@ -105,6 +105,34 @@ export default function Conversations() {
     useState<ConversationContact | null>(null);
   const [newContactName, setNewContactName] = useState("");
 
+  // Refs for socket handlers to always have current state
+  const activePhoneNumberRef = useRef<string | null>(null);
+  const phoneNumbersRef = useRef<PhoneNumber[]>([]);
+  const selectedContactIdRef = useRef<string | null>(null);
+  const notificationsRef = useRef(false);
+  const contactsRef = useRef<ConversationContact[]>([]);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    activePhoneNumberRef.current = activePhoneNumber;
+  }, [activePhoneNumber]);
+
+  useEffect(() => {
+    phoneNumbersRef.current = phoneNumbers;
+  }, [phoneNumbers]);
+
+  useEffect(() => {
+    selectedContactIdRef.current = selectedContactId;
+  }, [selectedContactId]);
+
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
+
+  useEffect(() => {
+    contactsRef.current = contacts;
+  }, [contacts]);
+
   // Initialize everything
   useEffect(() => {
     loadInitialData();
