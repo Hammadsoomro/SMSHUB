@@ -267,10 +267,11 @@ export default function Conversations() {
       socketService.on("new_message", (data: any) => {
         console.log("📱 New message received:", data);
 
-        // Update contacts list
-        if (activePhoneNumber) {
-          const phoneNum = phoneNumbers.find(
-            (p) => p.phoneNumber === activePhoneNumber,
+        // Update contacts list using ref to get current state
+        const currentActivePhone = activePhoneNumberRef.current;
+        if (currentActivePhone) {
+          const phoneNum = phoneNumbersRef.current.find(
+            (p) => p.phoneNumber === currentActivePhone,
           );
           if (phoneNum) {
             loadContactsForPhoneNumber(phoneNum.id);
@@ -278,12 +279,14 @@ export default function Conversations() {
         }
 
         // If message is for currently selected contact, reload messages
-        if (selectedContactId === data.contactId) {
-          loadMessages(selectedContactId);
+        const currentSelectedContactId = selectedContactIdRef.current;
+        if (currentSelectedContactId === data.contactId) {
+          loadMessages(currentSelectedContactId);
         }
 
-        // Show notification for incoming messages
-        if (notifications && !data.isOutgoing) {
+        // Show notification for incoming messages using ref to get current notifications setting
+        const currentNotifications = notificationsRef.current;
+        if (currentNotifications && !data.isOutgoing) {
           showNotification(
             "New Message",
             `${data.senderName}: ${data.content}`,
@@ -296,16 +299,18 @@ export default function Conversations() {
 
       socketService.on("messageStatusUpdate", (data: any) => {
         console.log("✓ Message status updated:", data);
-        if (selectedContactId) {
-          loadMessages(selectedContactId);
+        const currentSelectedContactId = selectedContactIdRef.current;
+        if (currentSelectedContactId) {
+          loadMessages(currentSelectedContactId);
         }
       });
 
       socketService.on("contact_updated", (data: any) => {
         console.log("👥 Contacts updated:", data);
-        if (activePhoneNumber) {
-          const phoneNum = phoneNumbers.find(
-            (p) => p.phoneNumber === activePhoneNumber,
+        const currentActivePhone = activePhoneNumberRef.current;
+        if (currentActivePhone) {
+          const phoneNum = phoneNumbersRef.current.find(
+            (p) => p.phoneNumber === currentActivePhone,
           );
           if (phoneNum) {
             loadContactsForPhoneNumber(phoneNum.id);
