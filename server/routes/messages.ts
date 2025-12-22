@@ -37,6 +37,8 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (
 export const handleGetContacts: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId!;
+    const { phoneNumberId } = req.query;
+
     const user = await storage.getUserById(userId);
 
     // Determine the admin ID
@@ -45,27 +47,42 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
       adminId = user.adminId;
     }
 
-    // Get phone numbers for this admin
-    const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
-
-    let contacts: Contact[] = [];
-    for (const phoneNumber of phoneNumbers) {
-      const phoneContacts = await storage.getContactsByPhoneNumber(
-        phoneNumber.id,
-      );
-      // Ensure all contacts have IDs
-      const contactsWithIds = phoneContacts.map((contact) => {
-        if (!contact.id) {
-          console.warn("Contact missing ID:", contact);
-          contact.id = `contact-${Math.random().toString(36).substr(2, 9)}`;
-        }
-        return contact;
-      });
-      contacts = contacts.concat(contactsWithIds);
+    if (!phoneNumberId) {
+      return res
+        .status(400)
+        .json({ error: "Phone number ID is required" });
     }
 
-    console.log(`Returning ${contacts.length} contacts`);
-    res.json({ contacts });
+    // Get phone number and verify access
+    const phoneNumber = await storage.getPhoneNumberById(phoneNumberId as string);
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    // Verify user has access to this phone number
+    if (phoneNumber.adminId !== adminId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // For team members, verify they are assigned to this number
+    if (user?.role === "team_member" && phoneNumber.assignedTo !== userId) {
+      return res.status(403).json({ error: "This number is not assigned to you" });
+    }
+
+    // Get contacts for this specific phone number
+    const phoneContacts = await storage.getContactsByPhoneNumber(phoneNumberId as string);
+
+    // Ensure all contacts have IDs
+    const contactsWithIds = phoneContacts.map((contact) => {
+      if (!contact.id) {
+        console.warn("Contact missing ID:", contact);
+        contact.id = `contact-${Math.random().toString(36).substr(2, 9)}`;
+      }
+      return contact;
+    });
+
+    console.log(`Returning ${contactsWithIds.length} contacts for phone number ${phoneNumberId}`);
+    res.json({ contacts: contactsWithIds });
   } catch (error) {
     console.error("Get contacts error:", error);
     res.status(500).json({ error: "Internal server error" });
