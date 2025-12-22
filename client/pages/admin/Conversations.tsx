@@ -208,6 +208,15 @@ export default function Conversations() {
 
       // Load profile from localStorage or API
       const storedUser = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        // No token found, redirect to login
+        console.warn("No authentication token found. Redirecting to login...");
+        navigate("/login");
+        return;
+      }
+
       if (storedUser) {
         setProfile(JSON.parse(storedUser));
       } else {
@@ -217,6 +226,11 @@ export default function Conversations() {
           localStorage.setItem("user", JSON.stringify(userProfile));
         } catch (profileError) {
           console.error("Error loading profile:", profileError);
+          // If profile load fails due to auth, redirect to login
+          if (profileError instanceof Error && profileError.message.includes("session has expired")) {
+            navigate("/login");
+            return;
+          }
           throw new Error(`Failed to load profile: ${profileError instanceof Error ? profileError.message : 'Unknown error'}`);
         }
       }
