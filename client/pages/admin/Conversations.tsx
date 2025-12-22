@@ -227,11 +227,16 @@ export default function Conversations() {
         } catch (profileError) {
           console.error("Error loading profile:", profileError);
           // If profile load fails due to auth, redirect to login
-          if (profileError instanceof Error && profileError.message.includes("session has expired")) {
+          if (
+            profileError instanceof Error &&
+            profileError.message.includes("session has expired")
+          ) {
             navigate("/login");
             return;
           }
-          throw new Error(`Failed to load profile: ${profileError instanceof Error ? profileError.message : 'Unknown error'}`);
+          throw new Error(
+            `Failed to load profile: ${profileError instanceof Error ? profileError.message : "Unknown error"}`,
+          );
         }
       }
 
@@ -253,7 +258,9 @@ export default function Conversations() {
         }
       } catch (numbersError) {
         console.error("Error loading phone numbers:", numbersError);
-        throw new Error(`Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : 'Unknown error'}`);
+        throw new Error(
+          `Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : "Unknown error"}`,
+        );
       }
 
       // Load wallet balance
@@ -268,7 +275,10 @@ export default function Conversations() {
       console.error("Error loading initial data:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to load initial data. Please refresh the page.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to load initial data. Please refresh the page.",
         variant: "destructive",
       });
     } finally {
