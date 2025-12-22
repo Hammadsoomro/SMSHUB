@@ -177,6 +177,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            title="Toggle theme"
+          >
+            {isDarkMode ? (
+              <Sun className="w-4 h-4" />
+            ) : (
+              <Moon className="w-4 h-4" />
+            )}
+          </Button>
         </div>
 
         {/* Content */}
