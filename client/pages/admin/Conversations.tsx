@@ -676,99 +676,31 @@ export default function Conversations() {
 
   return (
     <div
-      className={`min-h-screen flex relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
+      className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
     >
       {/* Animated Background */}
       <AnimatedBackground />
 
+      {/* Top Navigation Bar */}
+      <ConversationsTopBar
+        phoneNumbers={phoneNumbers}
+        activePhoneNumber={activePhoneNumber}
+        onPhoneNumberSelect={switchPhoneNumber}
+        profile={profile}
+        walletBalance={walletBalance}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        notifications={notifications}
+        onToggleNotifications={toggleNotifications}
+        totalUnreadCount={totalUnreadCount}
+      />
+
       {/* Main Content */}
-      <div className="relative z-10 flex w-full">
+      <div className="relative z-10 flex w-full flex-1">
         {/* Left Sidebar - Contact List & Controls */}
         <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col">
           {/* Header Section */}
           <div className="p-4 border-b border-border bg-muted/20">
-            {/* Top Navigation */}
-            <div className="flex items-center justify-between mb-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 text-primary hover:text-primary/80"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <Home className="w-4 h-4" />
-                Home
-              </Button>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleNotifications}
-                  className="p-2"
-                  title={
-                    notifications
-                      ? "Disable notifications"
-                      : "Enable notifications"
-                  }
-                >
-                  {notifications ? (
-                    <Bell className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <BellOff className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleTheme}
-                  className="p-2"
-                  title="Toggle theme"
-                >
-                  {isDarkMode ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Settings className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => navigate("/")}>
-                      <User className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </DropdownMenuItem>
-                    {profile.role === "admin" && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={() => navigate("/buy-numbers")}
-                        >
-                          <Phone className="w-4 h-4 mr-2" />
-                          Buy Phone Numbers
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem disabled>
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      Balance: ${walletBalance.toFixed(2)}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => window.location.reload()}>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Refresh Page
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
             {/* Search Contacts */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
