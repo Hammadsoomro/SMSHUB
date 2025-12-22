@@ -211,25 +211,35 @@ export default function Conversations() {
       if (storedUser) {
         setProfile(JSON.parse(storedUser));
       } else {
-        const userProfile = await ApiService.getProfile();
-        setProfile(userProfile);
-        localStorage.setItem("user", JSON.stringify(userProfile));
+        try {
+          const userProfile = await ApiService.getProfile();
+          setProfile(userProfile);
+          localStorage.setItem("user", JSON.stringify(userProfile));
+        } catch (profileError) {
+          console.error("Error loading profile:", profileError);
+          throw new Error(`Failed to load profile: ${profileError instanceof Error ? profileError.message : 'Unknown error'}`);
+        }
       }
 
       // Load phone numbers accessible to user
       // Admin: all numbers, Team member: only assigned number
-      const phoneNumbersData = await ApiService.getAccessiblePhoneNumbers();
-      const processedPhones = phoneNumbersData.map((phone: any) => ({
-        ...phone,
-      }));
+      try {
+        const phoneNumbersData = await ApiService.getAccessiblePhoneNumbers();
+        const processedPhones = phoneNumbersData.map((phone: any) => ({
+          ...phone,
+        }));
 
-      setPhoneNumbers(processedPhones);
+        setPhoneNumbers(processedPhones);
 
-      // Set active phone number if we have phones but no active one
-      if (processedPhones.length > 0 && !activePhoneNumber) {
-        const activePhone =
-          processedPhones.find((p) => p.active) || processedPhones[0];
-        setActivePhoneNumber(activePhone.phoneNumber);
+        // Set active phone number if we have phones but no active one
+        if (processedPhones.length > 0 && !activePhoneNumber) {
+          const activePhone =
+            processedPhones.find((p) => p.active) || processedPhones[0];
+          setActivePhoneNumber(activePhone.phoneNumber);
+        }
+      } catch (numbersError) {
+        console.error("Error loading phone numbers:", numbersError);
+        throw new Error(`Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : 'Unknown error'}`);
       }
 
       // Load wallet balance
@@ -244,7 +254,7 @@ export default function Conversations() {
       console.error("Error loading initial data:", error);
       toast({
         title: "Error",
-        description: "Failed to load initial data. Please refresh the page.",
+        description: error instanceof Error ? error.message : "Failed to load initial data. Please refresh the page.",
         variant: "destructive",
       });
     } finally {
