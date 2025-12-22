@@ -105,6 +105,34 @@ export default function Conversations() {
     useState<ConversationContact | null>(null);
   const [newContactName, setNewContactName] = useState("");
 
+  // Refs for socket handlers to always have current state
+  const activePhoneNumberRef = useRef<string | null>(null);
+  const phoneNumbersRef = useRef<PhoneNumber[]>([]);
+  const selectedContactIdRef = useRef<string | null>(null);
+  const notificationsRef = useRef(false);
+  const contactsRef = useRef<ConversationContact[]>([]);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    activePhoneNumberRef.current = activePhoneNumber;
+  }, [activePhoneNumber]);
+
+  useEffect(() => {
+    phoneNumbersRef.current = phoneNumbers;
+  }, [phoneNumbers]);
+
+  useEffect(() => {
+    selectedContactIdRef.current = selectedContactId;
+  }, [selectedContactId]);
+
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
+
+  useEffect(() => {
+    contactsRef.current = contacts;
+  }, [contacts]);
+
   // Initialize everything
   useEffect(() => {
     loadInitialData();
@@ -117,8 +145,8 @@ export default function Conversations() {
 
     return () => {
       try {
-        if (activePhoneNumber) {
-          socketService.leavePhoneNumber(activePhoneNumber);
+        if (activePhoneNumberRef.current) {
+          socketService.leavePhoneNumber(activePhoneNumberRef.current);
         }
         socketService.disconnect();
       } catch (error) {
@@ -155,7 +183,7 @@ export default function Conversations() {
         socketService.joinPhoneNumber(activePhoneNumber);
       }
     }
-  }, [activePhoneNumber]);
+  }, [activePhoneNumber, phoneNumbers]);
 
   // Load messages when contact is selected
   useEffect(() => {
@@ -180,28 +208,59 @@ export default function Conversations() {
 
       // Load profile from localStorage or API
       const storedUser = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        // No token found, redirect to login
+        console.warn("No authentication token found. Redirecting to login...");
+        navigate("/login");
+        return;
+      }
+
       if (storedUser) {
         setProfile(JSON.parse(storedUser));
       } else {
-        const userProfile = await ApiService.getProfile();
-        setProfile(userProfile);
-        localStorage.setItem("user", JSON.stringify(userProfile));
+        try {
+          const userProfile = await ApiService.getProfile();
+          setProfile(userProfile);
+          localStorage.setItem("user", JSON.stringify(userProfile));
+        } catch (profileError) {
+          console.error("Error loading profile:", profileError);
+          // If profile load fails due to auth, redirect to login
+          if (
+            profileError instanceof Error &&
+            profileError.message.includes("session has expired")
+          ) {
+            navigate("/login");
+            return;
+          }
+          throw new Error(
+            `Failed to load profile: ${profileError instanceof Error ? profileError.message : "Unknown error"}`,
+          );
+        }
       }
 
       // Load phone numbers accessible to user
       // Admin: all numbers, Team member: only assigned number
-      const phoneNumbersData = await ApiService.getAccessiblePhoneNumbers();
-      const processedPhones = phoneNumbersData.map((phone: any) => ({
-        ...phone,
-      }));
+      try {
+        const phoneNumbersData = await ApiService.getAccessiblePhoneNumbers();
+        const processedPhones = phoneNumbersData.map((phone: any) => ({
+          ...phone,
+        }));
 
-      setPhoneNumbers(processedPhones);
+        setPhoneNumbers(processedPhones);
 
-      // Set active phone number if we have phones but no active one
-      if (processedPhones.length > 0 && !activePhoneNumber) {
-        const activePhone =
-          processedPhones.find((p) => p.active) || processedPhones[0];
-        setActivePhoneNumber(activePhone.phoneNumber);
+        // Set active phone number if we have phones but no active one
+        if (processedPhones.length > 0 && !activePhoneNumber) {
+          const activePhone =
+            processedPhones.find((p) => p.active) || processedPhones[0];
+          setActivePhoneNumber(activePhone.phoneNumber);
+        }
+      } catch (numbersError) {
+        console.error("Error loading phone numbers:", numbersError);
+        throw new Error(
+          `Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : "Unknown error"}`,
+        );
       }
 
       // Load wallet balance
@@ -216,7 +275,10 @@ export default function Conversations() {
       console.error("Error loading initial data:", error);
       toast({
         title: "Error",
-        description: "Failed to load initial data. Please refresh the page.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to load initial data. Please refresh the page.",
         variant: "destructive",
       });
     } finally {
@@ -239,10 +301,11 @@ export default function Conversations() {
       socketService.on("new_message", (data: any) => {
         console.log("📱 New message received:", data);
 
-        // Update contacts list
-        if (activePhoneNumber) {
-          const phoneNum = phoneNumbers.find(
-            (p) => p.phoneNumber === activePhoneNumber,
+        // Update contacts list using ref to get current state
+        const currentActivePhone = activePhoneNumberRef.current;
+        if (currentActivePhone) {
+          const phoneNum = phoneNumbersRef.current.find(
+            (p) => p.phoneNumber === currentActivePhone,
           );
           if (phoneNum) {
             loadContactsForPhoneNumber(phoneNum.id);
@@ -250,12 +313,14 @@ export default function Conversations() {
         }
 
         // If message is for currently selected contact, reload messages
-        if (selectedContactId === data.contactId) {
-          loadMessages(selectedContactId);
+        const currentSelectedContactId = selectedContactIdRef.current;
+        if (currentSelectedContactId === data.contactId) {
+          loadMessages(currentSelectedContactId);
         }
 
-        // Show notification for incoming messages
-        if (notifications && !data.isOutgoing) {
+        // Show notification for incoming messages using ref to get current notifications setting
+        const currentNotifications = notificationsRef.current;
+        if (currentNotifications && !data.isOutgoing) {
           showNotification(
             "New Message",
             `${data.senderName}: ${data.content}`,
@@ -268,16 +333,18 @@ export default function Conversations() {
 
       socketService.on("messageStatusUpdate", (data: any) => {
         console.log("✓ Message status updated:", data);
-        if (selectedContactId) {
-          loadMessages(selectedContactId);
+        const currentSelectedContactId = selectedContactIdRef.current;
+        if (currentSelectedContactId) {
+          loadMessages(currentSelectedContactId);
         }
       });
 
       socketService.on("contact_updated", (data: any) => {
         console.log("👥 Contacts updated:", data);
-        if (activePhoneNumber) {
-          const phoneNum = phoneNumbers.find(
-            (p) => p.phoneNumber === activePhoneNumber,
+        const currentActivePhone = activePhoneNumberRef.current;
+        if (currentActivePhone) {
+          const phoneNum = phoneNumbersRef.current.find(
+            (p) => p.phoneNumber === currentActivePhone,
           );
           if (phoneNum) {
             loadContactsForPhoneNumber(phoneNum.id);
@@ -406,7 +473,7 @@ export default function Conversations() {
       }
 
       await ApiService.sendSMS(
-        selectedContactId,
+        selectedContact.phoneNumber,
         newMessage.trim(),
         phoneNum.id,
       );
