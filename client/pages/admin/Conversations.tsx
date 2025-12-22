@@ -978,61 +978,6 @@ export default function Conversations() {
                 )}
               </ScrollArea>
 
-              {/* Phone Number Selection - Above Message Input */}
-              <div className="p-3 border-t border-border bg-muted/20">
-                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
-                  Send from:
-                </Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between h-auto py-2"
-                      size="sm"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3 h-3" />
-                        <span className="font-mono text-xs">
-                          {activePhoneNumber || "Select number"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {totalUnreadCount > 0 && (
-                          <Badge
-                            variant="destructive"
-                            className="text-xs h-4 min-w-[16px]"
-                          >
-                            {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
-                          </Badge>
-                        )}
-                        {isConnecting && (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        )}
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full min-w-[300px]">
-                    {phoneNumbers.map((phone) => (
-                      <DropdownMenuItem
-                        key={phone.id}
-                        onClick={() => switchPhoneNumber(phone.phoneNumber)}
-                        className="font-mono"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4" />
-                            <span>{phone.phoneNumber}</span>
-                            {phone.active && (
-                              <CheckCircle2 className="w-4 h-4 text-green-600" />
-                            )}
-                          </div>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
               {/* Message Input */}
               <div className="p-4 border-t border-border bg-card">
                 <div className="flex space-x-2">
