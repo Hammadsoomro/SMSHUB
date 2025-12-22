@@ -145,8 +145,8 @@ export default function Conversations() {
 
     return () => {
       try {
-        if (activePhoneNumber) {
-          socketService.leavePhoneNumber(activePhoneNumber);
+        if (activePhoneNumberRef.current) {
+          socketService.leavePhoneNumber(activePhoneNumberRef.current);
         }
         socketService.disconnect();
       } catch (error) {
