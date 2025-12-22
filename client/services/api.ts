@@ -51,6 +51,19 @@ class ApiService {
     return response.numbers || [];
   }
 
+  async getAccessiblePhoneNumbers(): Promise<PhoneNumber[]> {
+    try {
+      // Try to get all numbers (admin endpoint)
+      return await this.getPhoneNumbers();
+    } catch {
+      // Fall back to assigned number for team members
+      const response = await this.request<{ phoneNumbers: PhoneNumber[] }>(
+        "/api/messages/assigned-phone-number",
+      );
+      return response.phoneNumbers || [];
+    }
+  }
+
   async getContacts(phoneNumberId: string): Promise<Contact[]> {
     const response = await this.request<{ contacts: Contact[] }>(
       `/api/messages/contacts?phoneNumberId=${encodeURIComponent(phoneNumberId)}`,
