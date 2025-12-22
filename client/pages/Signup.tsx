@@ -75,7 +75,20 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12">
+    <div className={`min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12 ${isDarkMode ? "dark" : ""}`}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        title="Toggle theme"
+        className="absolute top-4 right-4"
+      >
+        {isDarkMode ? (
+          <Sun className="w-4 h-4" />
+        ) : (
+          <Moon className="w-4 h-4" />
+        )}
+      </Button>
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
