@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { MessageSquare, Loader2, AlertCircle } from "lucide-react";
+import { MessageSquare, Loader2, AlertCircle, Sun, Moon } from "lucide-react";
 import { LoginRequest } from "@shared/api";
 
 interface LoginFormData {
@@ -15,7 +16,21 @@ export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    return (
+      stored === "dark" ||
+      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
+
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    document.documentElement.classList.toggle("dark", newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+  };
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -56,7 +71,20 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12">
+    <div className={`min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12 ${isDarkMode ? "dark" : ""}`}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        title="Toggle theme"
+        className="absolute top-4 right-4"
+      >
+        {isDarkMode ? (
+          <Sun className="w-4 h-4" />
+        ) : (
+          <Moon className="w-4 h-4" />
+        )}
+      </Button>
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">

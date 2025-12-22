@@ -51,9 +51,30 @@ class ApiService {
     return response.numbers || [];
   }
 
-  async getContacts(phoneNumber: string): Promise<Contact[]> {
+  async getAccessiblePhoneNumbers(): Promise<PhoneNumber[]> {
+    try {
+      // Try to get all numbers (admin endpoint)
+      const response = await this.request<{ numbers: PhoneNumber[] }>(
+        "/api/admin/numbers",
+      );
+      return response.numbers || [];
+    } catch (error: any) {
+      // If admin endpoint fails (team member), get assigned number
+      try {
+        const response = await this.request<{ phoneNumbers: PhoneNumber[] }>(
+          "/api/messages/assigned-phone-number",
+        );
+        return response.phoneNumbers || [];
+      } catch {
+        console.error("Failed to get phone numbers:", error);
+        return [];
+      }
+    }
+  }
+
+  async getContacts(phoneNumberId: string): Promise<Contact[]> {
     const response = await this.request<{ contacts: Contact[] }>(
-      `/api/messages/contacts?phoneNumber=${encodeURIComponent(phoneNumber)}`,
+      `/api/messages/contacts?phoneNumberId=${encodeURIComponent(phoneNumberId)}`,
     );
     return response.contacts || [];
   }
@@ -84,7 +105,7 @@ class ApiService {
   async sendSMS(
     contactId: string,
     message: string,
-    phoneNumber: string,
+    phoneNumberId: string,
   ): Promise<Message> {
     const response = await this.request<{ message: Message }>(
       "/api/messages/send",
@@ -93,7 +114,7 @@ class ApiService {
         body: JSON.stringify({
           to: contactId,
           body: message,
-          phoneNumber,
+          phoneNumberId,
         }),
       },
     );

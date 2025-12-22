@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,11 +10,30 @@ import {
   BarChart3,
   Shield,
   Smartphone,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 export default function Landing() {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    return (
+      stored === "dark" ||
+      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
+
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    document.documentElement.classList.toggle("dark", newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
+    <div
+      className={`min-h-screen bg-gradient-to-b from-background via-background to-background ${isDarkMode ? "dark" : ""}`}
+    >
       {/* Schema.org structured data for SEO */}
       <script type="application/ld+json">
         {JSON.stringify({
@@ -49,6 +69,18 @@ export default function Landing() {
             </span>
           </div>
           <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              title="Toggle theme"
+            >
+              {isDarkMode ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </Button>
             <Link to="/login">
               <Button variant="ghost">Sign In</Button>
             </Link>

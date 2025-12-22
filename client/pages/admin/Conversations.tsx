@@ -25,28 +25,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  ArrowLeft,
   Send,
   Plus,
   MoreVertical,
   Edit,
   Trash2,
   Phone,
-  DollarSign,
-  Sun,
-  Moon,
-  Settings,
-  User,
   Search,
-  Bell,
-  BellOff,
   MessageSquare,
   Users,
-  RefreshCw,
-  CheckCircle2,
-  Check,
   Loader2,
-  Home,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
@@ -54,6 +42,7 @@ import socketService from "@/services/socketService";
 import AdBanner from "@/components/AdBanner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
+import ConversationsTopBar from "@/components/ConversationsTopBar";
 import { Message, Contact, PhoneNumber, User as UserType } from "@shared/api";
 
 interface ConversationContact extends Contact {
@@ -196,10 +185,12 @@ export default function Conversations() {
       } else {
         const userProfile = await ApiService.getProfile();
         setProfile(userProfile);
+        localStorage.setItem("user", JSON.stringify(userProfile));
       }
 
-      // Load phone numbers
-      const phoneNumbersData = await ApiService.getPhoneNumbers();
+      // Load phone numbers accessible to user
+      // Admin: all numbers, Team member: only assigned number
+      const phoneNumbersData = await ApiService.getAccessiblePhoneNumbers();
       const processedPhones = phoneNumbersData.map((phone: any) => ({
         ...phone,
       }));
@@ -211,7 +202,6 @@ export default function Conversations() {
         const activePhone =
           processedPhones.find((p) => p.active) || processedPhones[0];
         setActivePhoneNumber(activePhone.phoneNumber);
-        loadContactsForPhoneNumber(activePhone.id);
       }
 
       // Load wallet balance
@@ -687,99 +677,31 @@ export default function Conversations() {
 
   return (
     <div
-      className={`min-h-screen flex relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
+      className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
     >
       {/* Animated Background */}
       <AnimatedBackground />
 
+      {/* Top Navigation Bar */}
+      <ConversationsTopBar
+        phoneNumbers={phoneNumbers}
+        activePhoneNumber={activePhoneNumber}
+        onPhoneNumberSelect={switchPhoneNumber}
+        profile={profile}
+        walletBalance={walletBalance}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        notifications={notifications}
+        onToggleNotifications={toggleNotifications}
+        totalUnreadCount={totalUnreadCount}
+      />
+
       {/* Main Content */}
-      <div className="relative z-10 flex w-full">
+      <div className="relative z-10 flex w-full flex-1">
         {/* Left Sidebar - Contact List & Controls */}
         <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col">
           {/* Header Section */}
           <div className="p-4 border-b border-border bg-muted/20">
-            {/* Top Navigation */}
-            <div className="flex items-center justify-between mb-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 text-primary hover:text-primary/80"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <Home className="w-4 h-4" />
-                Home
-              </Button>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleNotifications}
-                  className="p-2"
-                  title={
-                    notifications
-                      ? "Disable notifications"
-                      : "Enable notifications"
-                  }
-                >
-                  {notifications ? (
-                    <Bell className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <BellOff className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleTheme}
-                  className="p-2"
-                  title="Toggle theme"
-                >
-                  {isDarkMode ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <Settings className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => navigate("/")}>
-                      <User className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </DropdownMenuItem>
-                    {profile.role === "admin" && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={() => navigate("/buy-numbers")}
-                        >
-                          <Phone className="w-4 h-4 mr-2" />
-                          Buy Phone Numbers
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem disabled>
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      Balance: ${walletBalance.toFixed(2)}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => window.location.reload()}>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Refresh Page
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
             {/* Search Contacts */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -1056,61 +978,6 @@ export default function Conversations() {
                   </div>
                 )}
               </ScrollArea>
-
-              {/* Phone Number Selection - Above Message Input */}
-              <div className="p-3 border-t border-border bg-muted/20">
-                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
-                  Send from:
-                </Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-between h-auto py-2"
-                      size="sm"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3 h-3" />
-                        <span className="font-mono text-xs">
-                          {activePhoneNumber || "Select number"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {totalUnreadCount > 0 && (
-                          <Badge
-                            variant="destructive"
-                            className="text-xs h-4 min-w-[16px]"
-                          >
-                            {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
-                          </Badge>
-                        )}
-                        {isConnecting && (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        )}
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full min-w-[300px]">
-                    {phoneNumbers.map((phone) => (
-                      <DropdownMenuItem
-                        key={phone.id}
-                        onClick={() => switchPhoneNumber(phone.phoneNumber)}
-                        className="font-mono"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4" />
-                            <span>{phone.phoneNumber}</span>
-                            {phone.active && (
-                              <CheckCircle2 className="w-4 h-4 text-green-600" />
-                            )}
-                          </div>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
 
               {/* Message Input */}
               <div className="p-4 border-t border-border bg-card">
