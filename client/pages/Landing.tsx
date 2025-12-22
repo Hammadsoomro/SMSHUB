@@ -32,7 +32,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background">
+    <div className={`min-h-screen bg-gradient-to-b from-background via-background to-background ${isDarkMode ? "dark" : ""}`}>
       {/* Schema.org structured data for SEO */}
       <script type="application/ld+json">
         {JSON.stringify({
