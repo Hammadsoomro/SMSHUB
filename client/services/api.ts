@@ -51,9 +51,9 @@ class ApiService {
     return response.numbers || [];
   }
 
-  async getContacts(phoneNumber: string): Promise<Contact[]> {
+  async getContacts(phoneNumberId: string): Promise<Contact[]> {
     const response = await this.request<{ contacts: Contact[] }>(
-      `/api/messages/contacts?phoneNumber=${encodeURIComponent(phoneNumber)}`,
+      `/api/messages/contacts?phoneNumberId=${encodeURIComponent(phoneNumberId)}`,
     );
     return response.contacts || [];
   }
