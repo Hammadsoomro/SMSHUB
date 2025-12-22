@@ -61,7 +61,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className={`flex h-screen bg-background ${isDarkMode ? "dark" : ""}`}>
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border/50 overflow-hidden transition-all duration-300 lg:relative lg:translate-x-0 ${
