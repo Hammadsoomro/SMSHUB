@@ -185,10 +185,12 @@ export default function Conversations() {
       } else {
         const userProfile = await ApiService.getProfile();
         setProfile(userProfile);
+        localStorage.setItem("user", JSON.stringify(userProfile));
       }
 
-      // Load phone numbers
-      const phoneNumbersData = await ApiService.getPhoneNumbers();
+      // Load phone numbers accessible to user
+      // Admin: all numbers, Team member: only assigned number
+      const phoneNumbersData = await ApiService.getAccessiblePhoneNumbers();
       const processedPhones = phoneNumbersData.map((phone: any) => ({
         ...phone,
       }));
@@ -200,7 +202,6 @@ export default function Conversations() {
         const activePhone =
           processedPhones.find((p) => p.active) || processedPhones[0];
         setActivePhoneNumber(activePhone.phoneNumber);
-        loadContactsForPhoneNumber(activePhone.id);
       }
 
       // Load wallet balance
