@@ -292,7 +292,44 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      socketService.connect(token);
+      const socket = socketService.connect(token);
+
+      // Connection status handlers
+      const handleConnect = () => {
+        console.log("✅ Socket.IO connected");
+        setIsConnecting(false);
+        toast({
+          title: "Connected",
+          description: "Real-time messaging is now active",
+        });
+      };
+
+      const handleDisconnect = () => {
+        console.log("❌ Socket.IO disconnected");
+        setIsConnecting(false);
+        toast({
+          title: "Disconnected",
+          description: "Real-time messaging is offline",
+          variant: "destructive",
+        });
+      };
+
+      const handleError = (error: any) => {
+        console.error("Socket.IO connection error:", error);
+        setIsConnecting(false);
+        toast({
+          title: "Connection Error",
+          description: "Failed to establish real-time connection",
+          variant: "destructive",
+        });
+      };
+
+      // Attach connection status listeners to socket directly for better reliability
+      if (socket) {
+        socket.on("connect", handleConnect);
+        socket.on("disconnect", handleDisconnect);
+        socket.on("connect_error", handleError);
+      }
 
       // Set up Socket.IO event listeners
       socketService.on("new_message", (data: any) => {
@@ -353,40 +390,6 @@ export default function Conversations() {
         console.log("🔔 Unread counts updated:", data);
         updatePageTitle();
       });
-
-      // Connection status handlers
-      const handleConnect = () => {
-        console.log("✅ Socket.IO connected");
-        setIsConnecting(false);
-        toast({
-          title: "Connected",
-          description: "Real-time messaging is now active",
-        });
-      };
-
-      const handleDisconnect = () => {
-        console.log("❌ Socket.IO disconnected");
-        setIsConnecting(false);
-        toast({
-          title: "Disconnected",
-          description: "Real-time messaging is offline",
-          variant: "destructive",
-        });
-      };
-
-      const handleError = (error: any) => {
-        console.error("Socket.IO connection error:", error);
-        setIsConnecting(false);
-        toast({
-          title: "Connection Error",
-          description: "Failed to establish real-time connection",
-          variant: "destructive",
-        });
-      };
-
-      socketService.on("connect", handleConnect);
-      socketService.on("disconnect", handleDisconnect);
-      socketService.on("connect_error", handleError);
     } catch (error) {
       console.error("Error initializing Socket.IO:", error);
       setIsConnecting(false);
