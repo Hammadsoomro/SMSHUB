@@ -81,7 +81,7 @@ export default function ConversationsTopBar({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 min-w-[180px] justify-between"
+                  className="flex items-center gap-2 min-w-[180px] justify-between cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4" />
