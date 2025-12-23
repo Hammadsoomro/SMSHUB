@@ -325,10 +325,24 @@ export default function Conversations() {
       };
 
       // Attach connection status listeners to socket directly for better reliability
+      // Try both approaches: attach to returned socket and via getSocket() to ensure it works
       if (socket) {
         socket.on("connect", handleConnect);
         socket.on("disconnect", handleDisconnect);
         socket.on("connect_error", handleError);
+      }
+
+      // Also attach via socketService to ensure it's captured
+      const socketInstance = socketService.getSocket();
+      if (socketInstance) {
+        // Remove default handlers and attach custom ones
+        socketInstance.off("connect");
+        socketInstance.off("disconnect");
+        socketInstance.off("connect_error");
+
+        socketInstance.on("connect", handleConnect);
+        socketInstance.on("disconnect", handleDisconnect);
+        socketInstance.on("connect_error", handleError);
       }
 
       // Set up Socket.IO event listeners
