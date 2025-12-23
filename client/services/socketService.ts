@@ -3,21 +3,39 @@ import { io, Socket } from "socket.io-client";
 class SocketService {
   private socket: Socket | null = null;
 
-  connect(token: string): Socket {
+  connect(token: string): Socket | null {
     if (this.socket?.connected) {
       return this.socket;
     }
 
-    this.socket = io({
-      auth: {
-        authorization: `Bearer ${token}`,
-      },
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-    });
+    try {
+      this.socket = io({
+        auth: {
+          authorization: `Bearer ${token}`,
+        },
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+      });
 
-    return this.socket;
+      // Ensure listeners are properly set up
+      this.socket.on("connect", () => {
+        console.log("[SocketService] Socket connected");
+      });
+
+      this.socket.on("disconnect", () => {
+        console.log("[SocketService] Socket disconnected");
+      });
+
+      this.socket.on("connect_error", (error: any) => {
+        console.error("[SocketService] Connection error:", error);
+      });
+
+      return this.socket;
+    } catch (error) {
+      console.error("Error creating socket connection:", error);
+      return null;
+    }
   }
 
   disconnect(): void {
