@@ -58,7 +58,7 @@ export default function ConversationsTopBar({
   );
 
   return (
-    <div className="bg-card border-b border-border">
+    <div className="bg-card border-b border-border relative z-20">
       <div className="px-4 py-3 flex items-center justify-between">
         {/* Left side: Logo/Title and Phone Selector */}
         <div className="flex items-center gap-4">
