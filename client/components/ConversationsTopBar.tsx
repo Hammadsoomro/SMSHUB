@@ -203,7 +203,7 @@ export default function ConversationsTopBar({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="p-2">
+              <Button variant="ghost" size="sm" className="p-2 cursor-pointer">
                 <Settings className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
