@@ -191,7 +191,7 @@ export default function ConversationsTopBar({
             variant="ghost"
             size="sm"
             onClick={onToggleTheme}
-            className="p-2"
+            className="p-2 cursor-pointer"
             title="Toggle theme"
           >
             {isDarkMode ? (
