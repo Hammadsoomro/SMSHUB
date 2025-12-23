@@ -79,10 +79,7 @@ export default function Conversations() {
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
-    return (
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    );
+    return stored === "dark";
   });
   const [notifications, setNotifications] = useState(() => {
     return Notification.permission === "granted";
