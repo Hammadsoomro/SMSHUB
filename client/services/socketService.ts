@@ -18,19 +18,6 @@ class SocketService {
         reconnectionAttempts: 5,
       });
 
-      // Ensure listeners are properly set up
-      this.socket.on("connect", () => {
-        console.log("[SocketService] Socket connected");
-      });
-
-      this.socket.on("disconnect", () => {
-        console.log("[SocketService] Socket disconnected");
-      });
-
-      this.socket.on("connect_error", (error: any) => {
-        console.error("[SocketService] Connection error:", error);
-      });
-
       return this.socket;
     } catch (error) {
       console.error("Error creating socket connection:", error);
