@@ -17,10 +17,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
-    return (
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    );
+    return stored === "dark";
   });
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
