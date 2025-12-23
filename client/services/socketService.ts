@@ -78,6 +78,10 @@ class SocketService {
   get connected(): boolean {
     return this.socket?.connected || false;
   }
+
+  getSocket(): Socket | null {
+    return this.socket;
+  }
 }
 
 export default new SocketService();
