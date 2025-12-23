@@ -173,7 +173,7 @@ export default function ConversationsTopBar({
             variant="ghost"
             size="sm"
             onClick={onToggleNotifications}
-            className="p-2"
+            className="p-2 cursor-pointer"
             title={
               notifications
                 ? "Disable notifications"
