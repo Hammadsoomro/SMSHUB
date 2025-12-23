@@ -66,7 +66,7 @@ export default function ConversationsTopBar({
             variant="ghost"
             size="sm"
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-primary hover:text-primary/80"
+            className="flex items-center gap-2 text-primary hover:text-primary/80 cursor-pointer"
           >
             <Home className="w-4 h-4" />
             <span className="text-sm font-medium hidden sm:inline">
