@@ -345,10 +345,7 @@ export default function Conversations() {
         console.log("Socket is already connected, triggering connected state");
         setIsConnecting(false);
         setTimeout(() => {
-          toast({
-            title: "Connected",
-            description: "Real-time messaging is now active",
-          });
+          toast.success("Real-time messaging is now active");
         }, 100);
       }
 
