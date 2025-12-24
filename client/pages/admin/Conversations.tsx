@@ -296,11 +296,30 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
+      console.log("Initializing Socket.IO...");
+
+      // Connect to socket service
       const socket = socketService.connect(token);
 
-      // Connection status handlers
+      if (!socket) {
+        console.error("Failed to get socket instance");
+        setIsConnecting(false);
+        toast({
+          title: "Connection Failed",
+          description: "Unable to establish socket connection",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Remove old listeners to avoid duplicates
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
+
+      // Connection status handlers with debug logging
       const handleConnect = () => {
-        console.log("✅ Socket.IO connected");
+        console.log("✅ Socket.IO connected event fired");
         setIsConnecting(false);
         toast({
           title: "Connected",
@@ -309,7 +328,7 @@ export default function Conversations() {
       };
 
       const handleDisconnect = () => {
-        console.log("❌ Socket.IO disconnected");
+        console.log("❌ Socket.IO disconnected event fired");
         setIsConnecting(false);
         toast({
           title: "Disconnected",
@@ -319,7 +338,7 @@ export default function Conversations() {
       };
 
       const handleError = (error: any) => {
-        console.error("Socket.IO connection error:", error);
+        console.error("Socket.IO connection error event:", error);
         setIsConnecting(false);
         toast({
           title: "Connection Error",
@@ -328,22 +347,21 @@ export default function Conversations() {
         });
       };
 
-      // Attach connection status listeners to socket directly for better reliability
-      if (socket) {
-        // Check if already connected
-        if (socket.connected) {
-          console.log("Socket already connected, showing connected toast");
-          setIsConnecting(false);
+      // Attach connection status listeners
+      socket.on("connect", handleConnect);
+      socket.on("disconnect", handleDisconnect);
+      socket.on("connect_error", handleError);
+
+      // Check if already connected and show toast if so
+      if (socket.connected) {
+        console.log("Socket is already connected, triggering connected state");
+        setIsConnecting(false);
+        setTimeout(() => {
           toast({
             title: "Connected",
             description: "Real-time messaging is now active",
           });
-        }
-
-        // Attach listeners for future events
-        socket.on("connect", handleConnect);
-        socket.on("disconnect", handleDisconnect);
-        socket.on("connect_error", handleError);
+        }, 100);
       }
 
       // Set up Socket.IO event listeners
@@ -408,6 +426,11 @@ export default function Conversations() {
     } catch (error) {
       console.error("Error initializing Socket.IO:", error);
       setIsConnecting(false);
+      toast({
+        title: "Error",
+        description: "Failed to initialize real-time connection",
+        variant: "destructive",
+      });
     }
   };
 
