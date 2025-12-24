@@ -22,6 +22,11 @@ export default function Login() {
   });
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
+  // Apply theme to document root on mount
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
+
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
