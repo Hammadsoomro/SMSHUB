@@ -53,7 +53,6 @@ interface ConversationContact extends Contact {
 export default function Conversations() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Core State
