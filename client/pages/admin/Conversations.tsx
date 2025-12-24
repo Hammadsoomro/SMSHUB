@@ -133,7 +133,6 @@ export default function Conversations() {
   // Initialize everything
   useEffect(() => {
     loadInitialData();
-    initializeSocketIO();
     requestNotificationPermission();
 
     // Set theme
@@ -150,6 +149,11 @@ export default function Conversations() {
         console.error("Error during Conversations cleanup:", error);
       }
     };
+  }, []);
+
+  // Initialize Socket.IO separately with better lifecycle management
+  useEffect(() => {
+    initializeSocketIO();
   }, []);
 
   // Handle phone number URL parameter
