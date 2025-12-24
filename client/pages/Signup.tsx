@@ -26,6 +26,11 @@ export default function Signup() {
 
   const password = watch("password");
 
+  // Apply theme to document root on mount
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
+
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
