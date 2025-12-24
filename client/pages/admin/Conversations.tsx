@@ -320,30 +320,19 @@ export default function Conversations() {
       const handleConnect = () => {
         console.log("✅ Socket.IO connected event fired");
         setIsConnecting(false);
-        toast({
-          title: "Connected",
-          description: "Real-time messaging is now active",
-        });
+        toast.success("Real-time messaging is now active");
       };
 
       const handleDisconnect = () => {
         console.log("❌ Socket.IO disconnected event fired");
         setIsConnecting(false);
-        toast({
-          title: "Disconnected",
-          description: "Real-time messaging is offline",
-          variant: "destructive",
-        });
+        toast.error("Real-time messaging is offline");
       };
 
       const handleError = (error: any) => {
         console.error("Socket.IO connection error event:", error);
         setIsConnecting(false);
-        toast({
-          title: "Connection Error",
-          description: "Failed to establish real-time connection",
-          variant: "destructive",
-        });
+        toast.error("Failed to establish real-time connection");
       };
 
       // Attach connection status listeners
