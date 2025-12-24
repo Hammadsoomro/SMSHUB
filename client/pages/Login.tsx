@@ -19,7 +19,11 @@ export default function Login() {
     const stored = localStorage.getItem("theme");
     return stored === "dark";
   });
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>();
 
   // Apply theme to document root on mount
   useEffect(() => {
@@ -72,7 +76,9 @@ export default function Login() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12 ${isDarkMode ? "dark" : ""}`}>
+    <div
+      className={`min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12 ${isDarkMode ? "dark" : ""}`}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -127,7 +133,9 @@ export default function Login() {
                 className="h-10"
               />
               {errors.email && (
-                <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
@@ -142,7 +150,9 @@ export default function Login() {
                 className="h-10"
               />
               {errors.password && (
-                <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -165,7 +175,10 @@ export default function Login() {
           <div className="mt-6 pt-6 border-t border-border text-center">
             <p className="text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
+              <Link
+                to="/signup"
+                className="text-primary hover:underline font-medium"
+              >
                 Sign Up
               </Link>
             </p>

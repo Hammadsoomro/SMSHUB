@@ -276,7 +276,7 @@ export default function Conversations() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to load initial data. Please refresh the page."
+          : "Failed to load initial data. Please refresh the page.",
       );
     } finally {
       setIsLoading(false);
@@ -493,9 +493,7 @@ export default function Conversations() {
       toast.success("Your message has been sent successfully");
     } catch (error: any) {
       console.error("Error sending message:", error);
-      toast.error(
-        error.message || "Failed to send message. Please try again."
-      );
+      toast.error(error.message || "Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -549,7 +547,7 @@ export default function Conversations() {
     } catch (error: any) {
       console.error("Error editing contact:", error);
       toast.error(
-        error.message || "Failed to update contact. Please try again."
+        error.message || "Failed to update contact. Please try again.",
       );
     }
   };
@@ -590,7 +588,7 @@ export default function Conversations() {
     } catch (error: any) {
       console.error("Error deleting contact:", error);
       toast.error(
-        error.message || "Failed to delete contact. Please try again."
+        error.message || "Failed to delete contact. Please try again.",
       );
     }
   };

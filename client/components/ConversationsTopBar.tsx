@@ -73,9 +73,7 @@ export default function ConversationsTopBar({
               title="Go back"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm font-medium hidden sm:inline">
-                Back
-              </span>
+              <span className="text-sm font-medium hidden sm:inline">Back</span>
             </Button>
 
             <Button
@@ -193,9 +191,7 @@ export default function ConversationsTopBar({
             onClick={onToggleNotifications}
             className="p-2 cursor-pointer"
             title={
-              notifications
-                ? "Disable notifications"
-                : "Enable notifications"
+              notifications ? "Disable notifications" : "Enable notifications"
             }
           >
             {notifications ? (
