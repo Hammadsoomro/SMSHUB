@@ -62,12 +62,26 @@ export default function ConversationsTopBar({
     <div className="bg-card border-b border-border relative z-20">
       <div className="px-4 py-3 flex items-center justify-between">
         {/* Left side: Logo/Title and Phone Selector */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
+            title="Go back"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium hidden sm:inline">
+              Back
+            </span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/admin")}
             className="flex items-center gap-2 text-primary hover:text-primary/80 cursor-pointer"
+            title="Go to dashboard"
           >
             <Home className="w-4 h-4" />
             <span className="text-sm font-medium hidden sm:inline">
