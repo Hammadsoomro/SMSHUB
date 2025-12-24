@@ -20,6 +20,11 @@ export default function Landing() {
     return stored === "dark";
   });
 
+  // Apply theme to document root on mount
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
+
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
