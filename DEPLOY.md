@@ -104,31 +104,37 @@ Once environment variables are set:
 After deployment, test these features:
 
 ### ✅ Authentication
+
 - [ ] Sign up with a new account
 - [ ] Login with email/password
 - [ ] See user profile
 
 ### ✅ Credentials
+
 - [ ] Navigate to Credentials page
 - [ ] Save Twilio credentials (if you have them)
 - [ ] Credentials are stored securely
 
 ### ✅ Real-time Connection
+
 - [ ] Check browser console for socket connection
 - [ ] You should see "Connected" toast notification
 - [ ] Real-time messaging works
 
 ### ✅ Messaging (if credentials set)
+
 - [ ] View contacts
 - [ ] Send messages
 - [ ] Receive messages (if Twilio webhook configured)
 - [ ] See real-time updates
 
 ### ✅ Dark/Light Theme
+
 - [ ] Toggle between light and dark themes
 - [ ] Theme persists on refresh
 
 ### ✅ Navigation
+
 - [ ] All navbar buttons work
 - [ ] Back button navigates correctly
 - [ ] Dashboard button goes to `/admin`
@@ -138,36 +144,43 @@ After deployment, test these features:
 ### Build Failures
 
 **Error: "npm: command not found"**
+
 - Netlify uses pnpm by default. Add this to build settings:
 - Or update your `package.json` `engines` field
 
 **Error: "MONGODB_URI is undefined"**
+
 - Check environment variables in Netlify dashboard
 - Make sure variable names match exactly (case-sensitive)
 - Redeploy after adding variables
 
 **Error: "Build exceeded timeout"**
+
 - Check build logs for bottlenecks
 - Try clearing Netlify cache (Site settings → Build & deploy → Clear cache)
 
 ### Runtime Issues
 
 **Socket.IO Connection Fails**
+
 - Check browser console for errors
 - Verify environment variables are set correctly
 - Make sure MongoDB connection is working
 
 **Cannot Save Credentials**
+
 - Check that MongoDB is connected
 - Verify JWT_SECRET is set
 - Check browser console for API errors
 
 **Messages Not Sending**
+
 - If using Twilio, verify TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN
 - Check Twilio account has SMS credits
 - Verify phone number format (must be international format, e.g., +1234567890)
 
 **Dark Mode Not Working**
+
 - Clear browser cache
 - Check that sonner toast library is loaded
 - Verify theme CSS is being applied
@@ -175,6 +188,7 @@ After deployment, test these features:
 ## Monitoring & Logs
 
 ### View Deploy Logs
+
 1. Go to Netlify dashboard
 2. Click on your site
 3. Go to **Deploys**
@@ -182,12 +196,14 @@ After deployment, test these features:
 5. Scroll down to see build logs
 
 ### Monitor Site Status
+
 1. Go to **Monitoring** → **Overview**
 2. Check uptime status
 3. View error rates
 4. Check response times
 
 ### Enable Error Tracking (Optional)
+
 1. Go to **Analytics** → **Data**
 2. Monitor visitor activity
 3. Track performance metrics
@@ -265,6 +281,7 @@ git push origin main  # Netlify automatically deploys
 ## SSL/TLS Security
 
 Netlify automatically provides:
+
 - ✅ Free SSL certificate (automatic)
 - ✅ Automatic renewal
 - ✅ HSTS headers
@@ -275,16 +292,19 @@ Your site is automatically secure!
 ## Backup & Recovery
 
 ### MongoDB Backup
+
 1. Enable automatic backups in MongoDB Atlas
 2. Set backup frequency to daily
 3. Keep at least 7 days of backups
 
 ### Code Backup
+
 1. Git repository is your backup
 2. Keep production branch safe
 3. Use git tags for releases
 
 ### Data Recovery
+
 1. Restore from MongoDB backups if needed
 2. Check Netlify deploy history for code rollback
 3. Use git to revert commits if needed

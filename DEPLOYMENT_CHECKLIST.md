@@ -47,6 +47,7 @@ Use this checklist to ensure everything is ready before deploying to production.
 ## Features
 
 ### Authentication
+
 - [ ] Sign up works
 - [ ] Login works
 - [ ] JWT tokens are generated
@@ -54,24 +55,28 @@ Use this checklist to ensure everything is ready before deploying to production.
 - [ ] Logout clears tokens
 
 ### Real-time Messaging
+
 - [ ] Socket.IO connection works
 - [ ] Connection/disconnection toasts show
 - [ ] Messages update in real-time
 - [ ] No console errors on socket events
 
 ### Theme
+
 - [ ] Light theme is default
 - [ ] Theme toggle works
 - [ ] Theme persists on refresh
 - [ ] Dark mode CSS is applied correctly
 
 ### Navigation
+
 - [ ] All navbar buttons work
 - [ ] Back button navigates correctly
 - [ ] Dashboard button goes to `/admin`
 - [ ] All routes are accessible
 
 ### Messaging (if SMS enabled)
+
 - [ ] Twilio credentials can be saved
 - [ ] Contacts can be added/edited/deleted
 - [ ] Messages can be sent
@@ -131,24 +136,30 @@ Use this checklist to ensure everything is ready before deploying to production.
 ### Before Pushing to Production
 
 1. **Test locally**
+
    ```bash
    npm run build
    npm run start
    ```
+
    - Visit http://localhost:3000
    - Test all major features
    - Check browser console for errors
 
 2. **Run type check**
+
    ```bash
    npm run typecheck
    ```
+
    - Should have 0 errors
 
 3. **Review recent changes**
+
    ```bash
    git log --oneline -10
    ```
+
    - Verify all commits are intentional
 
 4. **Check environment variables**
@@ -177,14 +188,14 @@ Use this checklist to ensure everything is ready before deploying to production.
 
 ## Common Issues & Solutions
 
-| Issue | Solution |
-|-------|----------|
-| Build fails | Check `npm run build` locally, review Netlify logs |
-| 502 Bad Gateway | Verify MongoDB connection, check Netlify functions logs |
-| Messages not sending | Verify Twilio credentials, check API logs |
-| Socket connection fails | Check browser console, verify server is running |
-| Theme not persisting | Clear browser cache, check localStorage |
-| API returns 401 | Verify JWT_SECRET, check token in localStorage |
+| Issue                   | Solution                                                |
+| ----------------------- | ------------------------------------------------------- |
+| Build fails             | Check `npm run build` locally, review Netlify logs      |
+| 502 Bad Gateway         | Verify MongoDB connection, check Netlify functions logs |
+| Messages not sending    | Verify Twilio credentials, check API logs               |
+| Socket connection fails | Check browser console, verify server is running         |
+| Theme not persisting    | Clear browser cache, check localStorage                 |
+| API returns 401         | Verify JWT_SECRET, check token in localStorage          |
 
 ## Rollback Plan
 
@@ -197,10 +208,12 @@ If something goes wrong:
    - Site is back to previous version
 
 2. **Code Rollback**
+
    ```bash
    git revert <commit-hash>
    git push
    ```
+
    - Netlify automatically redeploys
 
 3. **Database Rollback**
