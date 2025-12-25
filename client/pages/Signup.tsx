@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,14 +19,21 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
-    return (
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    );
+    return stored === "dark";
   });
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<SignupFormData>();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<SignupFormData>();
 
   const password = watch("password");
+
+  // Apply theme to document root on mount
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
 
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
@@ -74,7 +81,9 @@ export default function Signup() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12 ${isDarkMode ? "dark" : ""}`}>
+    <div
+      className={`min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12 ${isDarkMode ? "dark" : ""}`}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -115,14 +124,18 @@ export default function Signup() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Full Name</label>
+              <label className="text-sm font-medium mb-2 block">
+                Full Name
+              </label>
               <Input
                 {...register("name", { required: "Name is required" })}
                 placeholder="John Doe"
                 className="h-10"
               />
               {errors.name && (
-                <p className="text-xs text-destructive mt-1">{errors.name.message}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
@@ -141,7 +154,9 @@ export default function Signup() {
                 className="h-10"
               />
               {errors.email && (
-                <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
@@ -160,12 +175,16 @@ export default function Signup() {
                 className="h-10"
               />
               {errors.password && (
-                <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Confirm Password</label>
+              <label className="text-sm font-medium mb-2 block">
+                Confirm Password
+              </label>
               <Input
                 {...register("confirmPassword", {
                   required: "Please confirm your password",
@@ -175,7 +194,9 @@ export default function Signup() {
                 className="h-10"
               />
               {errors.confirmPassword && (
-                <p className="text-xs text-destructive mt-1">{errors.confirmPassword.message}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.confirmPassword.message}
+                </p>
               )}
             </div>
 
@@ -198,7 +219,10 @@ export default function Signup() {
           <div className="mt-6 pt-6 border-t border-border text-center">
             <p className="text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline font-medium">
+              <Link
+                to="/login"
+                className="text-primary hover:underline font-medium"
+              >
                 Sign In
               </Link>
             </p>

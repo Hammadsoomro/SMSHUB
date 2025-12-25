@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import {
   Send,
   Plus,
@@ -53,7 +53,6 @@ interface ConversationContact extends Contact {
 export default function Conversations() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Core State
@@ -79,10 +78,7 @@ export default function Conversations() {
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
-    return (
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    );
+    return stored === "dark";
   });
   const [notifications, setNotifications] = useState(() => {
     return Notification.permission === "granted";
@@ -136,7 +132,6 @@ export default function Conversations() {
   // Initialize everything
   useEffect(() => {
     loadInitialData();
-    initializeSocketIO();
     requestNotificationPermission();
 
     // Set theme
@@ -153,6 +148,11 @@ export default function Conversations() {
         console.error("Error during Conversations cleanup:", error);
       }
     };
+  }, []);
+
+  // Initialize Socket.IO separately with better lifecycle management
+  useEffect(() => {
+    initializeSocketIO();
   }, []);
 
   // Handle phone number URL parameter
@@ -273,14 +273,11 @@ export default function Conversations() {
       }
     } catch (error) {
       console.error("Error loading initial data:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to load initial data. Please refresh the page.",
-        variant: "destructive",
-      });
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to load initial data. Please refresh the page.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -295,7 +292,55 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      socketService.connect(token);
+      console.log("Initializing Socket.IO...");
+
+      // Connect to socket service
+      const socket = socketService.connect(token);
+
+      if (!socket) {
+        console.error("Failed to get socket instance");
+        setIsConnecting(false);
+        toast.error("Unable to establish socket connection");
+        return;
+      }
+
+      // Remove old listeners to avoid duplicates
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
+
+      // Connection status handlers with debug logging
+      const handleConnect = () => {
+        console.log("✅ Socket.IO connected event fired");
+        setIsConnecting(false);
+        toast.success("Real-time messaging is now active");
+      };
+
+      const handleDisconnect = () => {
+        console.log("❌ Socket.IO disconnected event fired");
+        setIsConnecting(false);
+        toast.error("Real-time messaging is offline");
+      };
+
+      const handleError = (error: any) => {
+        console.error("Socket.IO connection error event:", error);
+        setIsConnecting(false);
+        toast.error("Failed to establish real-time connection");
+      };
+
+      // Attach connection status listeners
+      socket.on("connect", handleConnect);
+      socket.on("disconnect", handleDisconnect);
+      socket.on("connect_error", handleError);
+
+      // Check if already connected and show toast if so
+      if (socket.connected) {
+        console.log("Socket is already connected, triggering connected state");
+        setIsConnecting(false);
+        setTimeout(() => {
+          toast.success("Real-time messaging is now active");
+        }, 100);
+      }
 
       // Set up Socket.IO event listeners
       socketService.on("new_message", (data: any) => {
@@ -356,43 +401,10 @@ export default function Conversations() {
         console.log("🔔 Unread counts updated:", data);
         updatePageTitle();
       });
-
-      // Connection status handlers
-      const handleConnect = () => {
-        console.log("✅ Socket.IO connected");
-        setIsConnecting(false);
-        toast({
-          title: "Connected",
-          description: "Real-time messaging is now active",
-        });
-      };
-
-      const handleDisconnect = () => {
-        console.log("❌ Socket.IO disconnected");
-        setIsConnecting(false);
-        toast({
-          title: "Disconnected",
-          description: "Real-time messaging is offline",
-          variant: "destructive",
-        });
-      };
-
-      const handleError = (error: any) => {
-        console.error("Socket.IO connection error:", error);
-        setIsConnecting(false);
-        toast({
-          title: "Connection Error",
-          description: "Failed to establish real-time connection",
-          variant: "destructive",
-        });
-      };
-
-      socketService.on("connect", handleConnect);
-      socketService.on("disconnect", handleDisconnect);
-      socketService.on("connect_error", handleError);
     } catch (error) {
       console.error("Error initializing Socket.IO:", error);
       setIsConnecting(false);
+      toast.error("Failed to initialize real-time connection");
     }
   };
 
@@ -402,11 +414,7 @@ export default function Conversations() {
       setContacts(contactsData || []);
     } catch (error) {
       console.error("Error loading contacts:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load contacts",
-        variant: "destructive",
-      });
+      toast.error("Failed to load contacts");
     }
   };
 
@@ -420,11 +428,7 @@ export default function Conversations() {
       setMessages(messagesData || []);
     } catch (error) {
       console.error("Error loading messages:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load messages",
-        variant: "destructive",
-      });
+      toast.error("Failed to load messages");
     } finally {
       setIsLoadingMessages(false);
     }
@@ -486,18 +490,10 @@ export default function Conversations() {
         loadContactsForPhoneNumber(phoneNum.id),
       ]);
 
-      toast({
-        title: "Message Sent",
-        description: "Your message has been sent successfully",
-      });
+      toast.success("Your message has been sent successfully");
     } catch (error: any) {
       console.error("Error sending message:", error);
-      toast({
-        title: "Failed to Send",
-        description:
-          error.message || "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -547,18 +543,12 @@ export default function Conversations() {
         await loadContactsForPhoneNumber(phoneNum.id);
       }
 
-      toast({
-        title: "Contact Updated",
-        description: "Contact has been updated successfully",
-      });
+      toast.success("Contact has been updated successfully");
     } catch (error: any) {
       console.error("Error editing contact:", error);
-      toast({
-        title: "Failed to Update",
-        description:
-          error.message || "Failed to update contact. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(
+        error.message || "Failed to update contact. Please try again.",
+      );
     }
   };
 
@@ -580,10 +570,7 @@ export default function Conversations() {
       }
 
       // Show optimistic success message
-      toast({
-        title: "Contact Deleted",
-        description: "Contact and all messages have been deleted",
-      });
+      toast.success("Contact and all messages have been deleted");
 
       // Delete from server
       await ApiService.deleteContact(contactId);
@@ -600,12 +587,9 @@ export default function Conversations() {
       setContacts((prev) => prev.filter((contact) => contact.id !== contactId));
     } catch (error: any) {
       console.error("Error deleting contact:", error);
-      toast({
-        title: "Failed to Delete",
-        description:
-          error.message || "Failed to delete contact. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(
+        error.message || "Failed to delete contact. Please try again.",
+      );
     }
   };
 
@@ -629,18 +613,11 @@ export default function Conversations() {
         socketService.joinPhoneNumber(phoneNumber);
         await loadContactsForPhoneNumber(phoneNumberObj.id);
 
-        toast({
-          title: "Number Switched",
-          description: `Now using ${phoneNumber}`,
-        });
+        toast.success(`Now using ${phoneNumber}`);
       }
     } catch (error: any) {
       console.error("Error switching phone number:", error);
-      toast({
-        title: "Failed to Switch",
-        description: error.message || "Failed to switch phone number",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to switch phone number");
     }
   };
 

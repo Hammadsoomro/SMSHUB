@@ -2,22 +2,55 @@ import { io, Socket } from "socket.io-client";
 
 class SocketService {
   private socket: Socket | null = null;
+  private isConnecting = false;
 
-  connect(token: string): Socket {
-    if (this.socket?.connected) {
+  connect(token: string): Socket | null {
+    // Return existing socket if already connected or connecting
+    if (this.socket) {
+      console.log("[SocketService] Socket already exists, reusing...");
       return this.socket;
     }
 
-    this.socket = io({
-      auth: {
-        authorization: `Bearer ${token}`,
-      },
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-    });
+    if (this.isConnecting) {
+      console.log("[SocketService] Connection in progress, waiting...");
+      return this.socket;
+    }
 
-    return this.socket;
+    try {
+      this.isConnecting = true;
+      console.log("[SocketService] Creating new socket connection...");
+
+      this.socket = io({
+        auth: {
+          authorization: `Bearer ${token}`,
+        },
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        transports: ["websocket", "polling"],
+      });
+
+      // Attach base listeners that will always be there
+      this.socket.on("connect", () => {
+        console.log("[SocketService] Socket connected successfully");
+        this.isConnecting = false;
+      });
+
+      this.socket.on("disconnect", () => {
+        console.log("[SocketService] Socket disconnected");
+      });
+
+      this.socket.on("connect_error", (error: any) => {
+        console.error("[SocketService] Connection error:", error);
+        this.isConnecting = false;
+      });
+
+      return this.socket;
+    } catch (error) {
+      console.error("Error creating socket connection:", error);
+      this.isConnecting = false;
+      return null;
+    }
   }
 
   disconnect(): void {
@@ -59,6 +92,10 @@ class SocketService {
 
   get connected(): boolean {
     return this.socket?.connected || false;
+  }
+
+  getSocket(): Socket | null {
+    return this.socket;
   }
 }
 

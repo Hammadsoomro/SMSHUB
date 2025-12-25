@@ -21,6 +21,7 @@ import {
   DollarSign,
   RefreshCw,
   CheckCircle2,
+  ArrowLeft,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -58,21 +59,36 @@ export default function ConversationsTopBar({
   );
 
   return (
-    <div className="bg-card border-b border-border">
+    <div className="bg-card border-b border-border relative z-20">
       <div className="px-4 py-3 flex items-center justify-between">
-        {/* Left side: Logo/Title and Phone Selector */}
+        {/* Left side: Navigation and Phone Selector */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-primary hover:text-primary/80"
-          >
-            <Home className="w-4 h-4" />
-            <span className="text-sm font-medium hidden sm:inline">
-              Dashboard
-            </span>
-          </Button>
+          {/* Navigation Buttons */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
+              title="Go back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm font-medium hidden sm:inline">Back</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-2 text-primary hover:text-primary/80 cursor-pointer"
+              title="Go to dashboard"
+            >
+              <Home className="w-4 h-4" />
+              <span className="text-sm font-medium hidden sm:inline">
+                Dashboard
+              </span>
+            </Button>
+          </div>
 
           {/* Phone Number Selector Dropdown */}
           <div className="flex items-center gap-2">
@@ -81,7 +97,7 @@ export default function ConversationsTopBar({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 min-w-[180px] justify-between"
+                  className="flex items-center gap-2 min-w-[180px] justify-between cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4" />
@@ -173,11 +189,9 @@ export default function ConversationsTopBar({
             variant="ghost"
             size="sm"
             onClick={onToggleNotifications}
-            className="p-2"
+            className="p-2 cursor-pointer"
             title={
-              notifications
-                ? "Disable notifications"
-                : "Enable notifications"
+              notifications ? "Disable notifications" : "Enable notifications"
             }
           >
             {notifications ? (
@@ -191,7 +205,7 @@ export default function ConversationsTopBar({
             variant="ghost"
             size="sm"
             onClick={onToggleTheme}
-            className="p-2"
+            className="p-2 cursor-pointer"
             title="Toggle theme"
           >
             {isDarkMode ? (
@@ -203,7 +217,7 @@ export default function ConversationsTopBar({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="p-2">
+              <Button variant="ghost" size="sm" className="p-2 cursor-pointer">
                 <Settings className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
