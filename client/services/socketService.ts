@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { API_BASE_URL } from "@/config/api";
 
 class SocketService {
   private socket: Socket | null = null;
@@ -20,7 +21,7 @@ class SocketService {
       this.isConnecting = true;
       console.log("[SocketService] Creating new socket connection...");
 
-      this.socket = io({
+      this.socket = io(API_BASE_URL, {
         auth: {
           authorization: `Bearer ${token}`,
         },
