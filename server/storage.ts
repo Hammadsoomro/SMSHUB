@@ -106,10 +106,25 @@ class Storage {
     return data as PhoneNumber;
   }
 
-  async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findOneAndUpdate({ id: number.id }, number, {
-      new: true,
-    });
+  async updatePhoneNumber(number: PhoneNumber): Promise<PhoneNumber> {
+    const updated = await PhoneNumberModel.findOneAndUpdate(
+      { id: number.id },
+      {
+        ...number,
+        updatedAt: new Date().toISOString(),
+      },
+      { new: true },
+    );
+
+    if (!updated) {
+      throw new Error("Phone number not found");
+    }
+
+    const data = updated.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as PhoneNumber;
   }
 
   // Team Members
