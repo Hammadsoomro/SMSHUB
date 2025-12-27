@@ -611,8 +611,17 @@ const handleUpdateNumberSettings: RequestHandler = async (req, res) => {
       { new: true },
     );
 
+    if (!updatedNumber) {
+      return res.status(500).json({ error: "Failed to update number" });
+    }
+
+    const data = updatedNumber.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+
     res.json({
-      phoneNumber: updatedNumber?.toObject(),
+      phoneNumber: data,
     });
   } catch (error) {
     console.error("Update number settings error:", error);
