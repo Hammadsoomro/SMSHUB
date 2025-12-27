@@ -559,20 +559,34 @@ const handleAssignNumber: RequestHandler = async (req, res) => {
     }
 
     // If teamMemberId is null or undefined, unassign it
-    const assignedToValue =
-      teamMemberId && teamMemberId !== null ? teamMemberId : undefined;
+    const updateData: any = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (teamMemberId && teamMemberId !== null) {
+      updateData.assignedTo = teamMemberId;
+    } else {
+      // Unset the assignedTo field to properly remove the assignment
+      updateData.$unset = { assignedTo: 1 };
+    }
 
     const updatedNumber = await PhoneNumberModel.findOneAndUpdate(
       { id: phoneNumberId },
-      {
-        assignedTo: assignedToValue,
-        updatedAt: new Date().toISOString(),
-      },
+      updateData,
       { new: true },
     );
 
+    if (!updatedNumber) {
+      return res.status(500).json({ error: "Failed to update number" });
+    }
+
+    const data = updatedNumber.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+
     res.json({
-      phoneNumber: updatedNumber?.toObject(),
+      phoneNumber: data,
     });
   } catch (error) {
     console.error("Assign number error:", error);
