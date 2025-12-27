@@ -5,7 +5,6 @@ import express, { Express, RequestHandler } from "express";
 import cors from "cors";
 import crypto from "crypto";
 import https from "https";
-import { v4 as uuidv4 } from "uuid";
 
 // ============================================================================
 // MONGODB CONNECTION AND MODELS
