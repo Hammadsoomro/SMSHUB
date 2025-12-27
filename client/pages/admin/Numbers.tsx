@@ -147,7 +147,7 @@ export default function Numbers() {
         },
         body: JSON.stringify({
           phoneNumberId: selectedNumberId,
-          teamMemberId: selectedMemberId || undefined,
+          teamMemberId: selectedMemberId !== "" ? selectedMemberId : null,
         }),
       });
 
@@ -171,11 +171,19 @@ export default function Numbers() {
       setSelectedNumberId(null);
       setSelectedMemberId("");
 
-      const actionText =
-        selectedMemberId === "" ? "unassigned from" : "assigned to";
-      setSuccess(
-        `✅ Number ${data.phoneNumber.phoneNumber} ${actionText} team member!`,
-      );
+      const isUnassigning = selectedMemberId === "";
+      const memberName = teamMembers.find(
+        (m) => m.id === selectedMemberId,
+      )?.name;
+      let successMessage = "";
+
+      if (isUnassigning) {
+        successMessage = `✅ Number ${data.phoneNumber.phoneNumber} unassigned!`;
+      } else {
+        successMessage = `✅ Number ${data.phoneNumber.phoneNumber} assigned to ${memberName}!`;
+      }
+
+      setSuccess(successMessage);
 
       setTimeout(() => {
         setSuccess("");
@@ -533,7 +541,10 @@ export default function Numbers() {
                 {num.assignedTo && (
                   <div className="mb-4 p-3 bg-muted rounded">
                     <p className="text-xs text-muted-foreground">Assigned to</p>
-                    <p className="font-medium">Team Member</p>
+                    <p className="font-medium">
+                      {teamMembers.find((m) => m.id === num.assignedTo)?.name ||
+                        "Unknown Member"}
+                    </p>
                   </div>
                 )}
 

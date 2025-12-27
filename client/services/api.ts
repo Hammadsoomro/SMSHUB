@@ -1,4 +1,5 @@
 import { Contact, Message, PhoneNumber, User } from "@shared/api";
+import { API_BASE_URL } from "@/config/api";
 
 interface Wallet {
   balance: number;
@@ -23,7 +24,8 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
-    const response = await fetch(endpoint, {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
       ...options,
       headers: {
         ...this.getAuthHeader(),

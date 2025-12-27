@@ -204,7 +204,8 @@ export const handleSetActiveNumber: RequestHandler = async (req, res) => {
       });
     }
 
-    res.json({ number: { ...phoneNumber, active: true } });
+    const updatedNumber = await storage.getPhoneNumberById(phoneNumberId);
+    res.json({ number: updatedNumber });
   } catch (error) {
     console.error("Set active number error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -377,7 +378,7 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     }
 
     // If assigning to a team member, verify they exist and belong to this admin
-    if (teamMemberId) {
+    if (teamMemberId && teamMemberId !== null) {
       const members = await storage.getTeamMembersByAdminId(adminId);
       const member = members.find((m) => m.id === teamMemberId);
 
@@ -387,14 +388,16 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     }
 
     // Update the phone number with assignment
+    // If teamMemberId is null or undefined, unassign it
     const updatedNumber: PhoneNumber = {
       ...phoneNumber,
-      assignedTo: teamMemberId,
+      assignedTo:
+        teamMemberId && teamMemberId !== null ? teamMemberId : undefined,
     };
 
-    await storage.updatePhoneNumber(updatedNumber);
+    const result = await storage.updatePhoneNumber(updatedNumber);
 
-    res.json({ phoneNumber: updatedNumber });
+    res.json({ phoneNumber: result });
   } catch (error) {
     console.error("Assign number error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -429,9 +432,9 @@ export const handleUpdateNumberSettings: RequestHandler = async (req, res) => {
       active,
     };
 
-    await storage.updatePhoneNumber(updatedNumber);
+    const result = await storage.updatePhoneNumber(updatedNumber);
 
-    res.json({ phoneNumber: updatedNumber });
+    res.json({ phoneNumber: result });
   } catch (error) {
     console.error("Update number settings error:", error);
     res.status(500).json({ error: "Internal server error" });
