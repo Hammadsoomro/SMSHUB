@@ -107,12 +107,20 @@ class Storage {
   }
 
   async updatePhoneNumber(number: PhoneNumber): Promise<PhoneNumber> {
+    const updateData: any = {
+      ...number,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Explicitly unset assignedTo if it's undefined
+    if (number.assignedTo === undefined) {
+      updateData.$unset = { assignedTo: 1 };
+      delete updateData.assignedTo;
+    }
+
     const updated = await PhoneNumberModel.findOneAndUpdate(
       { id: number.id },
-      {
-        ...number,
-        updatedAt: new Date().toISOString(),
-      },
+      updateData,
       { new: true },
     );
 
