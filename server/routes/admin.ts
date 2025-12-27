@@ -204,7 +204,8 @@ export const handleSetActiveNumber: RequestHandler = async (req, res) => {
       });
     }
 
-    res.json({ number: { ...phoneNumber, active: true } });
+    const updatedNumber = await storage.getPhoneNumberById(phoneNumberId);
+    res.json({ number: updatedNumber });
   } catch (error) {
     console.error("Set active number error:", error);
     res.status(500).json({ error: "Internal server error" });
