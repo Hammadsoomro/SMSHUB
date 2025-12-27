@@ -546,7 +546,8 @@ const handleAssignNumber: RequestHandler = async (req, res) => {
       return res.status(404).json({ error: "Phone number not found" });
     }
 
-    if (teamMemberId) {
+    // If assigning to a team member, verify they exist and belong to this admin
+    if (teamMemberId && teamMemberId !== null) {
       const member = await TeamMemberModel.findOne({
         id: teamMemberId,
         adminId,
@@ -557,10 +558,14 @@ const handleAssignNumber: RequestHandler = async (req, res) => {
       }
     }
 
+    // If teamMemberId is null or undefined, unassign it
+    const assignedToValue =
+      teamMemberId && teamMemberId !== null ? teamMemberId : undefined;
+
     const updatedNumber = await PhoneNumberModel.findOneAndUpdate(
       { id: phoneNumberId },
       {
-        assignedTo: teamMemberId || undefined,
+        assignedTo: assignedToValue,
         updatedAt: new Date().toISOString(),
       },
       { new: true },
