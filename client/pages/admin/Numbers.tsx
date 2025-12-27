@@ -172,7 +172,9 @@ export default function Numbers() {
       setSelectedMemberId("");
 
       const isUnassigning = selectedMemberId === "";
-      const memberName = teamMembers.find((m) => m.id === selectedMemberId)?.name;
+      const memberName = teamMembers.find(
+        (m) => m.id === selectedMemberId,
+      )?.name;
       let successMessage = "";
 
       if (isUnassigning) {

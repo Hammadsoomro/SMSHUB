@@ -142,7 +142,8 @@ const WalletModel = mongoose.model("Wallet", walletSchema);
 // JWT AND AUTHENTICATION
 // ============================================================================
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
@@ -155,8 +156,12 @@ function generateToken(userId: string): string {
     iat: Math.floor(Date.now() / 1000),
   };
 
-  const headerEncoded = Buffer.from(JSON.stringify(header)).toString("base64url");
-  const payloadEncoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const headerEncoded = Buffer.from(JSON.stringify(header)).toString(
+    "base64url",
+  );
+  const payloadEncoded = Buffer.from(JSON.stringify(payload)).toString(
+    "base64url",
+  );
   const signature = crypto
     .createHmac("sha256", JWT_SECRET)
     .update(`${headerEncoded}.${payloadEncoded}`)
@@ -177,7 +182,9 @@ function verifyToken(token: string): { userId: string } | null {
       return null;
     }
 
-    const payload = JSON.parse(Buffer.from(payloadEncoded, "base64url").toString());
+    const payload = JSON.parse(
+      Buffer.from(payloadEncoded, "base64url").toString(),
+    );
     return { userId: payload.userId };
   } catch {
     return null;
@@ -221,7 +228,8 @@ async function validateTwilioCredentials(
       if (!accountSid.startsWith("AC") || accountSid.length !== 34) {
         return resolve({
           valid: false,
-          error: "Invalid Account SID format (should start with AC and be 34 characters)",
+          error:
+            "Invalid Account SID format (should start with AC and be 34 characters)",
         });
       }
 
@@ -252,7 +260,8 @@ async function validateTwilioCredentials(
         if (res.statusCode === 403) {
           return resolve({
             valid: false,
-            error: "Access forbidden (403). Your Twilio account may be suspended",
+            error:
+              "Access forbidden (403). Your Twilio account may be suspended",
           });
         }
         if (res.statusCode === 200 || res.statusCode === 429) {
@@ -414,7 +423,9 @@ const handleSaveCredentials: RequestHandler = async (req, res) => {
     const { accountSid, authToken } = req.body;
 
     if (!accountSid || !authToken) {
-      return res.status(400).json({ error: "Please enter both Account SID and Auth Token" });
+      return res
+        .status(400)
+        .json({ error: "Please enter both Account SID and Auth Token" });
     }
 
     const validation = await validateTwilioCredentials(accountSid, authToken);
@@ -828,7 +839,11 @@ const createApp = async (): Promise<Express> => {
 
   // Admin routes - Numbers
   app.get("/api/admin/numbers", authMiddleware, handleGetNumbers);
-  app.post("/api/admin/add-existing-number", authMiddleware, handleAddExistingNumber);
+  app.post(
+    "/api/admin/add-existing-number",
+    authMiddleware,
+    handleAddExistingNumber,
+  );
   app.post("/api/admin/assign-number", authMiddleware, handleAssignNumber);
   app.patch(
     "/api/admin/number-settings",
@@ -839,10 +854,18 @@ const createApp = async (): Promise<Express> => {
   // Admin routes - Team
   app.get("/api/admin/team", authMiddleware, handleGetTeamMembers);
   app.post("/api/admin/team/invite", authMiddleware, handleInviteTeamMember);
-  app.delete("/api/admin/team/:memberId", authMiddleware, handleRemoveTeamMember);
+  app.delete(
+    "/api/admin/team/:memberId",
+    authMiddleware,
+    handleRemoveTeamMember,
+  );
 
   // Admin routes - Dashboard
-  app.get("/api/admin/dashboard/stats", authMiddleware, handleGetDashboardStats);
+  app.get(
+    "/api/admin/dashboard/stats",
+    authMiddleware,
+    handleGetDashboardStats,
+  );
 
   // Health check
   app.get("/api/health", (req, res) => {

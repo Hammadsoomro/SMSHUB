@@ -391,7 +391,8 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     // If teamMemberId is null or undefined, unassign it
     const updatedNumber: PhoneNumber = {
       ...phoneNumber,
-      assignedTo: teamMemberId && teamMemberId !== null ? teamMemberId : undefined,
+      assignedTo:
+        teamMemberId && teamMemberId !== null ? teamMemberId : undefined,
     };
 
     const result = await storage.updatePhoneNumber(updatedNumber);
