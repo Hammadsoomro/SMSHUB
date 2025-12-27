@@ -429,9 +429,9 @@ export const handleUpdateNumberSettings: RequestHandler = async (req, res) => {
       active,
     };
 
-    await storage.updatePhoneNumber(updatedNumber);
+    const result = await storage.updatePhoneNumber(updatedNumber);
 
-    res.json({ phoneNumber: updatedNumber });
+    res.json({ phoneNumber: result });
   } catch (error) {
     console.error("Update number settings error:", error);
     res.status(500).json({ error: "Internal server error" });
