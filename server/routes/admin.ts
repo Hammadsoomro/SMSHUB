@@ -378,7 +378,7 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     }
 
     // If assigning to a team member, verify they exist and belong to this admin
-    if (teamMemberId) {
+    if (teamMemberId && teamMemberId !== null) {
       const members = await storage.getTeamMembersByAdminId(adminId);
       const member = members.find((m) => m.id === teamMemberId);
 
@@ -388,9 +388,10 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     }
 
     // Update the phone number with assignment
+    // If teamMemberId is null or undefined, unassign it
     const updatedNumber: PhoneNumber = {
       ...phoneNumber,
-      assignedTo: teamMemberId || undefined,
+      assignedTo: teamMemberId && teamMemberId !== null ? teamMemberId : undefined,
     };
 
     const result = await storage.updatePhoneNumber(updatedNumber);
