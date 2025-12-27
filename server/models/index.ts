@@ -55,9 +55,10 @@ const phoneNumberSchema = new Schema<IPhoneNumber>(
     id: { type: String, required: true, unique: true },
     adminId: { type: String, required: true },
     phoneNumber: { type: String, required: true },
-    assignedTo: { type: String, sparse: true },
+    assignedTo: { type: String, sparse: true, default: null },
     purchasedAt: { type: String, required: true },
     active: { type: Boolean, default: true },
+    updatedAt: { type: String, default: () => new Date().toISOString() },
   },
   { collection: "phone_numbers" },
 );
