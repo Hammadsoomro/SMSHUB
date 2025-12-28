@@ -43,7 +43,11 @@ export default function Wallet() {
           navigate("/login", { replace: true });
           return;
         }
-        await Promise.all([fetchWallet(), fetchTransactions()]);
+        await Promise.all([
+          fetchWallet(),
+          fetchTransactions(),
+          fetchTwilioBalance(),
+        ]);
         setIsLoading(false);
       } catch {
         navigate("/login", { replace: true });
