@@ -110,8 +110,7 @@ export default function Wallet() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Wallet & Billing</h1>
             <p className="text-muted-foreground">
-              Manage your account balance, view Twilio credits, and purchase
-              phone numbers
+              View Twilio credits and purchase phone numbers
             </p>
           </div>
           <Button
