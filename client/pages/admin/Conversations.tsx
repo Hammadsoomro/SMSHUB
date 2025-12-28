@@ -249,17 +249,21 @@ export default function Conversations() {
         }));
 
         setPhoneNumbers(processedPhones);
+        console.log("[Conversations] Loaded phone numbers:", processedPhones);
 
         // Set active phone number if we have phones but no active one
         if (processedPhones.length > 0 && !activePhoneNumber) {
           const activePhone =
             processedPhones.find((p) => p.active) || processedPhones[0];
           setActivePhoneNumber(activePhone.phoneNumber);
+          console.log("[Conversations] Set active phone number:", activePhone.phoneNumber);
         }
       } catch (numbersError) {
         console.error("Error loading phone numbers:", numbersError);
-        throw new Error(
-          `Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : "Unknown error"}`,
+        // Don't throw error - just show empty state
+        setPhoneNumbers([]);
+        toast.warning(
+          "Unable to load phone numbers. You may not have any assigned numbers yet.",
         );
       }
 
