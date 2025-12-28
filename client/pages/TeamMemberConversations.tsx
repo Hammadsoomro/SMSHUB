@@ -197,18 +197,23 @@ export default function TeamMemberConversations() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        const data = await response.json();
+        console.log("[TeamMemberConversations] Assigned phone numbers response:", data);
+
         if (response.ok) {
-          const data = await response.json();
           if (data.phoneNumbers && data.phoneNumbers.length > 0) {
+            console.log("[TeamMemberConversations] Setting assigned phone number:", data.phoneNumbers[0]);
             setAssignedPhoneNumber(data.phoneNumbers[0]);
           } else {
-            toast.error("No phone number assigned to your account");
+            console.warn("[TeamMemberConversations] No phone numbers assigned");
+            toast.error("No phone number assigned to your account. Please contact your admin.");
           }
         } else {
-          toast.error("Failed to load assigned phone number");
+          console.error("[TeamMemberConversations] API error:", data.error);
+          toast.error(data.error || "Failed to load assigned phone number");
         }
       } catch (error) {
-        console.error("Error loading assigned phone number:", error);
+        console.error("[TeamMemberConversations] Error loading assigned phone number:", error);
         toast.error("Failed to load phone number");
       }
     } catch (error) {
