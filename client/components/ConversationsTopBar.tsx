@@ -51,6 +51,7 @@ export default function ConversationsTopBar({
   notifications,
   onToggleNotifications,
   totalUnreadCount,
+  userRole,
 }: ConversationsTopBarProps) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
