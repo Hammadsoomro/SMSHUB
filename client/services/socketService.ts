@@ -13,7 +13,10 @@ class SocketService {
     }
 
     if (this.isConnecting) {
-      console.log("[SocketService] Connection in progress, waiting...");
+      console.log(
+        "[SocketService] Connection in progress, returning existing socket..."
+      );
+      // Even though connection is in progress, we should still have the socket instance
       return this.socket;
     }
 
@@ -30,6 +33,8 @@ class SocketService {
         reconnectionAttempts: 5,
         transports: ["websocket", "polling"],
       });
+
+      console.log("[SocketService] Socket instance created");
 
       // Attach base listeners that will always be there
       this.socket.on("connect", () => {
@@ -50,6 +55,7 @@ class SocketService {
     } catch (error) {
       console.error("Error creating socket connection:", error);
       this.isConnecting = false;
+      this.socket = null;
       return null;
     }
   }
