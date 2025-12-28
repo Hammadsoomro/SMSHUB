@@ -55,6 +55,21 @@ export default function Conversations() {
   const [searchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Role-based access control
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    const parsedUser = JSON.parse(user);
+    if (parsedUser.role !== "admin") {
+      // Team members should use /conversations instead
+      navigate("/conversations");
+      return;
+    }
+  }, [navigate]);
+
   // Core State
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null,
