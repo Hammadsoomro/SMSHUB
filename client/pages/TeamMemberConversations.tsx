@@ -578,11 +578,16 @@ export default function TeamMemberConversations() {
               className="w-full"
               size="sm"
               onClick={() => setShowAddContact(true)}
-              disabled={!assignedPhoneNumber}
+              disabled={!assignedPhoneNumber || isLoading}
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Contact
             </Button>
+            {!isLoading && !assignedPhoneNumber && (
+              <p className="text-xs text-destructive mt-2 text-center">
+                No phone number assigned. Contact your admin.
+              </p>
+            )}
           </div>
 
           {/* Contacts List */}
