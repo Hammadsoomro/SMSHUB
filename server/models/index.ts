@@ -58,7 +58,6 @@ const phoneNumberSchema = new Schema<IPhoneNumber>(
     assignedTo: { type: String, sparse: true, default: null },
     purchasedAt: { type: String, required: true },
     active: { type: Boolean, default: true },
-    updatedAt: { type: String, default: () => new Date().toISOString() },
   },
   { collection: "phone_numbers" },
 );
