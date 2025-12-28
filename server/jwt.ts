@@ -1,6 +1,7 @@
 import crypto from "crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+console.log("[JWT] JWT_SECRET is set:", !!process.env.JWT_SECRET, process.env.JWT_SECRET?.substring(0, 10) + "..." || "NOT SET");
 
 interface JWTPayload {
   userId: string;
