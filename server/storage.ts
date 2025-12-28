@@ -41,8 +41,16 @@ class Storage {
   async getUserById(id: string): Promise<User | undefined> {
     const user = (await UserModel.findById(id)) as any;
     if (!user) return undefined;
-    const { password, ...userWithoutPassword } = user.toObject();
-    return userWithoutPassword as User;
+    const userData = user.toObject();
+    const { password, ...userWithoutPassword } = userData;
+
+    // Map MongoDB's _id to id field if not already present
+    const userObject = userWithoutPassword as any;
+    if (!userObject.id && userObject._id) {
+      userObject.id = userObject._id.toString();
+    }
+
+    return userObject as User;
   }
 
   // Twilio Credentials
