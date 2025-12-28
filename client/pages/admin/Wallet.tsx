@@ -452,52 +452,77 @@ export default function Wallet() {
 
         {/* Transaction History */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Transaction History</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Transaction History
+            </h2>
+            {transactions.length > 0 && (
+              <Badge variant="secondary">
+                {transactions.length} {transactions.length === 1 ? "transaction" : "transactions"}
+              </Badge>
+            )}
+          </div>
 
           {transactions.length === 0 ? (
-            <div className="text-center py-8">
-              <WalletIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
-              <p className="text-muted-foreground">No transactions yet</p>
+            <div className="text-center py-12">
+              <WalletIcon className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-20" />
+              <p className="text-muted-foreground font-medium">No transactions yet</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your transaction history will appear here
+              </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {transactions.map((transaction, index) => (
                 <div
                   key={transaction.id || `transaction-${index}`}
-                  className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 smooth-transition"
+                  className="flex items-center justify-between p-4 rounded-lg border border-transparent hover:border-border hover:bg-muted/50 transition-all"
                 >
-                  <div className="flex items-center gap-4 flex-1">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div
-                      className={`p-2 rounded-lg ${
+                      className={`p-2.5 rounded-lg flex-shrink-0 ${
                         transaction.type === "credit"
-                          ? "bg-green-100"
-                          : "bg-red-100"
+                          ? "bg-green-100 dark:bg-green-950"
+                          : "bg-red-100 dark:bg-red-950"
                       }`}
                     >
                       {transaction.type === "credit" ? (
                         <TrendingUp
                           className={`w-5 h-5 ${
                             transaction.type === "credit"
-                              ? "text-green-600"
-                              : "text-red-600"
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
                           }`}
                         />
                       ) : (
-                        <TrendingDown className="w-5 h-5 text-red-600" />
+                        <TrendingDown
+                          className={`w-5 h-5 ${
+                            transaction.type === "credit"
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
+                          }`}
+                        />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{transaction.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {transaction.description}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(transaction.createdAt).toLocaleString()}
+                        {new Date(transaction.createdAt).toLocaleDateString()} at{" "}
+                        {new Date(transaction.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   </div>
                   <div
-                    className={`text-right font-semibold ${
+                    className={`text-right font-semibold flex-shrink-0 ${
                       transaction.type === "credit"
-                        ? "text-green-600"
-                        : "text-red-600"
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
                     }`}
                   >
                     {transaction.type === "credit" ? "+" : "-"}$
