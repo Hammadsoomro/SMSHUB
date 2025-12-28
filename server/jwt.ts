@@ -20,11 +20,8 @@ function base64UrlEncode(str: string): string {
 }
 
 function base64UrlDecode(str: string): string {
-  console.log("[JWT] base64UrlDecode input (first 50 chars):", str.substring(0, 50) + "...");
   str += new Array(5 - (str.length % 4)).join("=");
-  const decoded = Buffer.from(str.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString();
-  console.log("[JWT] base64UrlDecode output:", decoded);
-  return decoded;
+  return Buffer.from(str.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString();
 }
 
 export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string {
