@@ -507,7 +507,12 @@ export default function TeamMemberConversations() {
 
               <div className="flex-1">
                 <h1 className="font-semibold text-lg">Messages</h1>
-                {assignedPhoneNumber && (
+                {isLoading ? (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                    <p className="text-xs text-muted-foreground">Loading number...</p>
+                  </div>
+                ) : assignedPhoneNumber ? (
                   <div className="flex items-center space-x-2 mt-1">
                     <Phone className="w-3 h-3 text-primary" />
                     <p className="text-xs font-mono font-semibold text-primary">
@@ -517,6 +522,10 @@ export default function TeamMemberConversations() {
                       Active
                     </Badge>
                   </div>
+                ) : (
+                  <p className="text-xs text-destructive mt-1">
+                    ⚠️ No phone number assigned
+                  </p>
                 )}
               </div>
             </div>
