@@ -73,6 +73,7 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
 
 export const adminOnly: RequestHandler = (req, res, next) => {
   if (req.userRole !== "admin") {
+    console.warn(`Admin access denied for user ${req.userId} with role ${req.userRole} at ${req.method} ${req.path}`);
     return res.status(403).json({ error: "Only admins can access this" });
   }
   next();
