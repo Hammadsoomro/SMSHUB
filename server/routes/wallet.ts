@@ -88,7 +88,7 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     }
 
     res.json({
-      balance: parseFloat(balanceData.balance || "0"),
+      balance: parseFloat(String(balanceData.balance || "0")),
       currency: balanceData.currency || "USD",
     });
   } catch (error) {
