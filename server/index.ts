@@ -84,6 +84,15 @@ export async function createServer() {
     res.json({ message: ping });
   });
 
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      server: "running",
+      database: "connected",
+      timestamp: new Date().toISOString()
+    });
+  });
+
   app.get("/api/demo", handleDemo);
 
   // Auth routes (public)
