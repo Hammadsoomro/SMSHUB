@@ -5,12 +5,27 @@ import { TwilioClient } from "../twilio";
 
 export const handleGetWallet: RequestHandler = async (req, res) => {
   try {
-    const adminId = req.userId!;
+    const adminId = req.userId;
+
+    console.log("[handleGetWallet] Getting wallet for user:", adminId);
+
+    if (!adminId) {
+      console.error(
+        "[handleGetWallet] Error: User ID is missing after auth middleware",
+        {
+          userId: req.userId,
+          userRole: req.userRole,
+          user: req.user?.id,
+        },
+      );
+      return res.status(401).json({ error: "User authentication failed" });
+    }
+
     const wallet = await storage.getOrCreateWallet(adminId);
     res.json({ wallet });
   } catch (error) {
-    console.error("Get wallet error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("[handleGetWallet] Database error:", error);
+    res.status(500).json({ error: "Failed to get wallet" });
   }
 };
 

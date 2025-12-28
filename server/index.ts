@@ -89,7 +89,7 @@ export async function createServer() {
       status: "ok",
       server: "running",
       database: "connected",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   });
 

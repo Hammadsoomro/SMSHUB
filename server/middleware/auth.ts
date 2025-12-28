@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { Request, RequestHandler } from "express";
 import { verifyToken, extractTokenFromHeader } from "../jwt";
 import { storage } from "../storage";
 
@@ -40,7 +40,7 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     } catch (dbError) {
       console.warn(
         `Database lookup failed for user ${payload.userId}, using token data:`,
-        dbError
+        dbError,
       );
       // Fall through to use token data as fallback
     }
@@ -73,7 +73,9 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
 
 export const adminOnly: RequestHandler = (req, res, next) => {
   if (req.userRole !== "admin") {
-    console.warn(`Admin access denied for user ${req.userId} with role ${req.userRole} at ${req.method} ${req.path}`);
+    console.warn(
+      `Admin access denied for user ${req.userId} with role ${req.userRole} at ${req.method} ${req.path}`,
+    );
     return res.status(403).json({ error: "Only admins can access this" });
   }
   next();
