@@ -81,6 +81,27 @@ export default function Messages() {
     }
   };
 
+  const fetchContactsForNumber = async (phoneNumberId: string) => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/messages/contacts?phoneNumberId=${phoneNumberId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch contacts");
+      const data = await response.json();
+      setContacts(data.contacts || []);
+    } catch {
+      // Error handled silently
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const fetchContacts = async () => {
     try {
       setIsLoading(true);
