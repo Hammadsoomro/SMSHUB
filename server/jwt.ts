@@ -46,7 +46,10 @@ export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string 
 export function verifyToken(token: string): JWTPayload | null {
   try {
     const parts = token.split(".");
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3) {
+      console.warn("Invalid token format: wrong number of parts");
+      return null;
+    }
 
     const [header64, payload64, signature64] = parts;
 
@@ -57,16 +60,27 @@ export function verifyToken(token: string): JWTPayload | null {
       .digest();
     const expectedSignature = base64UrlEncode(signature.toString("base64"));
 
-    if (signature64 !== expectedSignature) return null;
+    if (signature64 !== expectedSignature) {
+      console.warn("Invalid token signature");
+      return null;
+    }
 
     // Parse payload
-    const payload = JSON.parse(base64UrlDecode(payload64)) as JWTPayload;
+    const decodedPayloadStr = base64UrlDecode(payload64);
+    console.log("Decoded JWT payload:", decodedPayloadStr);
+    const payload = JSON.parse(decodedPayloadStr) as JWTPayload;
+    console.log("Parsed JWT payload:", payload);
 
     // Check expiration
-    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp < now) {
+      console.warn("Token expired:", { exp: payload.exp, now });
+      return null;
+    }
 
     return payload;
-  } catch {
+  } catch (error) {
+    console.error("Error verifying token:", error);
     return null;
   }
 }
