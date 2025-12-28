@@ -40,15 +40,27 @@ export default function Numbers() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("No authentication token found");
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const response = await fetch("/api/admin/numbers", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch numbers");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch numbers (${response.status})`);
+      }
       const data = await response.json();
       setNumbers(data.numbers || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      console.error("Fetch numbers error:", errorMessage, err);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
