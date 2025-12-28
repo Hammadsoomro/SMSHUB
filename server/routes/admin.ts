@@ -171,7 +171,9 @@ export const handleRemoveCredentials: RequestHandler = async (req, res) => {
 export const handleGetNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
+    console.log(`Fetching numbers for admin: ${adminId}`);
     const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    console.log(`Found ${numbers.length} numbers for admin ${adminId}`);
     res.json({ numbers });
   } catch (error) {
     console.error("Get numbers error:", error);
