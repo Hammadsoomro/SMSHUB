@@ -89,6 +89,34 @@ export default function Wallet() {
     }
   };
 
+  const fetchTwilioBalance = async () => {
+    try {
+      const result = await ApiService.getTwilioBalance();
+      if (result.error) {
+        setTwilioError(result.error);
+        setTwilioBalance(null);
+      } else {
+        setTwilioBalance(result.balance);
+        setTwilioError(null);
+      }
+    } catch {
+      setTwilioError("Failed to fetch Twilio balance");
+      setTwilioBalance(null);
+    }
+  };
+
+  const handleRefreshTwilioBalance = async () => {
+    setIsRefreshingTwilio(true);
+    try {
+      await fetchTwilioBalance();
+      toast.success("Twilio balance refreshed");
+    } catch {
+      toast.error("Failed to refresh Twilio balance");
+    } finally {
+      setIsRefreshingTwilio(false);
+    }
+  };
+
   const handleAddFunds = async (e: React.FormEvent) => {
     e.preventDefault();
 
