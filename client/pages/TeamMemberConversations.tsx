@@ -364,12 +364,18 @@ export default function TeamMemberConversations() {
   };
 
   const addContactFromDialog = async (name: string, phoneNumber: string) => {
-    if (!assignedPhoneNumber) {
-      throw new Error("No phone number assigned");
-    }
+    try {
+      if (!assignedPhoneNumber) {
+        throw new Error("No phone number assigned to your account. Contact your admin.");
+      }
 
-    await ApiService.addContact(name, phoneNumber, assignedPhoneNumber.id);
-    await loadContactsForPhoneNumber(assignedPhoneNumber.id);
+      await ApiService.addContact(name, phoneNumber, assignedPhoneNumber.id);
+      await loadContactsForPhoneNumber(assignedPhoneNumber.id);
+      toast.success("Contact added successfully");
+    } catch (error: any) {
+      console.error("Error adding contact:", error);
+      throw error;
+    }
   };
 
   const editContact = async () => {
