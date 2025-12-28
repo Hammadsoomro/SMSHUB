@@ -311,57 +311,62 @@ export default function Wallet() {
           </Card>
         </div>
 
-        {/* Add Funds Section */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Add Funds Section & Statistics */}
+        <div className="grid md:grid-cols-3 gap-6">
           {/* Add Funds Form */}
-          <Card className="p-6 md:col-span-1">
-            <h2 className="text-lg font-semibold mb-4">Add Funds</h2>
+          <Card className="p-6 md:col-span-1 h-fit">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Add Funds
+            </h2>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
-                <p className="text-sm text-red-800">{error}</p>
+              <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg mb-4 flex gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
-                <p className="text-sm text-green-800">{success}</p>
+              <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg mb-4 flex gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-green-800 dark:text-green-300">
+                  {success}
+                </p>
               </div>
             )}
 
             <form onSubmit={handleAddFunds} className="space-y-4">
               <div>
                 <label className="text-sm font-medium block mb-2">Amount</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <span className="absolute left-3 top-3 text-muted-foreground">
-                      $
-                    </span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="Enter amount"
-                      value={addAmount}
-                      onChange={(e) => setAddAmount(e.target.value)}
-                      className="pl-7 h-10"
-                    />
-                  </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    placeholder="Enter amount"
+                    value={addAmount}
+                    onChange={(e) => setAddAmount(e.target.value)}
+                    className="pl-7 h-10"
+                  />
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Minimum: $1.00
+                <p className="text-xs text-muted-foreground mt-2">
+                  Minimum: $1.00 • Maximum: $10,000.00
                 </p>
               </div>
 
               <Button
                 type="submit"
-                disabled={isAdding}
+                disabled={isAdding || !addAmount}
                 className="w-full bg-gradient-to-r from-primary to-secondary"
               >
                 {isAdding ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Adding...
+                    Processing...
                   </>
                 ) : (
                   <>
@@ -384,7 +389,7 @@ export default function Wallet() {
                     variant="outline"
                     size="sm"
                     onClick={() => setAddAmount(amount.toString())}
-                    className="text-xs"
+                    className="text-xs hover:bg-primary hover:text-primary-foreground"
                   >
                     ${amount}
                   </Button>
@@ -396,43 +401,49 @@ export default function Wallet() {
           {/* Statistics */}
           <div className="md:col-span-2 space-y-4">
             {/* Total Spent */}
-            <Card className="p-6">
+            <Card className="p-6 bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950 dark:to-red-900/50 border-red-200 dark:border-red-800">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">
+                  <p className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2">
                     Total Spent
                   </p>
-                  <p className="text-3xl font-bold">
+                  <p className="text-3xl font-bold text-red-900 dark:text-red-100">
                     $
                     {transactions
                       .filter((t) => t.type === "debit")
                       .reduce((sum, t) => sum + t.amount, 0)
                       .toFixed(2)}
                   </p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                    {transactions.filter((t) => t.type === "debit").length} transactions
+                  </p>
                 </div>
-                <div className="p-3 bg-red-100 rounded-lg">
-                  <TrendingDown className="w-6 h-6 text-red-600" />
+                <div className="p-3 bg-red-500/20 rounded-lg">
+                  <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
               </div>
             </Card>
 
             {/* Total Added */}
-            <Card className="p-6">
+            <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950 dark:to-green-900/50 border-green-200 dark:border-green-800">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">
+                  <p className="text-sm font-semibold text-green-600 dark:text-green-400 mb-2">
                     Total Added
                   </p>
-                  <p className="text-3xl font-bold">
+                  <p className="text-3xl font-bold text-green-900 dark:text-green-100">
                     $
                     {transactions
                       .filter((t) => t.type === "credit")
                       .reduce((sum, t) => sum + t.amount, 0)
                       .toFixed(2)}
                   </p>
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                    {transactions.filter((t) => t.type === "credit").length} transactions
+                  </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+                <div className="p-3 bg-green-500/20 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </Card>
