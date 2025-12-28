@@ -24,6 +24,7 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
       });
     }
 
+    console.log("Auth token extracted, verifying...");
     const payload = verifyToken(token);
     if (!payload) {
       console.warn(`Auth failed for ${req.method} ${req.path}: INVALID_TOKEN`);
@@ -32,6 +33,8 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
         code: "INVALID_TOKEN",
       });
     }
+
+    console.log("Auth successful, payload:", { userId: payload.userId, email: payload.email, role: payload.role });
 
     // Get user from storage, but use token payload as fallback
     let user;
