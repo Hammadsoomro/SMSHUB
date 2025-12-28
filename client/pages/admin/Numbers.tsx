@@ -69,16 +69,26 @@ export default function Numbers() {
   const fetchTeamMembers = async () => {
     try {
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        console.warn("No authentication token found for team members fetch");
+        return;
+      }
+
       const response = await fetch("/api/admin/team", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setTeamMembers(data.members || []);
+      if (!response.ok) {
+        console.error(`Failed to fetch team members: ${response.status}`, response.statusText);
+        return;
       }
+
+      const data = await response.json();
+      setTeamMembers(data.members || []);
     } catch (err) {
-      console.error("Failed to fetch team members:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error("Team members fetch error:", errorMessage, err);
     }
   };
 
