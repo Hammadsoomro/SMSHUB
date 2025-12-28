@@ -13,45 +13,23 @@ declare global {
 }
 
 export const authMiddleware: RequestHandler = async (req, res, next) => {
-  console.log(`[Auth Middleware] Starting auth for ${req.method} ${req.path}`);
   try {
-    const authHeader = req.headers.authorization;
-    console.log(`[Auth Middleware] Authorization header present:`, !!authHeader);
-    const token = extractTokenFromHeader(authHeader);
+    const token = extractTokenFromHeader(req.headers.authorization);
 
     if (!token) {
-      console.warn(`[Auth Middleware] Auth failed for ${req.method} ${req.path}: NO_TOKEN`);
+      console.warn(`Auth failed for ${req.method} ${req.path}: NO_TOKEN`);
       return res.status(401).json({
         error: "Missing authorization token. Please login again.",
         code: "NO_TOKEN",
       });
     }
 
-    console.log("[Auth Middleware] Auth token extracted, verifying...");
     const payload = verifyToken(token);
     if (!payload) {
-      console.warn(`[Auth Middleware] Auth failed for ${req.method} ${req.path}: INVALID_TOKEN`);
+      console.warn(`Auth failed for ${req.method} ${req.path}: INVALID_TOKEN`);
       return res.status(401).json({
         error: "Your session has expired. Please login again.",
         code: "INVALID_TOKEN",
-      });
-    }
-
-    console.log("[Auth Middleware] Payload details:", {
-      payloadKeys: Object.keys(payload),
-      userId: (payload as any).userId,
-      email: (payload as any).email,
-      role: (payload as any).role,
-    });
-
-    if (!(payload as any).userId) {
-      console.error("[Auth Middleware] ERROR: payload.userId is missing!", {
-        payload: JSON.stringify(payload),
-        payloadKeys: Object.keys(payload),
-      });
-      return res.status(401).json({
-        error: "Invalid token: missing userId",
-        code: "INVALID_TOKEN_FORMAT",
       });
     }
 
@@ -82,12 +60,6 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     req.userId = payload.userId;
     req.userRole = payload.role;
     req.user = user;
-
-    console.log("[Auth Middleware] After assignment:", {
-      "req.userId": req.userId,
-      "req.userRole": req.userRole,
-      "req.user.id": req.user?.id,
-    });
 
     next();
   } catch (error) {
