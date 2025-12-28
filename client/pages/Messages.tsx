@@ -152,12 +152,32 @@ export default function Messages() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() || !conversation.contact) return;
+
+    if (!messageText.trim()) {
+      setError("Please enter a message before sending");
+      return;
+    }
+
+    if (!conversation.contact) {
+      setError("Please select a contact first");
+      return;
+    }
+
+    if (!conversation.contact.phoneNumberId && !conversation.contact.id.startsWith("temp-")) {
+      setError("This contact doesn't have an associated phone number. Please create a new conversation.");
+      return;
+    }
 
     setIsSending(true);
     setError("");
+
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Session expired. Please refresh the page and try again.");
+        return;
+      }
+
       const response = await fetch("/api/messages/send", {
         method: "POST",
         headers: {
@@ -166,10 +186,25 @@ export default function Messages() {
         },
         body: JSON.stringify({
           to: conversation.contact.phoneNumber,
-          body: messageText,
+          body: messageText.trim(),
           phoneNumberId: conversation.contact.phoneNumberId || "",
         }),
       });
+
+      if (response.status === 401) {
+        setError("Session expired. Please refresh the page and log in again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        return;
+      }
+
+      if (response.status === 400) {
+        const errorData = await response.json();
+        setError(
+          errorData.error || "Failed to send message. Please check your input and try again."
+        );
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -177,6 +212,7 @@ export default function Messages() {
       }
 
       setMessageText("");
+      setError("");
 
       // If this was a new conversation, refresh contacts
       if (conversation.contact.id.startsWith("temp-")) {
@@ -185,7 +221,12 @@ export default function Messages() {
         await fetchMessages(conversation.contact.id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send message");
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to send message. Please try again.";
+      setError(errorMessage);
+      console.error("Send message error:", err);
     } finally {
       setIsSending(false);
     }
