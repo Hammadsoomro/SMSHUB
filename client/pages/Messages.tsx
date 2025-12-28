@@ -284,9 +284,22 @@ export default function Messages() {
               )}
           </div>
           {error && (
-            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-red-700">{error}</p>
+            <div className="mt-2 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                  Error
+                </p>
+                <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
+                  {error}
+                </p>
+              </div>
+              <button
+                onClick={() => setError("")}
+                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>
