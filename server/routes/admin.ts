@@ -218,7 +218,9 @@ export const handleSetActiveNumber: RequestHandler = async (req, res) => {
 export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
+    console.log(`Fetching team members for admin: ${adminId}`);
     const members = await storage.getTeamMembersByAdminId(adminId);
+    console.log(`Found ${members.length} team members for admin ${adminId}`);
     res.json({ members });
   } catch (error) {
     console.error("Get team members error:", error);
