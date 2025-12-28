@@ -14,10 +14,15 @@ interface AuthenticatedSocket extends Socket {
 
 export function setupSocketIO(httpServer: HTTPServer): IOServer {
   const io = new IOServer(httpServer, {
+    path: "/socket.io/",
     cors: {
       origin: "*",
       methods: ["GET", "POST"],
+      credentials: true,
     },
+    transports: ["websocket", "polling"],
+    pingInterval: 25000,
+    pingTimeout: 60000,
   });
 
   // Middleware for authentication
