@@ -37,7 +37,23 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
       });
     }
 
-    console.log("[Auth Middleware] Auth successful, payload:", { userId: payload.userId, email: payload.email, role: payload.role });
+    console.log("[Auth Middleware] Payload details:", {
+      payloadKeys: Object.keys(payload),
+      userId: (payload as any).userId,
+      email: (payload as any).email,
+      role: (payload as any).role,
+    });
+
+    if (!(payload as any).userId) {
+      console.error("[Auth Middleware] ERROR: payload.userId is missing!", {
+        payload: JSON.stringify(payload),
+        payloadKeys: Object.keys(payload),
+      });
+      return res.status(401).json({
+        error: "Invalid token: missing userId",
+        code: "INVALID_TOKEN_FORMAT",
+      });
+    }
 
     // Get user from storage, but use token payload as fallback
     let user;
@@ -61,18 +77,6 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
         role: payload.role,
         createdAt: new Date().toISOString(),
       } as any;
-    }
-
-    // Ensure userId is extracted from payload
-    if (!payload.userId) {
-      console.error("[Auth Middleware] ERROR: payload.userId is missing!", {
-        payload: JSON.stringify(payload),
-        payloadKeys: Object.keys(payload),
-      });
-      return res.status(401).json({
-        error: "Invalid token: missing userId",
-        code: "INVALID_TOKEN_FORMAT",
-      });
     }
 
     req.userId = payload.userId;
