@@ -40,12 +40,11 @@ const App = () => (
           <Route path="/signup" element={<Signup />} />
 
           {/* Team Member Routes */}
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/conversations" element={<Conversations />} />
+          <Route path="/conversations" element={<TeamMemberConversations />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/conversations" element={<Conversations />} />
+          <Route path="/admin/conversations" element={<AdminConversations />} />
           <Route path="/admin/credentials" element={<Credentials />} />
           <Route path="/admin/numbers" element={<Numbers />} />
           <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
