@@ -45,22 +45,6 @@ export default function Wallet() {
     validateAuth();
   }, [navigate]);
 
-  const fetchWallet = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/wallet", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setWallet(data.wallet);
-      }
-    } catch {
-      // Wallet fetch error handled silently
-    }
-  };
-
   const fetchTransactions = async () => {
     try {
       const token = localStorage.getItem("token");
