@@ -75,9 +75,13 @@ export default function Messages() {
       if (response.ok) {
         const data = await response.json();
         setAssignedPhoneNumbers(data.phoneNumbers || []);
+      } else {
+        console.warn(
+          `Failed to fetch assigned phone numbers: ${response.status}`
+        );
       }
-    } catch {
-      // Error handled silently
+    } catch (err) {
+      console.error("Error fetching assigned phone numbers:", err);
     }
   };
 
