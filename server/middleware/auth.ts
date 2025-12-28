@@ -67,6 +67,12 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     req.userRole = payload.role;
     req.user = user;
 
+    console.log("[Auth Middleware] After assignment:", {
+      "req.userId": req.userId,
+      "req.userRole": req.userRole,
+      "req.user.id": req.user?.id,
+    });
+
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
