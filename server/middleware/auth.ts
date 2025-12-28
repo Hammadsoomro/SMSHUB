@@ -63,6 +63,18 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
       } as any;
     }
 
+    // Ensure userId is extracted from payload
+    if (!payload.userId) {
+      console.error("[Auth Middleware] ERROR: payload.userId is missing!", {
+        payload: JSON.stringify(payload),
+        payloadKeys: Object.keys(payload),
+      });
+      return res.status(401).json({
+        error: "Invalid token: missing userId",
+        code: "INVALID_TOKEN_FORMAT",
+      });
+    }
+
     req.userId = payload.userId;
     req.userRole = payload.role;
     req.user = user;
