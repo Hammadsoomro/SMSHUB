@@ -25,6 +25,8 @@ function base64UrlDecode(str: string): string {
 }
 
 export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string {
+  console.log("[JWT] generateToken called with payload:", JSON.stringify(payload));
+
   const now = Math.floor(Date.now() / 1000);
   const jwtPayload: JWTPayload = {
     ...payload,
@@ -32,8 +34,15 @@ export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string 
     exp: now + 24 * 60 * 60, // 24 hours
   };
 
+  console.log("[JWT] Final JWT payload before encoding:", JSON.stringify(jwtPayload));
+
   const header = base64UrlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload64 = base64UrlEncode(JSON.stringify(jwtPayload));
+
+  console.log("[JWT] Encoded payload64:", payload64.substring(0, 50) + "...");
+  // Let's decode to verify
+  const decodedTest = base64UrlDecode(payload64);
+  console.log("[JWT] Decoded payload (verification):", decodedTest);
 
   const signature = crypto
     .createHmac("sha256", JWT_SECRET)
@@ -41,7 +50,9 @@ export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string 
     .digest();
   const signature64 = base64UrlEncode(signature.toString("base64"));
 
-  return `${header}.${payload64}.${signature64}`;
+  const token = `${header}.${payload64}.${signature64}`;
+  console.log("[JWT] Generated token (first 50 chars):", token.substring(0, 50) + "...");
+  return token;
 }
 
 export function verifyToken(token: string): JWTPayload | null {
