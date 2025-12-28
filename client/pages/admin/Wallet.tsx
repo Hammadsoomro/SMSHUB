@@ -260,11 +260,7 @@ export default function Wallet() {
                         />
                       ) : (
                         <TrendingDown
-                          className={`w-5 h-5 ${
-                            transaction.type === "credit"
-                              ? "text-green-600 dark:text-green-400"
-                              : "text-red-600 dark:text-red-400"
-                          }`}
+                          className={`w-5 h-5 text-red-600 dark:text-red-400`}
                         />
                       )}
                     </div>
