@@ -32,10 +32,14 @@ class SocketService {
         auth: {
           authorization: `Bearer ${token}`,
         },
+        path: "/socket.io/",
         reconnection: true,
         reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
         reconnectionAttempts: 5,
         transports: ["websocket", "polling"],
+        secure: window.location.protocol === "https:",
+        rejectUnauthorized: false,
       });
 
       console.log(
