@@ -152,12 +152,37 @@ export default function Messages() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() || !conversation.contact) return;
+
+    if (!messageText.trim()) {
+      setError("Please enter a message before sending");
+      return;
+    }
+
+    if (!conversation.contact) {
+      setError("Please select a contact first");
+      return;
+    }
+
+    if (
+      !conversation.contact.phoneNumberId &&
+      !conversation.contact.id.startsWith("temp-")
+    ) {
+      setError(
+        "This contact doesn't have an associated phone number. Please create a new conversation.",
+      );
+      return;
+    }
 
     setIsSending(true);
     setError("");
+
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Session expired. Please refresh the page and try again.");
+        return;
+      }
+
       const response = await fetch("/api/messages/send", {
         method: "POST",
         headers: {
@@ -166,10 +191,26 @@ export default function Messages() {
         },
         body: JSON.stringify({
           to: conversation.contact.phoneNumber,
-          body: messageText,
+          body: messageText.trim(),
           phoneNumberId: conversation.contact.phoneNumberId || "",
         }),
       });
+
+      if (response.status === 401) {
+        setError("Session expired. Please refresh the page and log in again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        return;
+      }
+
+      if (response.status === 400) {
+        const errorData = await response.json();
+        setError(
+          errorData.error ||
+            "Failed to send message. Please check your input and try again.",
+        );
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -177,6 +218,7 @@ export default function Messages() {
       }
 
       setMessageText("");
+      setError("");
 
       // If this was a new conversation, refresh contacts
       if (conversation.contact.id.startsWith("temp-")) {
@@ -185,7 +227,12 @@ export default function Messages() {
         await fetchMessages(conversation.contact.id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send message");
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to send message. Please try again.";
+      setError(errorMessage);
+      console.error("Send message error:", err);
     } finally {
       setIsSending(false);
     }
@@ -243,9 +290,22 @@ export default function Messages() {
               )}
           </div>
           {error && (
-            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-red-700">{error}</p>
+            <div className="mt-2 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                  Error
+                </p>
+                <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">
+                  {error}
+                </p>
+              </div>
+              <button
+                onClick={() => setError("")}
+                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>
@@ -387,28 +447,52 @@ export default function Messages() {
             {/* Message Input - Sticky */}
             <form
               onSubmit={handleSendMessage}
-              className="sticky bottom-0 z-10 border-t border-border bg-card p-4"
+              className="sticky bottom-0 z-10 border-t border-border bg-card p-4 space-y-2"
             >
+              {error && (
+                <div className="p-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-700 dark:text-red-300">
+                    {error}
+                  </p>
+                </div>
+              )}
               <div className="flex gap-2">
                 <Input
                   value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
+                  onChange={(e) => {
+                    setMessageText(e.target.value);
+                    if (error) setError(""); // Clear error when user starts typing
+                  }}
                   placeholder="Type a message..."
                   className="flex-1 h-10"
                   disabled={isSending}
+                  maxLength={1600}
+                  aria-label="Message input"
                 />
                 <Button
                   type="submit"
                   disabled={isSending || !messageText.trim()}
                   className="bg-gradient-to-r from-primary to-secondary"
                   size="sm"
+                  title={
+                    !messageText.trim()
+                      ? "Please type a message"
+                      : "Send message"
+                  }
                 >
                   {isSending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </>
                   ) : (
                     <Send className="w-4 h-4" />
                   )}
                 </Button>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Press Enter to send • Max 1600 characters</span>
+                <span>{messageText.length}/1600</span>
               </div>
             </form>
           </div>

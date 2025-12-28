@@ -94,12 +94,45 @@ class Storage {
     return data as PhoneNumber;
   }
 
-  async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findOneAndUpdate(
-      { $or: [{ id: number.id }, { _id: number.id }] },
-      number,
+  async getPhoneNumberByPhoneNumber(
+    phoneNumber: string,
+  ): Promise<PhoneNumber | undefined> {
+    const doc = await PhoneNumberModel.findOne({ phoneNumber });
+    if (!doc) return undefined;
+    const data = doc.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as PhoneNumber;
+  }
+
+  async updatePhoneNumber(number: PhoneNumber): Promise<PhoneNumber> {
+    const updateData: any = {
+      ...number,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Explicitly unset assignedTo if it's undefined
+    if (number.assignedTo === undefined) {
+      updateData.$unset = { assignedTo: 1 };
+      delete updateData.assignedTo;
+    }
+
+    const updated = await PhoneNumberModel.findOneAndUpdate(
+      { id: number.id },
+      updateData,
       { new: true },
     );
+
+    if (!updated) {
+      throw new Error("Phone number not found");
+    }
+
+    const data = updated.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as PhoneNumber;
   }
 
   // Team Members
@@ -174,15 +207,16 @@ class Storage {
   }
 
   async getContactById(id: string): Promise<Contact | undefined> {
-    // Try multiple search methods
+    // Try to find by custom id field first
     let doc = await ContactModel.findOne({ id });
 
-    if (!doc) {
-      doc = await ContactModel.findById(id);
-    }
-
-    if (!doc) {
-      doc = await ContactModel.findOne({ _id: id });
+    // If not found by custom id, try MongoDB's _id as fallback (only if it's a valid ObjectId)
+    if (!doc && /^[0-9a-f]{24}$/i.test(id)) {
+      try {
+        doc = await ContactModel.findById(id);
+      } catch (error) {
+        // findById will throw if id is not a valid ObjectId, ignore it
+      }
     }
 
     if (!doc) return undefined;
@@ -199,11 +233,13 @@ class Storage {
   }
 
   async updateContact(contact: Contact): Promise<void> {
-    await ContactModel.findOneAndUpdate(
-      { $or: [{ id: contact.id }, { _id: contact.id }] },
-      contact,
-      { new: true },
-    );
+    await ContactModel.findOneAndUpdate({ id: contact.id }, contact, {
+      new: true,
+    });
+  }
+
+  async deleteContact(id: string): Promise<void> {
+    await ContactModel.deleteOne({ id });
   }
 
   // Wallet operations

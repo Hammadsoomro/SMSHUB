@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { API_BASE_URL } from "@/config/api";
 
 let socket: Socket | null = null;
 
@@ -9,7 +10,7 @@ export function initializeSocket(): Socket {
 
   const token = localStorage.getItem("token");
 
-  socket = io({
+  socket = io(API_BASE_URL, {
     auth: {
       authorization: `Bearer ${token}`,
     },

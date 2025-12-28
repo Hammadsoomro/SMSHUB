@@ -171,10 +171,45 @@ export const handleRemoveCredentials: RequestHandler = async (req, res) => {
 export const handleGetNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
+    console.log(`Fetching numbers for admin: ${adminId}`);
     const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    console.log(`Found ${numbers.length} numbers for admin ${adminId}`);
     res.json({ numbers });
   } catch (error) {
     console.error("Get numbers error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const handleSetActiveNumber: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumberId } = req.body;
+
+    if (!phoneNumberId) {
+      return res.status(400).json({ error: "Phone number ID is required" });
+    }
+
+    // Get the phone number and verify it belongs to this admin
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const phoneNumber = numbers.find((n) => n.id === phoneNumberId);
+
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    // Update all numbers to set active: false, then set the selected one to true
+    for (const number of numbers) {
+      await storage.updatePhoneNumber({
+        ...number,
+        active: number.id === phoneNumberId,
+      });
+    }
+
+    const updatedNumber = await storage.getPhoneNumberById(phoneNumberId);
+    res.json({ number: updatedNumber });
+  } catch (error) {
+    console.error("Set active number error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -183,7 +218,9 @@ export const handleGetNumbers: RequestHandler = async (req, res) => {
 export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
+    console.log(`Fetching team members for admin: ${adminId}`);
     const members = await storage.getTeamMembersByAdminId(adminId);
+    console.log(`Found ${members.length} team members for admin ${adminId}`);
     res.json({ members });
   } catch (error) {
     console.error("Get team members error:", error);
@@ -345,7 +382,7 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     }
 
     // If assigning to a team member, verify they exist and belong to this admin
-    if (teamMemberId) {
+    if (teamMemberId && teamMemberId !== null) {
       const members = await storage.getTeamMembersByAdminId(adminId);
       const member = members.find((m) => m.id === teamMemberId);
 
@@ -355,14 +392,16 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     }
 
     // Update the phone number with assignment
+    // If teamMemberId is null or undefined, unassign it
     const updatedNumber: PhoneNumber = {
       ...phoneNumber,
-      assignedTo: teamMemberId,
+      assignedTo:
+        teamMemberId && teamMemberId !== null ? teamMemberId : undefined,
     };
 
-    await storage.updatePhoneNumber(updatedNumber);
+    const result = await storage.updatePhoneNumber(updatedNumber);
 
-    res.json({ phoneNumber: updatedNumber });
+    res.json({ phoneNumber: result });
   } catch (error) {
     console.error("Assign number error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -397,9 +436,9 @@ export const handleUpdateNumberSettings: RequestHandler = async (req, res) => {
       active,
     };
 
-    await storage.updatePhoneNumber(updatedNumber);
+    const result = await storage.updatePhoneNumber(updatedNumber);
 
-    res.json({ phoneNumber: updatedNumber });
+    res.json({ phoneNumber: result });
   } catch (error) {
     console.error("Update number settings error:", error);
     res.status(500).json({ error: "Internal server error" });

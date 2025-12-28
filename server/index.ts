@@ -1,10 +1,11 @@
 import "dotenv/config";
-import express from "express";
+import express, { Express } from "express";
 import cors from "cors";
 import { connectDB } from "./db";
+import { Server as IOServer } from "socket.io";
 
 // Auth routes
-import { handleSignup, handleLogin } from "./routes/auth";
+import { handleSignup, handleLogin, handleGetProfile } from "./routes/auth";
 
 // Admin routes
 import {
@@ -12,6 +13,7 @@ import {
   handleGetCredentials,
   handleRemoveCredentials,
   handleGetNumbers,
+  handleSetActiveNumber,
   handleGetTeamMembers,
   handleInviteTeamMember,
   handleRemoveTeamMember,
@@ -26,6 +28,7 @@ import {
   handleGetWallet,
   handleAddFunds,
   handleGetTransactions,
+  handleGetTwilioBalance,
 } from "./routes/wallet";
 
 // Phone purchase routes
@@ -40,17 +43,35 @@ import {
   handleGetConversation,
   handleSendMessage,
   handleGetAssignedPhoneNumber,
+  handleMarkAsRead,
+  handleAddContact,
+  handleUpdateContact,
+  handleDeleteContact,
 } from "./routes/messages";
+
+// Webhooks
+import { handleInboundSMS, handleWebhookHealth } from "./routes/webhooks";
 
 // Middleware
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
 import { handleDemo } from "./routes/demo";
 
+// Global socket.io instance for webhook access
+let globalIO: IOServer | null = null;
+
+export function setSocketIOInstance(io: IOServer) {
+  globalIO = io;
+}
+
+export function getSocketIOInstance(): IOServer | null {
+  return globalIO;
+}
+
 export async function createServer() {
   // Connect to MongoDB BEFORE creating the app
   await connectDB();
 
-  const app = express();
+  const app = express() as Express;
 
   // Middleware
   app.use(cors());
@@ -63,11 +84,25 @@ export async function createServer() {
     res.json({ message: ping });
   });
 
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      server: "running",
+      database: "connected",
+      timestamp: new Date().toISOString()
+    });
+  });
+
   app.get("/api/demo", handleDemo);
 
   // Auth routes (public)
   app.post("/api/auth/signup", handleSignup);
   app.post("/api/auth/login", handleLogin);
+  app.get("/api/auth/profile", authMiddleware, handleGetProfile);
+
+  // Webhook routes (public - for Twilio callbacks)
+  app.get("/api/webhooks/inbound-sms", handleWebhookHealth); // Health check
+  app.post("/api/webhooks/inbound-sms", handleInboundSMS);
 
   // Admin routes (requires admin role)
   app.post(
@@ -89,6 +124,12 @@ export async function createServer() {
     handleRemoveCredentials,
   );
   app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
+  app.post(
+    "/api/admin/numbers/set-active",
+    authMiddleware,
+    adminOnly,
+    handleSetActiveNumber,
+  );
   app.post(
     "/api/admin/add-existing-number",
     authMiddleware,
@@ -135,6 +176,14 @@ export async function createServer() {
     handleGetConversation,
   );
   app.post("/api/messages/send", authMiddleware, handleSendMessage);
+  app.post(
+    "/api/messages/mark-read/:contactId",
+    authMiddleware,
+    handleMarkAsRead,
+  );
+  app.post("/api/contacts", authMiddleware, handleAddContact);
+  app.patch("/api/contacts/:contactId", authMiddleware, handleUpdateContact);
+  app.delete("/api/contacts/:contactId", authMiddleware, handleDeleteContact);
   app.get(
     "/api/messages/assigned-phone-number",
     authMiddleware,
@@ -145,6 +194,7 @@ export async function createServer() {
   app.get("/api/wallet", authMiddleware, handleGetWallet);
   app.post("/api/wallet/add-funds", authMiddleware, handleAddFunds);
   app.get("/api/wallet/transactions", authMiddleware, handleGetTransactions);
+  app.get("/api/wallet/twilio-balance", authMiddleware, handleGetTwilioBalance);
 
   // Phone purchase routes (requires authentication)
   app.get(

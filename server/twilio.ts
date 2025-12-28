@@ -426,6 +426,65 @@ export class TwilioClient {
   }
 
   /**
+   * Get account balance from Twilio
+   */
+  async getAccountBalance(): Promise<{
+    balance?: number;
+    currency?: string;
+    error?: string;
+    error_message?: string;
+  }> {
+    return new Promise((resolve, reject) => {
+      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
+        "base64",
+      );
+
+      const options = {
+        hostname: "api.twilio.com",
+        path: `/2010-04-01/Accounts/${this.accountSid}/Balance.json`,
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      };
+
+      const req = https.request(options, (res) => {
+        let data = "";
+
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        res.on("end", () => {
+          try {
+            const response = JSON.parse(data);
+
+            // Handle HTTP error status codes
+            if (res.statusCode && res.statusCode >= 400) {
+              return resolve({
+                error: response.code || response.message || "Twilio API error",
+                error_message:
+                  response.message ||
+                  `HTTP ${res.statusCode}: ${response.detail || "Error"}`,
+              });
+            }
+
+            resolve(response);
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+
+      req.on("error", (error) => {
+        reject(error);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
    * Purchase a phone number from Twilio
    */
   async purchasePhoneNumber(phoneNumber: string): Promise<TwilioResponse> {

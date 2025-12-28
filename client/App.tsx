@@ -39,6 +39,7 @@ const App = () => (
 
           {/* Team Member Routes */}
           <Route path="/messages" element={<Messages />} />
+          <Route path="/conversations" element={<Conversations />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />

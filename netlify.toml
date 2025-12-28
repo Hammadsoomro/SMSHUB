@@ -5,8 +5,14 @@
   node_version = "22"
 
 [functions]
-  external_node_modules = ["express", "cors", "mongoose", "socket.io", "dotenv"]
+  external_node_modules = ["express", "cors", "mongoose", "socket.io", "dotenv", "twilio"]
   node_bundler = "esbuild"
+
+# Set longer timeout for API functions to handle database operations
+[[functions]]
+  name = "api"
+  node_bundler = "esbuild"
+  timeout = 30
 
 [[redirects]]
   force = true
@@ -21,3 +27,12 @@
 
 [context.production.environment]
   NODE_ENV = "production"
+
+[context.production]
+  command = "npm run build:client"
+
+[context.deploy-preview]
+  command = "npm run build:client"
+
+[context.branch-deploy]
+  command = "npm run build:client"

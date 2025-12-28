@@ -1,6 +1,9 @@
 import path from "path";
 import { createServer } from "http";
-import { createServer as createExpressServer } from "./index";
+import {
+  createServer as createExpressServer,
+  setSocketIOInstance,
+} from "./index";
 import { setupSocketIO } from "./socket";
 import * as express from "express";
 
@@ -9,6 +12,7 @@ async function startServer() {
     const app = await createExpressServer();
     const httpServer = createServer(app);
     const io = setupSocketIO(httpServer);
+    setSocketIOInstance(io);
 
     const port = process.env.PORT || 3000;
 

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { MessageSquare, Loader2, AlertCircle } from "lucide-react";
+import { MessageSquare, Loader2, AlertCircle, Sun, Moon } from "lucide-react";
 import { LoginRequest } from "@shared/api";
 
 interface LoginFormData {
@@ -15,7 +15,27 @@ export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    return stored === "dark";
+  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>();
+
+  // Apply theme to document root on mount
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    document.documentElement.classList.toggle("dark", newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+  };
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
@@ -46,7 +66,7 @@ export default function Login() {
       if (result.user.role === "admin") {
         navigate("/admin");
       } else {
-        navigate("/messages");
+        navigate("/conversations");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -56,7 +76,22 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12">
+    <div
+      className={`min-h-screen bg-gradient-to-br from-background via-background to-background flex items-center justify-center px-4 py-12 ${isDarkMode ? "dark" : ""}`}
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        title="Toggle theme"
+        className="absolute top-4 right-4"
+      >
+        {isDarkMode ? (
+          <Sun className="w-4 h-4" />
+        ) : (
+          <Moon className="w-4 h-4" />
+        )}
+      </Button>
       <div className="w-full max-w-md">
         {/* Logo */}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
@@ -98,7 +133,9 @@ export default function Login() {
                 className="h-10"
               />
               {errors.email && (
-                <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
@@ -113,7 +150,9 @@ export default function Login() {
                 className="h-10"
               />
               {errors.password && (
-                <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -136,7 +175,10 @@ export default function Login() {
           <div className="mt-6 pt-6 border-t border-border text-center">
             <p className="text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
+              <Link
+                to="/signup"
+                className="text-primary hover:underline font-medium"
+              >
                 Sign Up
               </Link>
             </p>
