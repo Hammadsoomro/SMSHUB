@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -22,7 +21,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   Send,
@@ -30,19 +28,18 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Phone,
   Search,
   MessageSquare,
   Users,
   Loader2,
+  Settings,
+  LogOut,
+  Phone,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
 import socketService from "@/services/socketService";
-import AdBanner from "@/components/AdBanner";
-import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
-import ConversationsTopBar from "@/components/ConversationsTopBar";
 import { Message, Contact, PhoneNumber, User as UserType } from "@shared/api";
 
 interface ConversationContact extends Contact {
@@ -50,34 +47,16 @@ interface ConversationContact extends Contact {
   lastMessageTime?: string;
 }
 
-export default function Conversations() {
+export default function TeamMemberConversations() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Role-based access control
-  useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    const parsedUser = JSON.parse(user);
-    if (parsedUser.role !== "admin") {
-      // Team members should use /conversations instead
-      navigate("/conversations");
-      return;
-    }
-  }, [navigate]);
 
   // Core State
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null,
   );
-  const [activePhoneNumber, setActivePhoneNumber] = useState<string | null>(
-    null,
-  );
-  const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
+  const [assignedPhoneNumber, setAssignedPhoneNumber] =
+    useState<PhoneNumber | null>(null);
   const [contacts, setContacts] = useState<ConversationContact[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -90,13 +69,9 @@ export default function Conversations() {
   const [isConnecting, setIsConnecting] = useState(false);
 
   // UI State
-  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
     return stored === "dark";
-  });
-  const [notifications, setNotifications] = useState(() => {
-    return Notification.permission === "granted";
   });
 
   // Profile and Modals
@@ -104,7 +79,7 @@ export default function Conversations() {
     id: "",
     name: "",
     email: "",
-    role: "admin",
+    role: "team_member",
     createdAt: "",
   });
   const [showAddContact, setShowAddContact] = useState(false);
@@ -116,29 +91,19 @@ export default function Conversations() {
     useState<ConversationContact | null>(null);
   const [newContactName, setNewContactName] = useState("");
 
-  // Refs for socket handlers to always have current state
-  const activePhoneNumberRef = useRef<string | null>(null);
-  const phoneNumbersRef = useRef<PhoneNumber[]>([]);
+  // Refs for socket handlers
   const selectedContactIdRef = useRef<string | null>(null);
-  const notificationsRef = useRef(false);
+  const assignedPhoneNumberRef = useRef<PhoneNumber | null>(null);
   const contactsRef = useRef<ConversationContact[]>([]);
 
   // Keep refs in sync with state
-  useEffect(() => {
-    activePhoneNumberRef.current = activePhoneNumber;
-  }, [activePhoneNumber]);
-
-  useEffect(() => {
-    phoneNumbersRef.current = phoneNumbers;
-  }, [phoneNumbers]);
-
   useEffect(() => {
     selectedContactIdRef.current = selectedContactId;
   }, [selectedContactId]);
 
   useEffect(() => {
-    notificationsRef.current = notifications;
-  }, [notifications]);
+    assignedPhoneNumberRef.current = assignedPhoneNumber;
+  }, [assignedPhoneNumber]);
 
   useEffect(() => {
     contactsRef.current = contacts;
@@ -147,7 +112,6 @@ export default function Conversations() {
   // Initialize everything
   useEffect(() => {
     loadInitialData();
-    requestNotificationPermission();
 
     // Set theme
     document.documentElement.classList.toggle("dark", isDarkMode);
@@ -155,50 +119,30 @@ export default function Conversations() {
 
     return () => {
       try {
-        if (activePhoneNumberRef.current) {
-          socketService.leavePhoneNumber(activePhoneNumberRef.current);
+        if (assignedPhoneNumberRef.current) {
+          socketService.leavePhoneNumber(
+            assignedPhoneNumberRef.current.phoneNumber,
+          );
         }
         socketService.disconnect();
       } catch (error) {
-        console.error("Error during Conversations cleanup:", error);
+        console.error("Error during cleanup:", error);
       }
     };
   }, []);
 
-  // Initialize Socket.IO separately with better lifecycle management
+  // Initialize Socket.IO
   useEffect(() => {
     initializeSocketIO();
   }, []);
 
-  // Handle phone number URL parameter
+  // Load contacts when assigned phone number is set
   useEffect(() => {
-    const phoneNumberFromUrl = searchParams.get("phoneNumber");
-    if (phoneNumberFromUrl && phoneNumbers.length > 0) {
-      const foundPhone = phoneNumbers.find(
-        (p) => p.phoneNumber === phoneNumberFromUrl,
-      );
-      if (foundPhone && foundPhone.phoneNumber !== activePhoneNumber) {
-        switchPhoneNumber(foundPhone.phoneNumber);
-      }
-    } else if (phoneNumbers.length > 0 && !activePhoneNumber) {
-      const activePhone = phoneNumbers.find((p) => p.active) || phoneNumbers[0];
-      setActivePhoneNumber(activePhone.phoneNumber);
-      loadContactsForPhoneNumber(activePhone.id);
+    if (assignedPhoneNumber) {
+      loadContactsForPhoneNumber(assignedPhoneNumber.id);
+      socketService.joinPhoneNumber(assignedPhoneNumber.phoneNumber);
     }
-  }, [phoneNumbers, searchParams]);
-
-  // Load contacts when active phone number changes
-  useEffect(() => {
-    if (activePhoneNumber) {
-      const phoneNum = phoneNumbers.find(
-        (p) => p.phoneNumber === activePhoneNumber,
-      );
-      if (phoneNum) {
-        loadContactsForPhoneNumber(phoneNum.id);
-        socketService.joinPhoneNumber(activePhoneNumber);
-      }
-    }
-  }, [activePhoneNumber, phoneNumbers]);
+  }, [assignedPhoneNumber]);
 
   // Load messages when contact is selected
   useEffect(() => {
@@ -226,8 +170,6 @@ export default function Conversations() {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        // No token found, redirect to login
-        console.warn("No authentication token found. Redirecting to login...");
         navigate("/login");
         return;
       }
@@ -241,7 +183,6 @@ export default function Conversations() {
           localStorage.setItem("user", JSON.stringify(userProfile));
         } catch (profileError) {
           console.error("Error loading profile:", profileError);
-          // If profile load fails due to auth, redirect to login
           if (
             profileError instanceof Error &&
             profileError.message.includes("session has expired")
@@ -249,57 +190,48 @@ export default function Conversations() {
             navigate("/login");
             return;
           }
-          throw new Error(
-            `Failed to load profile: ${profileError instanceof Error ? profileError.message : "Unknown error"}`,
-          );
         }
       }
 
-      // Load phone numbers accessible to user
-      // Admin: all numbers, Team member: only assigned number
+      // Load assigned phone number
       try {
-        const phoneNumbersData = await ApiService.getAccessiblePhoneNumbers();
-        const processedPhones = phoneNumbersData.map((phone: any) => ({
-          ...phone,
-        }));
+        const response = await fetch("/api/messages/assigned-phone-number", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        setPhoneNumbers(processedPhones);
-        console.log("[Conversations] Loaded phone numbers:", processedPhones);
-
-        // Set active phone number if we have phones but no active one
-        if (processedPhones.length > 0 && !activePhoneNumber) {
-          const activePhone =
-            processedPhones.find((p) => p.active) || processedPhones[0];
-          setActivePhoneNumber(activePhone.phoneNumber);
-          console.log(
-            "[Conversations] Set active phone number:",
-            activePhone.phoneNumber,
-          );
-        }
-      } catch (numbersError) {
-        console.error("Error loading phone numbers:", numbersError);
-        // Don't throw error - just show empty state
-        setPhoneNumbers([]);
-        toast.warning(
-          "Unable to load phone numbers. You may not have any assigned numbers yet.",
+        const data = await response.json();
+        console.log(
+          "[TeamMemberConversations] Assigned phone numbers response:",
+          data,
         );
-      }
 
-      // Load wallet balance
-      try {
-        const walletData = await ApiService.getWallet();
-        setWalletBalance(walletData.balance || 0);
+        if (response.ok) {
+          if (data.phoneNumbers && data.phoneNumbers.length > 0) {
+            console.log(
+              "[TeamMemberConversations] Setting assigned phone number:",
+              data.phoneNumbers[0],
+            );
+            setAssignedPhoneNumber(data.phoneNumbers[0]);
+          } else {
+            console.warn("[TeamMemberConversations] No phone numbers assigned");
+            toast.error(
+              "No phone number assigned to your account. Please contact your admin.",
+            );
+          }
+        } else {
+          console.error("[TeamMemberConversations] API error:", data.error);
+          toast.error(data.error || "Failed to load assigned phone number");
+        }
       } catch (error) {
-        console.error("Error loading wallet balance:", error);
-        setWalletBalance(0);
+        console.error(
+          "[TeamMemberConversations] Error loading assigned phone number:",
+          error,
+        );
+        toast.error("Failed to load phone number");
       }
     } catch (error) {
       console.error("Error loading initial data:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to load initial data. Please refresh the page.",
-      );
+      toast.error("Failed to load initial data");
     } finally {
       setIsLoading(false);
     }
@@ -314,132 +246,65 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      console.log(
-        "Initializing Socket.IO with token:",
-        token.substring(0, 20) + "...",
-      );
-
-      // Connect to socket service
       const socket = socketService.connect(token);
 
       if (!socket) {
-        console.error(
-          "Failed to get socket instance - socketService.connect returned:",
-          socket,
-        );
         setIsConnecting(false);
         toast.error("Unable to establish socket connection");
         return;
       }
 
-      console.log(
-        "Socket instance obtained:",
-        socket.id,
-        "Connected:",
-        socket.connected,
-      );
-
-      // Remove old listeners to avoid duplicates
       socket.off("connect");
       socket.off("disconnect");
       socket.off("connect_error");
 
-      // Connection status handlers with debug logging
       const handleConnect = () => {
-        console.log("✅ Socket.IO connected event fired");
+        console.log("✅ Socket.IO connected");
         setIsConnecting(false);
         toast.success("Real-time messaging is now active");
       };
 
       const handleDisconnect = () => {
-        console.log("❌ Socket.IO disconnected event fired");
+        console.log("❌ Socket.IO disconnected");
         setIsConnecting(false);
-        toast.error("Real-time messaging is offline");
       };
 
       const handleError = (error: any) => {
-        console.error("Socket.IO connection error event:", error);
+        console.error("Socket.IO connection error:", error);
         setIsConnecting(false);
-        toast.error("Failed to establish real-time connection");
       };
 
-      // Attach connection status listeners
       socket.on("connect", handleConnect);
       socket.on("disconnect", handleDisconnect);
       socket.on("connect_error", handleError);
 
-      // Check if already connected and show toast if so
       if (socket.connected) {
-        console.log("Socket is already connected, triggering connected state");
         setIsConnecting(false);
-        setTimeout(() => {
-          toast.success("Real-time messaging is now active");
-        }, 100);
       }
 
-      // Set up Socket.IO event listeners
+      // Set up event listeners
       socketService.on("new_message", (data: any) => {
         console.log("📱 New message received:", data);
 
-        // Update contacts list using ref to get current state
-        const currentActivePhone = activePhoneNumberRef.current;
-        if (currentActivePhone) {
-          const phoneNum = phoneNumbersRef.current.find(
-            (p) => p.phoneNumber === currentActivePhone,
-          );
-          if (phoneNum) {
-            loadContactsForPhoneNumber(phoneNum.id);
-          }
+        if (assignedPhoneNumberRef.current) {
+          loadContactsForPhoneNumber(assignedPhoneNumberRef.current.id);
         }
 
-        // If message is for currently selected contact, reload messages
         const currentSelectedContactId = selectedContactIdRef.current;
         if (currentSelectedContactId === data.contactId) {
-          loadMessages(currentSelectedContactId);
-        }
-
-        // Show notification for incoming messages using ref to get current notifications setting
-        const currentNotifications = notificationsRef.current;
-        if (currentNotifications && !data.isOutgoing) {
-          showNotification(
-            "New Message",
-            `${data.senderName}: ${data.content}`,
-          );
-        }
-
-        // Update page title with unread count
-        updatePageTitle();
-      });
-
-      socketService.on("messageStatusUpdate", (data: any) => {
-        console.log("✓ Message status updated:", data);
-        const currentSelectedContactId = selectedContactIdRef.current;
-        if (currentSelectedContactId) {
           loadMessages(currentSelectedContactId);
         }
       });
 
       socketService.on("contact_updated", (data: any) => {
         console.log("👥 Contacts updated:", data);
-        const currentActivePhone = activePhoneNumberRef.current;
-        if (currentActivePhone) {
-          const phoneNum = phoneNumbersRef.current.find(
-            (p) => p.phoneNumber === currentActivePhone,
-          );
-          if (phoneNum) {
-            loadContactsForPhoneNumber(phoneNum.id);
-          }
+        if (assignedPhoneNumberRef.current) {
+          loadContactsForPhoneNumber(assignedPhoneNumberRef.current.id);
         }
-      });
-
-      socketService.on("unreadUpdated", (data: any) => {
-        console.log("🔔 Unread counts updated:", data);
-        updatePageTitle();
       });
     } catch (error) {
       console.error("Error initializing Socket.IO:", error);
       setIsConnecting(false);
-      toast.error("Failed to initialize real-time connection");
     }
   };
 
@@ -458,7 +323,7 @@ export default function Conversations() {
       setIsLoadingMessages(true);
       const messagesData = await ApiService.getMessages(
         contactId,
-        activePhoneNumber || undefined,
+        assignedPhoneNumber?.phoneNumber,
       );
       setMessages(messagesData || []);
     } catch (error) {
@@ -472,15 +337,11 @@ export default function Conversations() {
   const markMessagesAsRead = async (contactId: string) => {
     try {
       await ApiService.markAsRead(contactId);
-
-      // Update contact unread count in UI
       setContacts((prev) =>
         prev.map((contact) =>
           contact.id === contactId ? { ...contact, unreadCount: 0 } : contact,
         ),
       );
-
-      updatePageTitle();
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
@@ -490,7 +351,7 @@ export default function Conversations() {
     if (
       !newMessage.trim() ||
       !selectedContactId ||
-      !activePhoneNumber ||
+      !assignedPhoneNumber ||
       isSending
     ) {
       return;
@@ -504,191 +365,92 @@ export default function Conversations() {
         throw new Error("Selected contact not found");
       }
 
-      const phoneNum = phoneNumbers.find(
-        (p) => p.phoneNumber === activePhoneNumber,
-      );
-      if (!phoneNum) {
-        throw new Error("Phone number not found");
-      }
-
       await ApiService.sendSMS(
         selectedContact.phoneNumber,
         newMessage.trim(),
-        phoneNum.id,
+        assignedPhoneNumber.id,
       );
 
       setNewMessage("");
-
-      // Reload messages and contacts to show the sent message
       await Promise.all([
         loadMessages(selectedContactId),
-        loadContactsForPhoneNumber(phoneNum.id),
+        loadContactsForPhoneNumber(assignedPhoneNumber.id),
       ]);
 
-      toast.success("Your message has been sent successfully");
+      toast.success("Message sent successfully");
     } catch (error: any) {
       console.error("Error sending message:", error);
-      toast.error(error.message || "Failed to send message. Please try again.");
+      toast.error(error.message || "Failed to send message");
     } finally {
       setIsSending(false);
     }
   };
 
   const addContactFromDialog = async (name: string, phoneNumber: string) => {
-    // Get the active phone number ID
-    let currentActivePhoneId = phoneNumbers.find(
-      (p) => p.phoneNumber === activePhoneNumber,
-    )?.id;
+    try {
+      if (!assignedPhoneNumber) {
+        throw new Error(
+          "No phone number assigned to your account. Contact your admin.",
+        );
+      }
 
-    // If no active number, try to select the first available one
-    if (!currentActivePhoneId && phoneNumbers.length > 0) {
-      currentActivePhoneId = phoneNumbers[0].id;
-      setActivePhoneNumber(phoneNumbers[0].phoneNumber);
+      await ApiService.addContact(name, phoneNumber, assignedPhoneNumber.id);
+      await loadContactsForPhoneNumber(assignedPhoneNumber.id);
+      toast.success("Contact added successfully");
+    } catch (error: any) {
+      console.error("Error adding contact:", error);
+      throw error;
     }
-
-    // If still no phone number available, show helpful error
-    if (!currentActivePhoneId) {
-      throw new Error(
-        "No phone numbers available. Please purchase a phone number first.",
-      );
-    }
-
-    await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
-    await loadContactsForPhoneNumber(currentActivePhoneId);
   };
 
   const editContact = async () => {
     if (!editingContact || !newContactName.trim()) return;
 
-    const contactName = newContactName.trim();
-
     try {
       await ApiService.updateContact(editingContact.id, {
-        name: contactName,
+        name: newContactName.trim(),
       } as any);
 
       setNewContactName("");
       setShowEditContact(false);
       setEditingContact(null);
 
-      const phoneNum = phoneNumbers.find(
-        (p) => p.phoneNumber === activePhoneNumber,
-      );
-      if (phoneNum) {
-        await loadContactsForPhoneNumber(phoneNum.id);
+      if (assignedPhoneNumber) {
+        await loadContactsForPhoneNumber(assignedPhoneNumber.id);
       }
 
-      toast.success("Contact has been updated successfully");
+      toast.success("Contact updated successfully");
     } catch (error: any) {
       console.error("Error editing contact:", error);
-      toast.error(
-        error.message || "Failed to update contact. Please try again.",
-      );
+      toast.error(error.message || "Failed to update contact");
     }
   };
 
   const deleteContact = async () => {
     if (!deletingContact) return;
 
-    const contactName = deletingContact.name;
-    const contactId = deletingContact.id;
-
     try {
-      // Clear UI state immediately
       setShowDeleteContact(false);
       setDeletingContact(null);
 
-      // Clear selection if deleted contact was selected
-      if (selectedContactId === contactId) {
+      if (selectedContactId === deletingContact.id) {
         setSelectedContactId(null);
         setMessages([]);
       }
 
-      // Show optimistic success message
-      toast.success("Contact and all messages have been deleted");
+      toast.success("Contact deleted successfully");
+      await ApiService.deleteContact(deletingContact.id);
 
-      // Delete from server
-      await ApiService.deleteContact(contactId);
-
-      // Reload contacts to sync with server
-      const phoneNum = phoneNumbers.find(
-        (p) => p.phoneNumber === activePhoneNumber,
-      );
-      if (phoneNum) {
-        await loadContactsForPhoneNumber(phoneNum.id);
+      if (assignedPhoneNumber) {
+        await loadContactsForPhoneNumber(assignedPhoneNumber.id);
       }
 
-      // Immediately update local contacts list
-      setContacts((prev) => prev.filter((contact) => contact.id !== contactId));
+      setContacts((prev) =>
+        prev.filter((contact) => contact.id !== deletingContact.id),
+      );
     } catch (error: any) {
       console.error("Error deleting contact:", error);
-      toast.error(
-        error.message || "Failed to delete contact. Please try again.",
-      );
-    }
-  };
-
-  const switchPhoneNumber = async (phoneNumber: string) => {
-    try {
-      const phoneNumberObj = phoneNumbers.find(
-        (p) => p.phoneNumber === phoneNumber,
-      );
-      if (phoneNumberObj) {
-        await ApiService.setActiveNumber(phoneNumberObj.id);
-
-        // Leave old room and join new room
-        if (activePhoneNumber) {
-          socketService.leavePhoneNumber(activePhoneNumber);
-        }
-
-        setActivePhoneNumber(phoneNumber);
-        setSelectedContactId(null);
-        setMessages([]);
-
-        socketService.joinPhoneNumber(phoneNumber);
-        await loadContactsForPhoneNumber(phoneNumberObj.id);
-
-        toast.success(`Now using ${phoneNumber}`);
-      }
-    } catch (error: any) {
-      console.error("Error switching phone number:", error);
-      toast.error(error.message || "Failed to switch phone number");
-    }
-  };
-
-  const requestNotificationPermission = async () => {
-    if (Notification.permission === "default") {
-      const permission = await Notification.requestPermission();
-      setNotifications(permission === "granted");
-    }
-  };
-
-  const showNotification = (title: string, body: string) => {
-    if (notifications && Notification.permission === "granted") {
-      const notification = new Notification(title, {
-        body,
-        icon: "/favicon.ico",
-        tag: "sms-notification",
-      });
-
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      };
-
-      setTimeout(() => notification.close(), 5000);
-    }
-  };
-
-  const updatePageTitle = () => {
-    const totalUnread = contacts.reduce(
-      (sum, contact) => sum + contact.unreadCount,
-      0,
-    );
-    if (totalUnread > 0) {
-      document.title = `(${totalUnread}) Connectlify - Messages`;
-    } else {
-      document.title = "Connectlify - Messages";
+      toast.error(error.message || "Failed to delete contact");
     }
   };
 
@@ -699,13 +461,10 @@ export default function Conversations() {
     localStorage.setItem("theme", newTheme ? "dark" : "light");
   };
 
-  const toggleNotifications = async () => {
-    if (!notifications && Notification.permission !== "granted") {
-      const permission = await Notification.requestPermission();
-      setNotifications(permission === "granted");
-    } else {
-      setNotifications(!notifications);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   const formatMessageTime = (dateString: string) => {
@@ -724,7 +483,6 @@ export default function Conversations() {
     return format(date, "dd/MM/yyyy HH:mm");
   };
 
-  // Filter contacts based on search term
   const filteredContacts = contacts.filter(
     (contact) =>
       (contact.name &&
@@ -744,9 +502,9 @@ export default function Conversations() {
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <div>
-            <h3 className="text-lg font-semibold">Loading Connectlify</h3>
+            <h3 className="text-lg font-semibold">Loading conversations</h3>
             <p className="text-sm text-muted-foreground">
-              Setting up your conversations...
+              Setting up your messages...
             </p>
           </div>
         </div>
@@ -756,33 +514,84 @@ export default function Conversations() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
+      className={`min-h-screen flex flex-col relative ${isDarkMode ? "dark" : ""}`}
     >
-      {/* Animated Background */}
-      <AnimatedBackground />
-
       {/* Top Navigation Bar */}
-      <ConversationsTopBar
-        phoneNumbers={phoneNumbers}
-        activePhoneNumber={activePhoneNumber}
-        onPhoneNumberSelect={switchPhoneNumber}
-        profile={profile}
-        walletBalance={walletBalance}
-        isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
-        notifications={notifications}
-        onToggleNotifications={toggleNotifications}
-        totalUnreadCount={totalUnreadCount}
-        userRole={profile.role as "admin" | "team_member"}
-      />
+      <div className="bg-card border-b border-border sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 flex-1">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="w-6 h-6 text-white" />
+              </div>
+
+              <div className="flex-1">
+                <h1 className="font-semibold text-lg">Messages</h1>
+                {isLoading ? (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                    <p className="text-xs text-muted-foreground">
+                      Loading number...
+                    </p>
+                  </div>
+                ) : assignedPhoneNumber ? (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Phone className="w-3 h-3 text-primary" />
+                    <p className="text-xs font-mono font-semibold text-primary">
+                      {assignedPhoneNumber.phoneNumber}
+                    </p>
+                    <Badge variant="secondary" className="text-xs h-5 py-0">
+                      Active
+                    </Badge>
+                  </div>
+                ) : (
+                  <p className="text-xs text-destructive mt-1">
+                    ⚠️ No phone number assigned
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              {totalUnreadCount > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  {totalUnreadCount} unread
+                </Badge>
+              )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={toggleTheme}
+                    className="cursor-pointer"
+                  >
+                    {isDarkMode ? "Light Mode" : "Dark Mode"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-destructive cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex w-full flex-1">
-        {/* Left Sidebar - Contact List & Controls */}
-        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col">
-          {/* Header Section */}
-          <div className="p-4 border-b border-border bg-muted/20">
-            {/* Search Contacts */}
+      <div className="relative flex w-full flex-1 overflow-hidden">
+        {/* Left Sidebar - Contact List */}
+        <div className="w-80 bg-card/50 border-r border-border flex flex-col">
+          {/* Search Section */}
+          <div className="p-4 border-b border-border">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -800,19 +609,14 @@ export default function Conversations() {
               className="w-full"
               size="sm"
               onClick={() => setShowAddContact(true)}
-              disabled={phoneNumbers.length === 0}
-              title={
-                phoneNumbers.length === 0
-                  ? "No phone numbers available. Please purchase a phone number first."
-                  : "Add new contact"
-              }
+              disabled={!assignedPhoneNumber || isLoading}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add New Contact
+              Add Contact
             </Button>
-            {phoneNumbers.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                No phone numbers available
+            {!isLoading && !assignedPhoneNumber && (
+              <p className="text-xs text-destructive mt-2 text-center">
+                No phone number assigned. Contact your admin.
               </p>
             )}
           </div>
@@ -823,20 +627,20 @@ export default function Conversations() {
               {filteredContacts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p className="font-medium">No contacts found</p>
+                  <p className="font-medium">No contacts</p>
                   <p className="text-sm">
                     {searchTerm
-                      ? "Try a different search term"
-                      : "Add a contact to start messaging"}
+                      ? "Try a different search"
+                      : "Add a contact to start"}
                   </p>
                 </div>
               ) : (
                 filteredContacts.map((contact) => (
                   <Card
                     key={contact.id}
-                    className={`mb-2 cursor-pointer transition-all duration-200 hover:shadow-sm ${
+                    className={`mb-2 cursor-pointer transition-all ${
                       selectedContactId === contact.id
-                        ? "bg-primary/10 border-primary shadow-sm"
+                        ? "bg-primary/10 border-primary"
                         : "hover:bg-muted/50"
                     }`}
                     onClick={() => setSelectedContactId(contact.id)}
@@ -910,7 +714,7 @@ export default function Conversations() {
                                 }}
                               >
                                 <Edit className="w-4 h-4 mr-2" />
-                                Edit Contact
+                                Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={(e) => {
@@ -918,10 +722,10 @@ export default function Conversations() {
                                   setDeletingContact(contact);
                                   setShowDeleteContact(true);
                                 }}
-                                className="text-destructive focus:text-destructive"
+                                className="text-destructive"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Contact
+                                Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -933,20 +737,10 @@ export default function Conversations() {
               )}
             </div>
           </ScrollArea>
-
-          {/* Ad Banner at Bottom */}
-          <div className="p-3 border-t border-border bg-muted/20">
-            <div className="text-center mb-2">
-              <span className="text-xs text-muted-foreground">
-                Advertisement
-              </span>
-            </div>
-            <AdBanner width={300} height={80} />
-          </div>
         </div>
 
         {/* Right Side - Chat Area */}
-        <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl">
+        <div className="flex-1 flex flex-col bg-background/50">
           {selectedContact ? (
             <>
               {/* Chat Header */}
@@ -962,7 +756,7 @@ export default function Conversations() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold text-lg">
+                      <h3 className="font-semibold">
                         {selectedContact.name || selectedContact.phoneNumber}
                       </h3>
                       <p className="text-sm text-muted-foreground font-mono">
@@ -971,17 +765,12 @@ export default function Conversations() {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-xs">
-                      Via {activePhoneNumber}
+                  {isConnecting && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      Connecting...
                     </Badge>
-                    {isConnecting && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                        Connecting...
-                      </Badge>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -1031,7 +820,7 @@ export default function Conversations() {
                               }`}
                             >
                               <div
-                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                                className={`max-w-xs px-4 py-2 rounded-lg ${
                                   message.direction === "outbound"
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-muted"
@@ -1040,14 +829,9 @@ export default function Conversations() {
                                 <p className="text-sm whitespace-pre-wrap break-words">
                                   {message.body}
                                 </p>
-                                <div className="flex items-center justify-between mt-2 gap-2">
-                                  <span className="text-xs opacity-70">
-                                    {format(
-                                      new Date(message.timestamp),
-                                      "HH:mm",
-                                    )}
-                                  </span>
-                                </div>
+                                <span className="text-xs opacity-70 mt-2 block">
+                                  {format(new Date(message.timestamp), "HH:mm")}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -1079,7 +863,6 @@ export default function Conversations() {
                     onClick={sendMessage}
                     disabled={!newMessage.trim() || isSending}
                     size="sm"
-                    className="px-4"
                   >
                     {isSending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -1088,162 +871,123 @@ export default function Conversations() {
                     )}
                   </Button>
                 </div>
-                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                  <span>Press Enter to send, Shift+Enter for new line</span>
-                  <span>Balance: ${walletBalance.toFixed(2)}</span>
-                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Press Enter to send, Shift+Enter for new line
+                </p>
               </div>
             </>
           ) : (
             /* Welcome Screen */
-            <div className="flex-1 flex items-center justify-center bg-muted/5">
+            <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-6 max-w-md">
                 <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
                   <MessageSquare className="w-12 h-12 text-primary" />
                 </div>
 
                 <div>
-                  <h2 className="text-2xl font-bold mb-2">
-                    Welcome to Connectlify
-                  </h2>
+                  <h2 className="text-2xl font-bold mb-2">Welcome</h2>
                   <p className="text-muted-foreground">
-                    Select a contact from the sidebar to start messaging, or add
-                    a new contact to begin your conversation.
+                    Select a contact to start messaging, or add a new contact to
+                    begin.
                   </p>
                 </div>
 
-                <div className="bg-card rounded-lg p-4 space-y-2 border">
-                  <h3 className="font-semibold text-sm">Current Status</h3>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <div className="flex justify-between">
-                      <span>Active Number:</span>
-                      <span className="font-mono text-primary">
-                        {activePhoneNumber || "None"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Contacts:</span>
-                      <span>{contacts.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Unread Messages:</span>
-                      <span
-                        className={
-                          totalUnreadCount > 0
-                            ? "text-destructive font-semibold"
-                            : ""
-                        }
-                      >
-                        {totalUnreadCount}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Wallet Balance:</span>
-                      <span className="font-semibold text-green-600">
-                        ${walletBalance.toFixed(2)}
-                      </span>
-                    </div>
+                {assignedPhoneNumber && (
+                  <div className="bg-card rounded-lg p-4 border">
+                    <h3 className="font-semibold text-sm mb-2">
+                      Your Phone Number
+                    </h3>
+                    <p className="text-sm font-mono text-primary">
+                      {assignedPhoneNumber.phoneNumber}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      All messages will be sent from this number
+                    </p>
                   </div>
-                </div>
-
-                {/* Large Ad Banner */}
-                <div className="mt-8">
-                  <div className="text-center mb-4">
-                    <span className="text-xs text-muted-foreground">
-                      Advertisement
-                    </span>
-                  </div>
-                  <AdBanner width={728} height={90} />
-                </div>
+                )}
               </div>
             </div>
           )}
         </div>
-
-        {/* Edit Contact Dialog */}
-        <Dialog open={showEditContact} onOpenChange={setShowEditContact}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Contact</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="editContactName">Contact Name</Label>
-                <Input
-                  id="editContactName"
-                  value={newContactName}
-                  onChange={(e) => setNewContactName(e.target.value)}
-                  placeholder="Enter contact name"
-                />
-              </div>
-              <div>
-                <Label>Phone Number</Label>
-                <Input
-                  value={editingContact?.phoneNumber || ""}
-                  disabled
-                  className="bg-muted"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Phone number cannot be changed
-                </p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowEditContact(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={editContact} disabled={!newContactName.trim()}>
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Contact Dialog */}
-        <Dialog open={showDeleteContact} onOpenChange={setShowDeleteContact}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Contact</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Are you sure you want to delete{" "}
-                <strong>
-                  {deletingContact?.name || deletingContact?.phoneNumber}
-                </strong>
-                ? This will permanently delete the contact and all message
-                history.
-              </p>
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                <p className="text-sm text-destructive font-medium">
-                  ⚠️ This action cannot be undone
-                </p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteContact(false)}
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={deleteContact}>
-                Delete Contact
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Add Contact Dialog */}
-        <AddContactDialog
-          open={showAddContact}
-          onOpenChange={setShowAddContact}
-          onAddContact={addContactFromDialog}
-        />
       </div>
+
+      {/* Edit Contact Dialog */}
+      <Dialog open={showEditContact} onOpenChange={setShowEditContact}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Contact</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="editContactName">Contact Name</Label>
+              <Input
+                id="editContactName"
+                value={newContactName}
+                onChange={(e) => setNewContactName(e.target.value)}
+                placeholder="Enter contact name"
+              />
+            </div>
+            <div>
+              <Label>Phone Number</Label>
+              <Input
+                value={editingContact?.phoneNumber || ""}
+                disabled
+                className="bg-muted"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Phone number cannot be changed
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditContact(false)}>
+              Cancel
+            </Button>
+            <Button onClick={editContact} disabled={!newContactName.trim()}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Contact Dialog */}
+      <Dialog open={showDeleteContact} onOpenChange={setShowDeleteContact}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Contact</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete{" "}
+            <strong>
+              {deletingContact?.name || deletingContact?.phoneNumber}
+            </strong>
+            ? This will delete all message history.
+          </p>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+            <p className="text-sm text-destructive font-medium">
+              ⚠️ This action cannot be undone
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteContact(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteContact}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Contact Dialog */}
+      <AddContactDialog
+        open={showAddContact}
+        onOpenChange={setShowAddContact}
+        onAddContact={addContactFromDialog}
+      />
     </div>
   );
 }
