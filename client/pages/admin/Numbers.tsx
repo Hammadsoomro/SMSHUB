@@ -40,15 +40,27 @@ export default function Numbers() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("No authentication token found");
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const response = await fetch("/api/admin/numbers", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch numbers");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch numbers (${response.status})`);
+      }
       const data = await response.json();
       setNumbers(data.numbers || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      console.error("Fetch numbers error:", errorMessage, err);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -57,16 +69,26 @@ export default function Numbers() {
   const fetchTeamMembers = async () => {
     try {
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        console.warn("No authentication token found for team members fetch");
+        return;
+      }
+
       const response = await fetch("/api/admin/team", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setTeamMembers(data.members || []);
+      if (!response.ok) {
+        console.error(`Failed to fetch team members: ${response.status}`, response.statusText);
+        return;
       }
+
+      const data = await response.json();
+      setTeamMembers(data.members || []);
     } catch (err) {
-      console.error("Failed to fetch team members:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error("Team members fetch error:", errorMessage, err);
     }
   };
 
