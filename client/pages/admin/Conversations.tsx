@@ -292,17 +292,22 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      console.log("Initializing Socket.IO...");
+      console.log("Initializing Socket.IO with token:", token.substring(0, 20) + "...");
 
       // Connect to socket service
       const socket = socketService.connect(token);
 
       if (!socket) {
-        console.error("Failed to get socket instance");
+        console.error(
+          "Failed to get socket instance - socketService.connect returned:",
+          socket
+        );
         setIsConnecting(false);
         toast.error("Unable to establish socket connection");
         return;
       }
+
+      console.log("Socket instance obtained:", socket.id, "Connected:", socket.connected);
 
       // Remove old listeners to avoid duplicates
       socket.off("connect");
