@@ -50,9 +50,7 @@ export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string 
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    console.log("[JWT] Verifying token...");
     const parts = token.split(".");
-    console.log(`[JWT] Token parts count: ${parts.length}`);
 
     if (parts.length !== 3) {
       console.warn("[JWT] Invalid token format: wrong number of parts");
@@ -60,7 +58,6 @@ export function verifyToken(token: string): JWTPayload | null {
     }
 
     const [header64, payload64, signature64] = parts;
-    console.log("[JWT] Token structure valid");
 
     // Verify signature
     const signature = crypto
@@ -69,12 +66,6 @@ export function verifyToken(token: string): JWTPayload | null {
       .digest();
     const expectedSignature = base64UrlEncode(signature.toString("base64"));
 
-    console.log("[JWT] Signature check:", {
-      providedSig: signature64.substring(0, 10) + "...",
-      expectedSig: expectedSignature.substring(0, 10) + "...",
-      match: signature64 === expectedSignature,
-    });
-
     if (signature64 !== expectedSignature) {
       console.warn("[JWT] Invalid token signature");
       return null;
@@ -82,13 +73,7 @@ export function verifyToken(token: string): JWTPayload | null {
 
     // Parse payload
     const decodedPayloadStr = base64UrlDecode(payload64);
-    console.log("[JWT] Decoded payload string:", decodedPayloadStr);
-
     const payload = JSON.parse(decodedPayloadStr) as any;
-    console.log("[JWT] Parsed payload object:", JSON.stringify(payload));
-    console.log("[JWT] Payload userId field:", payload.userId);
-    console.log("[JWT] Payload email field:", payload.email);
-    console.log("[JWT] Payload role field:", payload.role);
 
     // Check expiration
     const now = Math.floor(Date.now() / 1000);
@@ -97,7 +82,6 @@ export function verifyToken(token: string): JWTPayload | null {
       return null;
     }
 
-    console.log("[JWT] Token verification successful");
     return payload as JWTPayload;
   } catch (error) {
     console.error("[JWT] Error verifying token:", error);
