@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { Request, RequestHandler } from "express";
 import { verifyToken, extractTokenFromHeader } from "../jwt";
 import { storage } from "../storage";
 
