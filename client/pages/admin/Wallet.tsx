@@ -33,7 +33,6 @@ export default function Wallet() {
           return;
         }
         await Promise.all([
-          fetchWallet(),
           fetchTransactions(),
           fetchTwilioBalance(),
         ]);
