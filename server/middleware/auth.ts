@@ -17,6 +17,7 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     const token = extractTokenFromHeader(req.headers.authorization);
 
     if (!token) {
+      console.warn(`Auth failed for ${req.method} ${req.path}: NO_TOKEN`);
       return res.status(401).json({
         error: "Missing authorization token. Please login again.",
         code: "NO_TOKEN",
@@ -25,6 +26,7 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
 
     const payload = verifyToken(token);
     if (!payload) {
+      console.warn(`Auth failed for ${req.method} ${req.path}: INVALID_TOKEN`);
       return res.status(401).json({
         error: "Your session has expired. Please login again.",
         code: "INVALID_TOKEN",
