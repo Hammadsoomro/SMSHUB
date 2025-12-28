@@ -57,3 +57,46 @@ export const handleGetTransactions: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+
+    // Get admin's Twilio credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res.status(400).json({
+        error: "Twilio credentials not connected",
+        balance: null,
+        currency: "USD",
+      });
+    }
+
+    // Fetch balance from Twilio
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      credentials.authToken,
+    );
+    const balanceData = await twilioClient.getAccountBalance();
+
+    if (balanceData.error) {
+      return res.status(400).json({
+        error: balanceData.error_message || balanceData.error,
+        balance: null,
+        currency: "USD",
+      });
+    }
+
+    res.json({
+      balance: parseFloat(balanceData.balance || "0"),
+      currency: balanceData.currency || "USD",
+    });
+  } catch (error) {
+    console.error("Get Twilio balance error:", error);
+    res.status(500).json({
+      error: "Failed to fetch Twilio balance",
+      balance: null,
+      currency: "USD",
+    });
+  }
+};
