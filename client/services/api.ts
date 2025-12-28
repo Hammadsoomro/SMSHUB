@@ -174,6 +174,27 @@ class ApiService {
     const response = await this.request<{ wallet: Wallet }>("/api/wallet");
     return response.wallet;
   }
+
+  async getTwilioBalance(): Promise<{
+    balance: number | null;
+    currency: string;
+    error?: string;
+  }> {
+    try {
+      const response = await this.request<{
+        balance: number | null;
+        currency: string;
+      }>("/api/wallet/twilio-balance");
+      return response;
+    } catch (error: any) {
+      return {
+        balance: null,
+        currency: "USD",
+        error:
+          error instanceof Error ? error.message : "Failed to fetch balance",
+      };
+    }
+  }
 }
 
 export default new ApiService();

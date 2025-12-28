@@ -66,7 +66,7 @@ export default function Login() {
       if (result.user.role === "admin") {
         navigate("/admin");
       } else {
-        navigate("/messages");
+        navigate("/conversations");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

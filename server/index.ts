@@ -28,6 +28,7 @@ import {
   handleGetWallet,
   handleAddFunds,
   handleGetTransactions,
+  handleGetTwilioBalance,
 } from "./routes/wallet";
 
 // Phone purchase routes
@@ -184,6 +185,7 @@ export async function createServer() {
   app.get("/api/wallet", authMiddleware, handleGetWallet);
   app.post("/api/wallet/add-funds", authMiddleware, handleAddFunds);
   app.get("/api/wallet/transactions", authMiddleware, handleGetTransactions);
+  app.get("/api/wallet/twilio-balance", authMiddleware, handleGetTwilioBalance);
 
   // Phone purchase routes (requires authentication)
   app.get(
