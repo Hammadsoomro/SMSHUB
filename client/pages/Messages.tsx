@@ -52,9 +52,18 @@ export default function Messages() {
       navigate("/login");
       return;
     }
-    fetchContacts();
-    fetchAssignedPhoneNumber();
+    const initializeData = async () => {
+      await fetchAssignedPhoneNumber();
+    };
+    initializeData();
   }, [navigate]);
+
+  // Fetch contacts when assigned phone numbers change
+  useEffect(() => {
+    if (assignedPhoneNumbers.length > 0) {
+      fetchContactsForNumber(assignedPhoneNumbers[0].id);
+    }
+  }, [assignedPhoneNumbers]);
 
   const fetchAssignedPhoneNumber = async () => {
     try {
