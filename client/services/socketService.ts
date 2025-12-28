@@ -10,7 +10,7 @@ class SocketService {
     if (this.socket) {
       console.log(
         "[SocketService] Socket already exists, reusing. Connected:",
-        this.socket.connected
+        this.socket.connected,
       );
       return this.socket;
     }
@@ -18,7 +18,7 @@ class SocketService {
     if (this.isConnecting) {
       console.log(
         "[SocketService] Connection in progress, returning existing socket...",
-        { socketExists: !!this.socket }
+        { socketExists: !!this.socket },
       );
       // Even though connection is in progress, we should still have the socket instance
       return this.socket;
@@ -26,7 +26,10 @@ class SocketService {
 
     try {
       this.isConnecting = true;
-      console.log("[SocketService] Creating new socket connection to:", API_BASE_URL);
+      console.log(
+        "[SocketService] Creating new socket connection to:",
+        API_BASE_URL,
+      );
 
       this.socket = io(API_BASE_URL, {
         auth: {
@@ -42,10 +45,10 @@ class SocketService {
         rejectUnauthorized: false,
       });
 
-      console.log(
-        "[SocketService] Socket instance created:",
-        { id: this.socket?.id, connected: this.socket?.connected }
-      );
+      console.log("[SocketService] Socket instance created:", {
+        id: this.socket?.id,
+        connected: this.socket?.connected,
+      });
 
       // Attach base listeners that will always be there
       this.socket.on("connect", () => {

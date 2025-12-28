@@ -120,7 +120,9 @@ export default function TeamMemberConversations() {
     return () => {
       try {
         if (assignedPhoneNumberRef.current) {
-          socketService.leavePhoneNumber(assignedPhoneNumberRef.current.phoneNumber);
+          socketService.leavePhoneNumber(
+            assignedPhoneNumberRef.current.phoneNumber,
+          );
         }
         socketService.disconnect();
       } catch (error) {
@@ -198,22 +200,33 @@ export default function TeamMemberConversations() {
         });
 
         const data = await response.json();
-        console.log("[TeamMemberConversations] Assigned phone numbers response:", data);
+        console.log(
+          "[TeamMemberConversations] Assigned phone numbers response:",
+          data,
+        );
 
         if (response.ok) {
           if (data.phoneNumbers && data.phoneNumbers.length > 0) {
-            console.log("[TeamMemberConversations] Setting assigned phone number:", data.phoneNumbers[0]);
+            console.log(
+              "[TeamMemberConversations] Setting assigned phone number:",
+              data.phoneNumbers[0],
+            );
             setAssignedPhoneNumber(data.phoneNumbers[0]);
           } else {
             console.warn("[TeamMemberConversations] No phone numbers assigned");
-            toast.error("No phone number assigned to your account. Please contact your admin.");
+            toast.error(
+              "No phone number assigned to your account. Please contact your admin.",
+            );
           }
         } else {
           console.error("[TeamMemberConversations] API error:", data.error);
           toast.error(data.error || "Failed to load assigned phone number");
         }
       } catch (error) {
-        console.error("[TeamMemberConversations] Error loading assigned phone number:", error);
+        console.error(
+          "[TeamMemberConversations] Error loading assigned phone number:",
+          error,
+        );
         toast.error("Failed to load phone number");
       }
     } catch (error) {
@@ -335,7 +348,12 @@ export default function TeamMemberConversations() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedContactId || !assignedPhoneNumber || isSending) {
+    if (
+      !newMessage.trim() ||
+      !selectedContactId ||
+      !assignedPhoneNumber ||
+      isSending
+    ) {
       return;
     }
 
@@ -371,7 +389,9 @@ export default function TeamMemberConversations() {
   const addContactFromDialog = async (name: string, phoneNumber: string) => {
     try {
       if (!assignedPhoneNumber) {
-        throw new Error("No phone number assigned to your account. Contact your admin.");
+        throw new Error(
+          "No phone number assigned to your account. Contact your admin.",
+        );
       }
 
       await ApiService.addContact(name, phoneNumber, assignedPhoneNumber.id);
@@ -510,7 +530,9 @@ export default function TeamMemberConversations() {
                 {isLoading ? (
                   <div className="flex items-center space-x-2 mt-1">
                     <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                    <p className="text-xs text-muted-foreground">Loading number...</p>
+                    <p className="text-xs text-muted-foreground">
+                      Loading number...
+                    </p>
                   </div>
                 ) : assignedPhoneNumber ? (
                   <div className="flex items-center space-x-2 mt-1">
@@ -607,7 +629,9 @@ export default function TeamMemberConversations() {
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p className="font-medium">No contacts</p>
                   <p className="text-sm">
-                    {searchTerm ? "Try a different search" : "Add a contact to start"}
+                    {searchTerm
+                      ? "Try a different search"
+                      : "Add a contact to start"}
                   </p>
                 </div>
               ) : (
@@ -659,8 +683,13 @@ export default function TeamMemberConversations() {
 
                         <div className="flex items-center space-x-2 flex-shrink-0">
                           {contact.unreadCount > 0 && (
-                            <Badge variant="destructive" className="text-xs h-5 min-w-[20px]">
-                              {contact.unreadCount > 99 ? "99+" : contact.unreadCount}
+                            <Badge
+                              variant="destructive"
+                              className="text-xs h-5 min-w-[20px]"
+                            >
+                              {contact.unreadCount > 99
+                                ? "99+"
+                                : contact.unreadCount}
                             </Badge>
                           )}
 
@@ -858,13 +887,16 @@ export default function TeamMemberConversations() {
                 <div>
                   <h2 className="text-2xl font-bold mb-2">Welcome</h2>
                   <p className="text-muted-foreground">
-                    Select a contact to start messaging, or add a new contact to begin.
+                    Select a contact to start messaging, or add a new contact to
+                    begin.
                   </p>
                 </div>
 
                 {assignedPhoneNumber && (
                   <div className="bg-card rounded-lg p-4 border">
-                    <h3 className="font-semibold text-sm mb-2">Your Phone Number</h3>
+                    <h3 className="font-semibold text-sm mb-2">
+                      Your Phone Number
+                    </h3>
                     <p className="text-sm font-mono text-primary">
                       {assignedPhoneNumber.phoneNumber}
                     </p>
@@ -937,7 +969,10 @@ export default function TeamMemberConversations() {
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteContact(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteContact(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={deleteContact}>

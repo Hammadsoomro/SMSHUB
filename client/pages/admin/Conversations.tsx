@@ -271,7 +271,10 @@ export default function Conversations() {
           const activePhone =
             processedPhones.find((p) => p.active) || processedPhones[0];
           setActivePhoneNumber(activePhone.phoneNumber);
-          console.log("[Conversations] Set active phone number:", activePhone.phoneNumber);
+          console.log(
+            "[Conversations] Set active phone number:",
+            activePhone.phoneNumber,
+          );
         }
       } catch (numbersError) {
         console.error("Error loading phone numbers:", numbersError);
@@ -311,7 +314,10 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      console.log("Initializing Socket.IO with token:", token.substring(0, 20) + "...");
+      console.log(
+        "Initializing Socket.IO with token:",
+        token.substring(0, 20) + "...",
+      );
 
       // Connect to socket service
       const socket = socketService.connect(token);
@@ -319,14 +325,19 @@ export default function Conversations() {
       if (!socket) {
         console.error(
           "Failed to get socket instance - socketService.connect returned:",
-          socket
+          socket,
         );
         setIsConnecting(false);
         toast.error("Unable to establish socket connection");
         return;
       }
 
-      console.log("Socket instance obtained:", socket.id, "Connected:", socket.connected);
+      console.log(
+        "Socket instance obtained:",
+        socket.id,
+        "Connected:",
+        socket.connected,
+      );
 
       // Remove old listeners to avoid duplicates
       socket.off("connect");
