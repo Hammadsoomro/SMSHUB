@@ -487,16 +487,30 @@ export default function TeamMemberConversations() {
     >
       {/* Top Navigation Bar */}
       <div className="bg-card border-b border-border sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 flex-1">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
-              <h1 className="font-semibold text-lg">Messages</h1>
+
+              <div className="flex-1">
+                <h1 className="font-semibold text-lg">Messages</h1>
+                {assignedPhoneNumber && (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Phone className="w-3 h-3 text-primary" />
+                    <p className="text-xs font-mono font-semibold text-primary">
+                      {assignedPhoneNumber.phoneNumber}
+                    </p>
+                    <Badge variant="secondary" className="text-xs h-5 py-0">
+                      Active
+                    </Badge>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-shrink-0">
               {totalUnreadCount > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   {totalUnreadCount} unread
@@ -527,28 +541,6 @@ export default function TeamMemberConversations() {
               </DropdownMenu>
             </div>
           </div>
-
-          {/* Assigned Phone Number Highlight */}
-          {assignedPhoneNumber && (
-            <div className="bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 flex items-center space-x-3">
-              <div className="flex items-center space-x-2 flex-1">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Phone className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    SMS FROM
-                  </p>
-                  <p className="text-sm font-semibold text-primary font-mono">
-                    {assignedPhoneNumber.phoneNumber}
-                  </p>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-xs bg-primary/5">
-                Active
-              </Badge>
-            </div>
-          )}
         </div>
       </div>
 
