@@ -9,12 +9,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
+
+// Team Member Pages
+import TeamMemberConversations from "./pages/TeamMemberConversations";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
-import Conversations from "./pages/admin/Conversations";
+import AdminConversations from "./pages/admin/Conversations";
 import Credentials from "./pages/admin/Credentials";
 import Numbers from "./pages/admin/Numbers";
 import BuyNumbers from "./pages/admin/BuyNumbers";
