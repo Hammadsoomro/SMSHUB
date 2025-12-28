@@ -167,7 +167,10 @@ export default function Wallet() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="text-center space-y-4">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+            <p className="text-muted-foreground">Loading wallet...</p>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -175,43 +178,138 @@ export default function Wallet() {
 
   return (
     <AdminLayout>
-      <div>
-        <div className="flex justify-between items-start mb-8">
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Wallet Management</h1>
+            <h1 className="text-3xl font-bold mb-2">Wallet & Billing</h1>
             <p className="text-muted-foreground">
-              Manage your account balance and purchase phone numbers
+              Manage your account balance, view Twilio credits, and purchase phone
+              numbers
             </p>
           </div>
           <Button
-            variant="outline"
             onClick={() => navigate("/admin/buy-numbers")}
+            className="bg-gradient-to-r from-primary to-secondary"
           >
-            Buy Numbers
+            <Plus className="w-4 h-4 mr-2" />
+            Buy Phone Numbers
           </Button>
         </div>
 
-        {/* Wallet Balance Card */}
-        {wallet && (
-          <Card className="p-8 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 mb-8">
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Current Balance
-                </p>
-                <p className="text-5xl font-bold">
-                  ${wallet.balance.toFixed(2)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Currency: {wallet.currency}
+        {/* Balance Cards Grid */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Account Wallet Balance */}
+          {wallet && (
+            <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950 dark:to-blue-900/50 border-blue-200 dark:border-blue-800 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full -mr-16 -mt-16"></div>
+              <div className="relative z-10">
+                <div className="flex items-start justify-between mb-6">
+                  <div>
+                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2">
+                      Account Balance
+                    </p>
+                    <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">
+                      ${wallet.balance.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                      {wallet.currency}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-500/20 rounded-lg">
+                    <WalletIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Available for SMS purchases and services
                 </p>
               </div>
-              <div className="p-4 bg-primary/20 rounded-lg">
-                <WalletIcon className="w-12 h-12 text-primary" />
+            </Card>
+          )}
+
+          {/* Twilio Balance */}
+          <Card
+            className={`p-6 bg-gradient-to-br overflow-hidden relative ${
+              twilioError
+                ? "from-orange-50 to-orange-100/50 dark:from-orange-950 dark:to-orange-900/50 border-orange-200 dark:border-orange-800"
+                : "from-emerald-50 to-emerald-100/50 dark:from-emerald-950 dark:to-emerald-900/50 border-emerald-200 dark:border-emerald-800"
+            }`}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-200/20 to-emerald-300/20 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative z-10">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p
+                      className={`text-sm font-semibold ${
+                        twilioError
+                          ? "text-orange-600 dark:text-orange-400"
+                          : "text-emerald-600 dark:text-emerald-400"
+                      }`}
+                    >
+                      Twilio Credits
+                    </p>
+                    {!twilioError && (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    )}
+                  </div>
+                  {twilioError ? (
+                    <div>
+                      <p className="text-sm text-orange-700 dark:text-orange-300 font-semibold">
+                        Not Connected
+                      </p>
+                      <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                        {twilioError}
+                      </p>
+                    </div>
+                  ) : twilioBalance !== null ? (
+                    <>
+                      <p className="text-4xl font-bold text-emerald-900 dark:text-emerald-100">
+                        ${twilioBalance.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+                        USD
+                      </p>
+                    </>
+                  ) : (
+                    <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+                  )}
+                </div>
+                <div
+                  className={`p-3 rounded-lg ${
+                    twilioError
+                      ? "bg-orange-500/20"
+                      : "bg-emerald-500/20"
+                  }`}
+                >
+                  <CreditCard
+                    className={`w-8 h-8 ${
+                      twilioError
+                        ? "text-orange-600 dark:text-orange-400"
+                        : "text-emerald-600 dark:text-emerald-400"
+                    }`}
+                  />
+                </div>
               </div>
+              {!twilioError && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefreshTwilioBalance}
+                  disabled={isRefreshingTwilio}
+                  className="text-xs h-8"
+                >
+                  <RefreshCw
+                    className={`w-3 h-3 mr-1 ${
+                      isRefreshingTwilio ? "animate-spin" : ""
+                    }`}
+                  />
+                  Refresh
+                </Button>
+              )}
             </div>
           </Card>
-        )}
+        </div>
 
         {/* Add Funds Section */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
