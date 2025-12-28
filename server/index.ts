@@ -28,6 +28,7 @@ import {
   handleGetWallet,
   handleAddFunds,
   handleGetTransactions,
+  handleGetTwilioBalance,
 } from "./routes/wallet";
 
 // Phone purchase routes
