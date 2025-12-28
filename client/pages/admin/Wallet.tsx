@@ -6,16 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertCircle,
   Wallet as WalletIcon,
   Loader2,
-  TrendingDown,
-  TrendingUp,
-  Plus,
   CreditCard,
   BarChart3,
   CheckCircle2,
-  AlertTriangle,
   RefreshCw,
 } from "lucide-react";
 import { Wallet as WalletType, WalletTransaction } from "@shared/api";
