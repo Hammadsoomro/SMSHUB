@@ -59,16 +59,26 @@ class ApiService {
       const response = await this.request<{ numbers: PhoneNumber[] }>(
         "/api/admin/numbers",
       );
+      console.log("[ApiService] Loaded phone numbers for admin:", response.numbers);
       return response.numbers || [];
-    } catch (error: any) {
+    } catch (adminError: any) {
+      console.log(
+        "[ApiService] Admin endpoint failed (expected for team members), trying assigned endpoint...",
+        adminError.message
+      );
       // If admin endpoint fails (team member), get assigned number
       try {
         const response = await this.request<{ phoneNumbers: PhoneNumber[] }>(
           "/api/messages/assigned-phone-number",
         );
+        console.log("[ApiService] Loaded assigned phone numbers for team member:", response.phoneNumbers);
         return response.phoneNumbers || [];
-      } catch {
-        console.error("Failed to get phone numbers:", error);
+      } catch (assignedError) {
+        console.error(
+          "[ApiService] Failed to get assigned phone numbers:",
+          assignedError instanceof Error ? assignedError.message : String(assignedError)
+        );
+        // Return empty array if both fail - the page will show "No phone numbers available"
         return [];
       }
     }
