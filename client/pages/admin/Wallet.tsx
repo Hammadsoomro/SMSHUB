@@ -18,15 +18,10 @@ import { toast } from "sonner";
 
 export default function Wallet() {
   const navigate = useNavigate();
-  const [wallet, setWallet] = useState<WalletType | null>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [twilioBalance, setTwilioBalance] = useState<number | null>(null);
-  const [addAmount, setAddAmount] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
   const [isRefreshingTwilio, setIsRefreshingTwilio] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [twilioError, setTwilioError] = useState<string | null>(null);
 
   useEffect(() => {
