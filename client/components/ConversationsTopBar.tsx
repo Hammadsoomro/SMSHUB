@@ -37,6 +37,7 @@ interface ConversationsTopBarProps {
   notifications: boolean;
   onToggleNotifications: () => void;
   totalUnreadCount: number;
+  userRole?: "admin" | "team_member";
 }
 
 export default function ConversationsTopBar({
