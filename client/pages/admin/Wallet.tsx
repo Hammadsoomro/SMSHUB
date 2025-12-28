@@ -11,6 +11,9 @@ import {
   BarChart3,
   CheckCircle2,
   RefreshCw,
+  Plus,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { Wallet as WalletType, WalletTransaction } from "@shared/api";
 import ApiService from "@/services/api";
