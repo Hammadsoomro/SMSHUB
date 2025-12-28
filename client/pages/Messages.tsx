@@ -163,8 +163,13 @@ export default function Messages() {
       return;
     }
 
-    if (!conversation.contact.phoneNumberId && !conversation.contact.id.startsWith("temp-")) {
-      setError("This contact doesn't have an associated phone number. Please create a new conversation.");
+    if (
+      !conversation.contact.phoneNumberId &&
+      !conversation.contact.id.startsWith("temp-")
+    ) {
+      setError(
+        "This contact doesn't have an associated phone number. Please create a new conversation.",
+      );
       return;
     }
 
@@ -201,7 +206,8 @@ export default function Messages() {
       if (response.status === 400) {
         const errorData = await response.json();
         setError(
-          errorData.error || "Failed to send message. Please check your input and try again."
+          errorData.error ||
+            "Failed to send message. Please check your input and try again.",
         );
         return;
       }
@@ -446,7 +452,9 @@ export default function Messages() {
               {error && (
                 <div className="p-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-red-700 dark:text-red-300">{error}</p>
+                  <p className="text-xs text-red-700 dark:text-red-300">
+                    {error}
+                  </p>
                 </div>
               )}
               <div className="flex gap-2">
@@ -467,7 +475,11 @@ export default function Messages() {
                   disabled={isSending || !messageText.trim()}
                   className="bg-gradient-to-r from-primary to-secondary"
                   size="sm"
-                  title={!messageText.trim() ? "Please type a message" : "Send message"}
+                  title={
+                    !messageText.trim()
+                      ? "Please type a message"
+                      : "Send message"
+                  }
                 >
                   {isSending ? (
                     <>

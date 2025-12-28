@@ -184,8 +184,8 @@ export default function Wallet() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Wallet & Billing</h1>
             <p className="text-muted-foreground">
-              Manage your account balance, view Twilio credits, and purchase phone
-              numbers
+              Manage your account balance, view Twilio credits, and purchase
+              phone numbers
             </p>
           </div>
           <Button
@@ -277,9 +277,7 @@ export default function Wallet() {
                 </div>
                 <div
                   className={`p-3 rounded-lg ${
-                    twilioError
-                      ? "bg-orange-500/20"
-                      : "bg-emerald-500/20"
+                    twilioError ? "bg-orange-500/20" : "bg-emerald-500/20"
                   }`}
                 >
                   <CreditCard
@@ -323,7 +321,9 @@ export default function Wallet() {
             {error && (
               <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg mb-4 flex gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+                <p className="text-sm text-red-800 dark:text-red-300">
+                  {error}
+                </p>
               </div>
             )}
 
@@ -415,7 +415,8 @@ export default function Wallet() {
                       .toFixed(2)}
                   </p>
                   <p className="text-xs text-red-600 dark:text-red-400 mt-2">
-                    {transactions.filter((t) => t.type === "debit").length} transactions
+                    {transactions.filter((t) => t.type === "debit").length}{" "}
+                    transactions
                   </p>
                 </div>
                 <div className="p-3 bg-red-500/20 rounded-lg">
@@ -439,7 +440,8 @@ export default function Wallet() {
                       .toFixed(2)}
                   </p>
                   <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-                    {transactions.filter((t) => t.type === "credit").length} transactions
+                    {transactions.filter((t) => t.type === "credit").length}{" "}
+                    transactions
                   </p>
                 </div>
                 <div className="p-3 bg-green-500/20 rounded-lg">
@@ -459,7 +461,8 @@ export default function Wallet() {
             </h2>
             {transactions.length > 0 && (
               <Badge variant="secondary">
-                {transactions.length} {transactions.length === 1 ? "transaction" : "transactions"}
+                {transactions.length}{" "}
+                {transactions.length === 1 ? "transaction" : "transactions"}
               </Badge>
             )}
           </div>
@@ -467,7 +470,9 @@ export default function Wallet() {
           {transactions.length === 0 ? (
             <div className="text-center py-12">
               <WalletIcon className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-20" />
-              <p className="text-muted-foreground font-medium">No transactions yet</p>
+              <p className="text-muted-foreground font-medium">
+                No transactions yet
+              </p>
               <p className="text-sm text-muted-foreground mt-1">
                 Your transaction history will appear here
               </p>
@@ -510,11 +515,15 @@ export default function Wallet() {
                         {transaction.description}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(transaction.createdAt).toLocaleDateString()} at{" "}
-                        {new Date(transaction.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {new Date(transaction.createdAt).toLocaleDateString()}{" "}
+                        at{" "}
+                        {new Date(transaction.createdAt).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
                       </p>
                     </div>
                   </div>
