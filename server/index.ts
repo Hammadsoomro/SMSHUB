@@ -93,6 +93,32 @@ export async function createServer() {
     });
   });
 
+  // Test JWT endpoint (for debugging only)
+  app.get("/api/test-jwt", (_req, res) => {
+    const { generateToken, verifyToken } = require("./jwt");
+
+    const testPayload = {
+      userId: "test-user-123",
+      email: "test@example.com",
+      role: "admin" as const,
+    };
+
+    const token = generateToken(testPayload);
+    const verified = verifyToken(token);
+
+    res.json({
+      message: "JWT Test",
+      generated: {
+        token: token.substring(0, 20) + "...",
+        payload: testPayload,
+      },
+      verified: {
+        token: verified,
+        matches: verified?.userId === testPayload.userId,
+      },
+    });
+  });
+
   app.get("/api/demo", handleDemo);
 
   // Auth routes (public)
