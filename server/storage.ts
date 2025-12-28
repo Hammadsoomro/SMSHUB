@@ -33,9 +33,16 @@ class Storage {
   async getUserByEmail(
     email: string,
   ): Promise<(User & { password: string }) | undefined> {
-    return (await UserModel.findOne({ email: email.toLowerCase() })) as
-      | (User & { password: string })
-      | null;
+    const user = (await UserModel.findOne({ email: email.toLowerCase() })) as any;
+    if (!user) return undefined;
+
+    const userData = user.toObject();
+    // Map MongoDB's _id to id field if not already present
+    if (!userData.id && userData._id) {
+      userData.id = userData._id.toString();
+    }
+
+    return userData as (User & { password: string }) | null;
   }
 
   async getUserById(id: string): Promise<User | undefined> {
