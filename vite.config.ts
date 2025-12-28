@@ -41,10 +41,15 @@ function expressPlugin(): Plugin {
 
       // Initialize Socket.IO on Vite's HTTP server
       io = new IOServer(server.httpServer!, {
+        path: "/socket.io/",
         cors: {
           origin: "*",
           methods: ["GET", "POST"],
+          credentials: true,
         },
+        transports: ["websocket", "polling"],
+        pingInterval: 25000,
+        pingTimeout: 60000,
       });
 
       // Middleware for authentication
