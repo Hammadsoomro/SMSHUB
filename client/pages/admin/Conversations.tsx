@@ -738,6 +738,7 @@ export default function Conversations() {
         notifications={notifications}
         onToggleNotifications={toggleNotifications}
         totalUnreadCount={totalUnreadCount}
+        userRole={profile.role as "admin" | "team_member"}
       />
 
       {/* Main Content */}
