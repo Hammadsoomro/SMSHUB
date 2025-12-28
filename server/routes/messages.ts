@@ -9,11 +9,16 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (
 ) => {
   try {
     const userId = req.userId!;
+    console.log(`[handleGetAssignedPhoneNumber] Getting assigned numbers for user: ${userId}`);
+
     const user = await storage.getUserById(userId);
 
     if (!user) {
+      console.warn(`[handleGetAssignedPhoneNumber] User not found: ${userId}`);
       return res.status(404).json({ error: "User not found" });
     }
+
+    console.log(`[handleGetAssignedPhoneNumber] User found:`, { id: user.id, role: user.role, adminId: user.adminId });
 
     // Determine the admin ID
     let adminId = userId;
@@ -21,11 +26,17 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (
       adminId = user.adminId;
     }
 
+    console.log(`[handleGetAssignedPhoneNumber] Admin ID: ${adminId}`);
+
     // Get phone numbers assigned to this user
     const allPhoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    console.log(`[handleGetAssignedPhoneNumber] All phone numbers for admin:`, allPhoneNumbers.map(pn => ({ id: pn.id, phoneNumber: pn.phoneNumber, assignedTo: pn.assignedTo })));
+
     const assignedPhoneNumbers = allPhoneNumbers.filter(
       (pn) => pn.assignedTo === userId,
     );
+
+    console.log(`[handleGetAssignedPhoneNumber] Assigned phone numbers for user ${userId}:`, assignedPhoneNumbers.map(pn => ({ id: pn.id, phoneNumber: pn.phoneNumber })));
 
     res.json({ phoneNumbers: assignedPhoneNumbers });
   } catch (error) {
