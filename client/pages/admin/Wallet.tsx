@@ -198,35 +198,7 @@ export default function Wallet() {
         </div>
 
         {/* Balance Cards Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Account Wallet Balance */}
-          {wallet && (
-            <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950 dark:to-blue-900/50 border-blue-200 dark:border-blue-800 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full -mr-16 -mt-16"></div>
-              <div className="relative z-10">
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2">
-                      Account Balance
-                    </p>
-                    <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">
-                      ${wallet.balance.toFixed(2)}
-                    </p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                      {wallet.currency}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-blue-500/20 rounded-lg">
-                    <WalletIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                  </div>
-                </div>
-                <p className="text-xs text-blue-600 dark:text-blue-400">
-                  Available for SMS purchases and services
-                </p>
-              </div>
-            </Card>
-          )}
-
+        <div className="grid md:grid-cols-1 gap-6">
           {/* Twilio Balance */}
           <Card
             className={`p-6 bg-gradient-to-br overflow-hidden relative ${
