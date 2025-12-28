@@ -96,11 +96,14 @@ export default function Messages() {
         },
       );
 
-      if (!response.ok) throw new Error("Failed to fetch contacts");
+      if (!response.ok) {
+        console.warn(`Failed to fetch contacts: ${response.status}`);
+        throw new Error("Failed to fetch contacts");
+      }
       const data = await response.json();
       setContacts(data.contacts || []);
-    } catch {
-      // Error handled silently
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
     } finally {
       setIsLoading(false);
     }
