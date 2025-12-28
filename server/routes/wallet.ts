@@ -10,11 +10,14 @@ export const handleGetWallet: RequestHandler = async (req, res) => {
     console.log("[handleGetWallet] Getting wallet for user:", adminId);
 
     if (!adminId) {
-      console.error("[handleGetWallet] Error: User ID is missing after auth middleware", {
-        userId: req.userId,
-        userRole: req.userRole,
-        user: req.user?.id,
-      });
+      console.error(
+        "[handleGetWallet] Error: User ID is missing after auth middleware",
+        {
+          userId: req.userId,
+          userRole: req.userRole,
+          user: req.user?.id,
+        },
+      );
       return res.status(401).json({ error: "User authentication failed" });
     }
 
