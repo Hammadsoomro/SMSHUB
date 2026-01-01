@@ -204,22 +204,14 @@ export default function Messages() {
 
   const messagesContent = (
     <div className="h-full bg-background flex flex-col">
-      {/* Header */}
-      <div className="border-b border-border bg-background px-6 py-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-lg font-bold">SMSHub Messages</span>
-        </div>
-
-        {/* Search Bar in Header */}
+      {/* Search Bar */}
+      <div className="border-b border-border bg-background px-6 py-4 flex items-center gap-4">
         <div className="flex-1 max-w-md">
           <div className="relative flex gap-2">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search or paste phone number..."
+                placeholder="Search contacts or paste phone number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => {
@@ -247,15 +239,6 @@ export default function Messages() {
               <p className="text-xs text-red-700">{error}</p>
             </div>
           )}
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon">
-            <Settings className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="w-5 h-5" />
-          </Button>
         </div>
       </div>
 
