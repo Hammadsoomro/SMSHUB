@@ -40,6 +40,7 @@ const App = () => (
 
           {/* Team Member Routes */}
           <Route path="/messages" element={<Messages />} />
+          <Route path="/assigned-numbers" element={<AssignedNumbers />} />
           <Route path="/conversations" element={<Conversations />} />
 
           {/* Admin Routes */}
