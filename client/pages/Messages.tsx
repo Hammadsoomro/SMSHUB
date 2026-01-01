@@ -246,21 +246,6 @@ export default function Messages() {
       <div className="flex-1 flex overflow-hidden">
         {/* Contacts Sidebar */}
         <div className="w-80 border-r border-border bg-card overflow-hidden flex flex-col">
-          {/* Assigned Phone Number Display */}
-          {assignedPhoneNumbers.length > 0 && (
-            <div className="p-4 border-b border-border bg-muted/50">
-              <p className="text-xs text-muted-foreground mb-2 font-semibold">
-                Assigned Number
-              </p>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-primary" />
-                <p className="font-semibold text-sm">
-                  {assignedPhoneNumbers[0].phoneNumber}
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Contacts List */}
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
