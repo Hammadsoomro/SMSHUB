@@ -8,7 +8,6 @@ import {
   MessageSquare,
   Send,
   Search,
-  Plus,
   Loader2,
   Phone,
   AlertCircle,
