@@ -533,7 +533,10 @@ export default function Numbers() {
                 {num.assignedTo && (
                   <div className="mb-4 p-3 bg-muted rounded">
                     <p className="text-xs text-muted-foreground">Assigned to</p>
-                    <p className="font-medium">Team Member</p>
+                    <p className="font-medium">
+                      {teamMembers.find((m) => m.id === num.assignedTo)?.name ||
+                        "Unknown"}
+                    </p>
                   </div>
                 )}
 
