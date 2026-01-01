@@ -202,8 +202,8 @@ export default function Messages() {
       contact.name?.includes(searchTerm),
   );
 
-  return (
-    <div className="h-screen bg-background flex flex-col">
+  const messagesContent = (
+    <div className="h-full bg-background flex flex-col">
       {/* Header */}
       <div className="border-b border-border bg-background px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
