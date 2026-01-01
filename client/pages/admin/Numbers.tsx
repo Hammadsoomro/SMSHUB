@@ -243,9 +243,9 @@ export default function Numbers() {
       <div>
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Phone Numbers</h1>
+            <h1 className="text-3xl font-bold mb-2">Active Numbers</h1>
             <p className="text-muted-foreground">
-              Manage your Twilio phone numbers
+              Manage your active Twilio phone numbers
             </p>
           </div>
           <div className="flex gap-2">
