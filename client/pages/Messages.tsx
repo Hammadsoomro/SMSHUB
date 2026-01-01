@@ -401,4 +401,6 @@ export default function Messages() {
       </div>
     </div>
   );
+
+  return <TeamMemberLayout>{messagesContent}</TeamMemberLayout>;
 }
