@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import TeamMemberLayout from "@/components/TeamMemberLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   MessageSquare,
   Send,
-  Settings,
-  LogOut,
   Search,
   Plus,
   Loader2,
