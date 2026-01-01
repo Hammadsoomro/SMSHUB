@@ -189,11 +189,6 @@ export default function Messages() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/");
-  };
 
   const filteredContacts = contacts.filter(
     (contact) =>
