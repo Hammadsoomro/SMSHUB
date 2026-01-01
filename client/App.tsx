@@ -10,6 +10,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Messages from "./pages/Messages";
+import AssignedNumbers from "./pages/AssignedNumbers";
 import NotFound from "./pages/NotFound";
 
 // Admin Pages
