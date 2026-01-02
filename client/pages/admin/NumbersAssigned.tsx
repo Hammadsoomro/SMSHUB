@@ -147,25 +147,11 @@ export default function NumbersAssigned() {
         throw new Error("Failed to unassign number");
       }
 
-      const data = await response.json();
-      const previousMemberId = allPhoneNumbers.find(n => n.id === phoneNumberId)?.assignedTo;
-
-      // Update local state
-      setAllPhoneNumbers(prev =>
-        prev.map(n => n.id === phoneNumberId ? data.phoneNumber : n)
-      );
-
-      // Emit Socket.io event
-      socketService.emit("number_unassigned", {
-        phoneNumberId,
-        previousMemberId,
-      });
-
       setSuccess("✅ Number unassigned successfully!");
       setTimeout(() => setSuccess(""), 3000);
-      
-      // Refresh data
-      setTimeout(() => fetchData(), 1000);
+
+      // Refresh data from server
+      fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     }
