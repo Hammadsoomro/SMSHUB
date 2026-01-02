@@ -37,8 +37,8 @@ class Storage {
     if (!user) return undefined;
 
     // Ensure user has an id field (for backward compatibility with existing users)
-    if (!user.id) {
-      user.id = user._id?.toString() || this.generateId();
+    if (!user.id && user._id) {
+      user.id = user._id.toString();
       await user.save();
     }
 
