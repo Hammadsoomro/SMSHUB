@@ -5,7 +5,12 @@ import { connectDB } from "./db";
 import { Server as IOServer } from "socket.io";
 
 // Auth routes
-import { handleSignup, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
+import {
+  handleSignup,
+  handleLogin,
+  handleGetProfile,
+  handleUpdateProfile,
+} from "./routes/auth";
 
 // Admin routes
 import {

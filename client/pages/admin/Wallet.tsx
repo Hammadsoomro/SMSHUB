@@ -136,7 +136,9 @@ export default function Wallet() {
                     Twilio Account Balance
                   </p>
                 </div>
-                <p className="text-5xl font-bold">${twilioBalance.toFixed(2)}</p>
+                <p className="text-5xl font-bold">
+                  ${twilioBalance.toFixed(2)}
+                </p>
                 <p className="text-sm text-blue-100 mt-2">
                   Live balance from your connected Twilio account
                 </p>
@@ -269,16 +271,16 @@ export default function Wallet() {
               </h3>
               <ul className="text-sm text-blue-700 space-y-1">
                 <li>
-                  <strong>Twilio Balance:</strong> Live account balance from your
-                  connected Twilio account
+                  <strong>Twilio Balance:</strong> Live account balance from
+                  your connected Twilio account
                 </li>
                 <li>
-                  <strong>Transactions:</strong> History of all Twilio charges and
-                  activities
+                  <strong>Transactions:</strong> History of all Twilio charges
+                  and activities
                 </li>
                 <li>
-                  <strong>Refresh:</strong> Click refresh to get the latest balance
-                  from Twilio
+                  <strong>Refresh:</strong> Click refresh to get the latest
+                  balance from Twilio
                 </li>
               </ul>
             </div>

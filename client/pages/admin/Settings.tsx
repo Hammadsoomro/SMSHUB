@@ -315,12 +315,13 @@ export default function Settings() {
                     </summary>
                     <ul className="mt-2 ml-2 space-y-1">
                       <li>
-                        ✓ Account SID should start with "AC" and be 34 characters
-                        long
+                        ✓ Account SID should start with "AC" and be 34
+                        characters long
                       </li>
                       <li>✓ Auth Token should be at least 32 characters</li>
                       <li>
-                        ✓ Copy both values from Twilio Console (Account Settings)
+                        ✓ Copy both values from Twilio Console (Account
+                        Settings)
                       </li>
                       <li>✓ Make sure there are no extra spaces</li>
                     </ul>
@@ -368,7 +369,9 @@ export default function Settings() {
                   <div className="p-3 bg-primary/10 rounded-lg">
                     <User className="w-6 h-6 text-primary" />
                   </div>
-                  <h2 className="text-2xl font-semibold">Personal Information</h2>
+                  <h2 className="text-2xl font-semibold">
+                    Personal Information
+                  </h2>
                 </div>
 
                 <div className="space-y-6">
@@ -485,7 +488,9 @@ export default function Settings() {
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {user.role === "admin" ? "Administrator" : "Team Member"}
+                        {user.role === "admin"
+                          ? "Administrator"
+                          : "Team Member"}
                       </span>
                     </div>
                   </div>
@@ -579,9 +584,9 @@ export default function Settings() {
                     Important Security Notice
                   </h3>
                   <p className="text-sm text-blue-700">
-                    Your Twilio credentials are stored securely and encrypted. They
-                    are only used to connect to Twilio's API on your behalf. Never
-                    share these credentials with anyone.
+                    Your Twilio credentials are stored securely and encrypted.
+                    They are only used to connect to Twilio's API on your
+                    behalf. Never share these credentials with anyone.
                   </p>
                 </div>
               </div>
@@ -609,7 +614,8 @@ export default function Settings() {
                     className="h-10 font-mono"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Format: Must start with "AC" and be exactly 34 characters long
+                    Format: Must start with "AC" and be exactly 34 characters
+                    long
                   </p>
                   {errors.accountSid && (
                     <p className="text-xs text-destructive mt-1">
@@ -687,8 +693,8 @@ export default function Settings() {
                       2.
                     </span>
                     <span>
-                      In the left sidebar, click on <strong>Account</strong> &gt;{" "}
-                      <strong>API Keys & Tokens</strong>
+                      In the left sidebar, click on <strong>Account</strong>{" "}
+                      &gt; <strong>API Keys & Tokens</strong>
                     </span>
                   </li>
                   <li className="flex gap-3">
@@ -745,7 +751,9 @@ export default function Settings() {
                     Email Address
                   </label>
                   <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
-                    <code className="flex-1 font-mono text-sm">{user.email}</code>
+                    <code className="flex-1 font-mono text-sm">
+                      {user.email}
+                    </code>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -796,7 +804,9 @@ export default function Settings() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Role</label>
+                  <label className="text-sm font-semibold mb-2 block">
+                    Role
+                  </label>
                   <p className="p-4 bg-muted rounded-lg">
                     <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-primary text-white">
                       {user.role === "admin" ? "Admin" : "Team Member"}
@@ -839,7 +849,9 @@ export default function Settings() {
             </div>
 
             <Card className="p-6 border-destructive/30 bg-destructive/5">
-              <h3 className="font-semibold text-destructive mb-4">Danger Zone</h3>
+              <h3 className="font-semibold text-destructive mb-4">
+                Danger Zone
+              </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Once you delete your account, there is no going back. Please be
                 certain.
