@@ -21,6 +21,7 @@ import Numbers from "./pages/admin/Numbers";
 import BuyNumbers from "./pages/admin/BuyNumbers";
 import Wallet from "./pages/admin/Wallet";
 import TeamManagement from "./pages/admin/TeamManagement";
+import Settings from "./pages/admin/Settings";
 import AccountInfo from "./pages/admin/AccountInfo";
 import Insights from "./pages/admin/Insights";
 
