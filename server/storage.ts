@@ -43,7 +43,18 @@ class Storage {
     }
 
     // Convert Mongoose document to plain JavaScript object
-    const userObj = user.toObject ? user.toObject() : user;
+    // Use lean() alternative by explicitly calling toObject with all fields
+    const userObj = user.toObject ? user.toObject({ virtuals: true }) : user;
+
+    // Verify all required fields are present
+    if (!userObj.id) {
+      userObj.id = user._id?.toString() || this.generateId();
+    }
+    if (!userObj.role) {
+      console.warn(`[WARN] User ${email} missing role field, defaulting to admin`);
+      userObj.role = "admin";
+    }
+
     return userObj as (User & { password: string });
   }
 
