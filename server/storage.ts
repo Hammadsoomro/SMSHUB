@@ -38,10 +38,8 @@ class Storage {
 
     // Ensure user has an id field (for backward compatibility with existing users)
     if (!user.id && user._id) {
-      console.log(`[DEBUG] User ${email} missing id field, setting to MongoDB _id: ${user._id}`);
       user.id = user._id.toString();
       await user.save();
-      console.log(`[DEBUG] User ${email} saved with id: ${user.id}`);
     }
 
     return user as (User & { password: string });
