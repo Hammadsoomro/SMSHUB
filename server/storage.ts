@@ -59,9 +59,26 @@ class Storage {
 
   async updateUser(user: User): Promise<void> {
     const { password, ...userWithoutPassword } = user as any;
-    await UserModel.findOneAndUpdate({ id: user.id }, userWithoutPassword, {
-      new: true,
-    });
+
+    // Try to update by custom id field first
+    let result = await UserModel.findOneAndUpdate(
+      { id: user.id },
+      userWithoutPassword,
+      { new: true }
+    );
+
+    // Fallback to MongoDB's _id for backward compatibility
+    if (!result) {
+      result = await UserModel.findByIdAndUpdate(user.id, userWithoutPassword, {
+        new: true,
+      });
+
+      // If found by _id but doesn't have custom id field, ensure it's set
+      if (result && !result.id) {
+        result.id = user.id;
+        await result.save();
+      }
+    }
   }
 
   // Twilio Credentials
