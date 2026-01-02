@@ -166,7 +166,8 @@ export default function BuyNumbers() {
           navigate("/login", { replace: true });
           return;
         }
-        fetchWallet();
+        await fetchWallet();
+        await fetchTwilioBalance();
         setIsLoadingWallet(false);
       } catch {
         navigate("/login", { replace: true });
