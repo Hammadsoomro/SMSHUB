@@ -23,13 +23,11 @@ interface AdminLayoutProps {
 const ADMIN_MENU = [
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
   { href: "/admin/conversations", label: "Conversations", icon: MessageSquare },
-  { href: "/admin/credentials", label: "Credentials", icon: Settings },
   { href: "/admin/numbers", label: "Active Numbers", icon: Phone },
   { href: "/admin/buy-numbers", label: "Buy Numbers", icon: Phone },
   { href: "/admin/wallet", label: "Wallet", icon: Wallet },
   { href: "/admin/team", label: "Team Management", icon: Users },
-  { href: "/admin/settings", label: "Settings", icon: FileText },
-  { href: "/admin/account", label: "Account Info", icon: FileText },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
