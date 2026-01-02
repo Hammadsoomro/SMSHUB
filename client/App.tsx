@@ -10,7 +10,6 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Messages from "./pages/Messages";
-import AssignedNumbers from "./pages/AssignedNumbers";
 import NotFound from "./pages/NotFound";
 
 // Admin Pages
@@ -41,7 +40,6 @@ const App = () => (
 
           {/* Team Member Routes */}
           <Route path="/messages" element={<Messages />} />
-          <Route path="/assigned-numbers" element={<AssignedNumbers />} />
           <Route path="/conversations" element={<Conversations />} />
 
           {/* Admin Routes */}
