@@ -55,6 +55,12 @@ export default function ConversationsTopBar({
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   const activePhone = phoneNumbers.find(
     (p) => p.phoneNumber === activePhoneNumber,
   );
