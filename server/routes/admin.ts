@@ -414,11 +414,14 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
           console.log(
             `📡 Emitting phone number unassignment event to team member ${phoneNumber.assignedTo}`,
           );
-          io.to(`user:${phoneNumber.assignedTo}`).emit("phone_number_assigned", {
-            phoneNumberId,
-            phoneNumber: updatedNumber.phoneNumber,
-            action: "unassigned",
-          });
+          io.to(`user:${phoneNumber.assignedTo}`).emit(
+            "phone_number_assigned",
+            {
+              phoneNumberId,
+              phoneNumber: updatedNumber.phoneNumber,
+              action: "unassigned",
+            },
+          );
         }
       } else {
         console.warn(

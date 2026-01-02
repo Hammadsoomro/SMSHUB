@@ -12,7 +12,9 @@ class SocketService {
     }
 
     if (this.isConnecting) {
-      console.log("[SocketService] Connection already in progress, waiting for socket...");
+      console.log(
+        "[SocketService] Connection already in progress, waiting for socket...",
+      );
       // Return null but socket should be created shortly
       return null;
     }

@@ -300,9 +300,7 @@ export default function Conversations() {
       if (!socket) {
         // Socket creation initiated but not immediately available
         // Wait a moment and retry once
-        console.warn(
-          "Socket instance not immediately available, retrying...",
-        );
+        console.warn("Socket instance not immediately available, retrying...");
         setTimeout(() => {
           const retrySocket = socketService.getSocket();
           if (retrySocket) {
@@ -327,7 +325,6 @@ export default function Conversations() {
 
   const setupSocketListeners = (socket: any) => {
     try {
-
       // Remove old listeners to avoid duplicates
       socket.off("connect");
       socket.off("disconnect");
