@@ -39,7 +39,19 @@ class Storage {
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    const user = (await UserModel.findOne({ id })) as any;
+    let user = (await UserModel.findOne({ id })) as any;
+
+    // Fallback to MongoDB's _id for backward compatibility with existing users
+    if (!user) {
+      user = (await UserModel.findById(id)) as any;
+
+      // If found by _id but doesn't have custom id field, update it
+      if (user && !user.id) {
+        user.id = id;
+        await user.save();
+      }
+    }
+
     if (!user) return undefined;
     const { password, ...userWithoutPassword } = user.toObject();
     return userWithoutPassword as User;
