@@ -217,9 +217,25 @@ class Storage {
   }
 
   async getTeamMemberById(id: string): Promise<TeamMember | undefined> {
-    const member = await TeamMemberModel.findOne({ id });
+    let member = await TeamMemberModel.findOne({ id });
+
+    // Fallback to MongoDB's _id for backward compatibility
+    if (!member) {
+      try {
+        member = (await TeamMemberModel.findById(id)) as any;
+      } catch (error) {
+        return undefined;
+      }
+    }
+
     if (!member) return undefined;
-    const { password, ...memberWithoutPassword } = member.toObject() as any;
+    const memberObj = member.toObject() as any;
+    const { password, ...memberWithoutPassword } = memberObj;
+
+    // Ensure team member has an id field for backward compatibility
+    if (!memberWithoutPassword.id && memberObj._id) {
+      memberWithoutPassword.id = memberObj._id.toString();
+    }
     return memberWithoutPassword as TeamMember;
   }
 
