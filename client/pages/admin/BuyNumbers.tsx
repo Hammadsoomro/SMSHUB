@@ -418,8 +418,8 @@ export default function BuyNumbers() {
           </div>
         </div>
 
-        {/* Wallet Card */}
-        {wallet && (
+        {/* Twilio Balance Card */}
+        {twilioBalance !== null && (
           <Card className="p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 mb-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -428,10 +428,13 @@ export default function BuyNumbers() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    Wallet Balance
+                    Twilio Balance
                   </p>
                   <p className="text-2xl font-bold">
-                    ${wallet.balance.toFixed(2)} {wallet.currency}
+                    ${twilioBalance.toFixed(2)} USD
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your Twilio account balance
                   </p>
                 </div>
               </div>
