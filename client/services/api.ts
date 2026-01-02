@@ -53,22 +53,35 @@ class ApiService {
 
   async getAccessiblePhoneNumbers(): Promise<PhoneNumber[]> {
     try {
-      // Try to get all numbers (admin endpoint)
-      const response = await this.request<{ numbers: PhoneNumber[] }>(
-        "/api/admin/numbers",
-      );
-      return response.numbers || [];
-    } catch (error: any) {
-      // If admin endpoint fails (team member), get assigned number
-      try {
-        const response = await this.request<{ phoneNumbers: PhoneNumber[] }>(
-          "/api/messages/assigned-phone-number",
-        );
-        return response.phoneNumbers || [];
-      } catch {
-        console.error("Failed to get phone numbers:", error);
-        return [];
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+
+      // Admin: get all numbers, Team member: get assigned numbers
+      if (user?.role === "admin") {
+        try {
+          const response = await this.request<{ numbers: PhoneNumber[] }>(
+            "/api/admin/numbers",
+          );
+          return response.numbers || [];
+        } catch (error: any) {
+          console.error("Failed to get admin phone numbers:", error);
+          return [];
+        }
+      } else {
+        // Team member: get only assigned numbers
+        try {
+          const response = await this.request<{ phoneNumbers: PhoneNumber[] }>(
+            "/api/messages/assigned-phone-number",
+          );
+          return response.phoneNumbers || [];
+        } catch (error: any) {
+          console.error("Failed to get assigned phone numbers:", error);
+          return [];
+        }
       }
+    } catch (error) {
+      console.error("Failed to get accessible phone numbers:", error);
+      return [];
     }
   }
 
