@@ -47,7 +47,7 @@ class Storage {
 
   async updateUser(user: User): Promise<void> {
     const { password, ...userWithoutPassword } = user as any;
-    await UserModel.findByIdAndUpdate(user.id, userWithoutPassword, {
+    await UserModel.findOneAndUpdate({ id: user.id }, userWithoutPassword, {
       new: true,
     });
   }
