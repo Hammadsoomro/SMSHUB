@@ -300,8 +300,8 @@ export default function BuyNumbers() {
   };
 
   const handlePurchaseNumber = async (number: AvailablePhoneNumber) => {
-    if (!wallet) {
-      setError("Wallet information not loaded. Please refresh the page.");
+    if (twilioBalance === null) {
+      setError("Twilio balance information not loaded. Please refresh the page.");
       return;
     }
 
@@ -311,9 +311,9 @@ export default function BuyNumbers() {
       return;
     }
 
-    if (wallet.balance < cost) {
+    if (twilioBalance < cost) {
       setError(
-        `Insufficient wallet balance. Need $${cost.toFixed(2)}, have $${wallet.balance.toFixed(2)}`,
+        `Insufficient Twilio balance. Need $${cost.toFixed(2)}, have $${twilioBalance.toFixed(2)}`,
       );
       return;
     }
