@@ -10,7 +10,6 @@ import {
   Check,
   X,
   Users,
-  ArrowRight,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneNumber, TeamMember } from "@shared/api";
