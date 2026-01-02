@@ -42,7 +42,9 @@ class Storage {
       await user.save();
     }
 
-    return user as (User & { password: string });
+    // Convert Mongoose document to plain JavaScript object
+    const userObj = user.toObject ? user.toObject() : user;
+    return userObj as (User & { password: string });
   }
 
   async getUserById(id: string): Promise<User | undefined> {
