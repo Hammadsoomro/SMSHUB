@@ -3,6 +3,7 @@ import crypto from "crypto";
 import https from "https";
 import { storage } from "../storage";
 import { generateToken } from "../jwt";
+import { getSocketIOInstance } from "../index";
 import {
   TwilioCredentialsRequest,
   TwilioCredentials,
