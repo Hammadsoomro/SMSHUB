@@ -384,8 +384,6 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
       if (!member) {
         return res.status(404).json({ error: "Team member not found" });
       }
-
-      console.log(`[DEBUG] Assigning number ${phoneNumber.phoneNumber} to team member ${member.name} (id: ${teamMemberId})`);
     }
 
     // Update the phone number with assignment or unassignment
@@ -394,7 +392,6 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
       assignedTo: teamMemberId || undefined,
     };
 
-    console.log(`[DEBUG] Updating phone number ${phoneNumberId} with assignedTo: ${teamMemberId || 'undefined'}`);
     await storage.updatePhoneNumberWithAssignment(phoneNumberId, teamMemberId);
 
     res.json({ phoneNumber: updatedNumber });
