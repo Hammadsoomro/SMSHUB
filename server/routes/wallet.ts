@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { storage } from "../storage";
 import { Wallet, WalletTransaction } from "@shared/api";
+import { TwilioClient } from "../twilio";
 
 export const handleGetWallet: RequestHandler = async (req, res) => {
   try {
