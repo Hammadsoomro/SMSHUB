@@ -33,9 +33,16 @@ class Storage {
   async getUserByEmail(
     email: string,
   ): Promise<(User & { password: string }) | undefined> {
-    return (await UserModel.findOne({ email: email.toLowerCase() })) as
-      | (User & { password: string })
-      | null;
+    const user = (await UserModel.findOne({ email: email.toLowerCase() })) as any;
+    if (!user) return undefined;
+
+    // Ensure user has an id field (for backward compatibility with existing users)
+    if (!user.id) {
+      user.id = user._id?.toString() || this.generateId();
+      await user.save();
+    }
+
+    return user as (User & { password: string });
   }
 
   async getUserById(id: string): Promise<User | undefined> {
