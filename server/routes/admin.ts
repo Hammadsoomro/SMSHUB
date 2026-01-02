@@ -386,13 +386,13 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
       }
     }
 
-    // Update the phone number with assignment
+    // Update the phone number with assignment or unassignment
     const updatedNumber: PhoneNumber = {
       ...phoneNumber,
-      assignedTo: teamMemberId,
+      assignedTo: teamMemberId || undefined,
     };
 
-    await storage.updatePhoneNumber(updatedNumber);
+    await storage.updatePhoneNumberWithAssignment(phoneNumberId, teamMemberId);
 
     res.json({ phoneNumber: updatedNumber });
   } catch (error) {
