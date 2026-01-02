@@ -651,7 +651,7 @@ export default function BuyNumbers() {
             <div className="grid gap-4">
               {filteredNumbers.map((num, idx) => {
                 const cost = parseFloat(num.cost);
-                const hasBalance = wallet && wallet.balance >= cost;
+                const hasBalance = twilioBalance !== null && twilioBalance >= cost;
                 const isPurchased = purchasedNumbers.has(num.phoneNumber);
 
                 return (
