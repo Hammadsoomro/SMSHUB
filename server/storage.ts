@@ -81,14 +81,19 @@ class Storage {
 
     // Fallback to MongoDB's _id for backward compatibility
     if (!result) {
-      result = await UserModel.findByIdAndUpdate(user.id, userWithoutPassword, {
-        new: true,
-      });
+      try {
+        result = await UserModel.findByIdAndUpdate(user.id, userWithoutPassword, {
+          new: true,
+        });
 
-      // If found by _id but doesn't have custom id field, ensure it's set
-      if (result && !result.id) {
-        result.id = user.id;
-        await result.save();
+        // If found by _id but doesn't have custom id field, ensure it's set to _id
+        if (result && !result.id) {
+          result.id = result._id.toString();
+          await result.save();
+        }
+      } catch (error) {
+        // findByIdAndUpdate may fail if id is not a valid ObjectId
+        throw error;
       }
     }
   }
