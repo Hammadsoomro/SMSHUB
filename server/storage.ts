@@ -204,7 +204,14 @@ class Storage {
   async getTeamMembersByAdminId(adminId: string): Promise<TeamMember[]> {
     const members = await TeamMemberModel.find({ adminId });
     return members.map((member) => {
-      const { password, ...teamMember } = member.toObject() as any;
+      const memberObj = member.toObject() as any;
+      const { password, ...teamMember } = memberObj;
+
+      // Ensure team member has an id field for backward compatibility
+      if (!teamMember.id && memberObj._id) {
+        teamMember.id = memberObj._id.toString();
+      }
+
       return teamMember as TeamMember;
     });
   }
