@@ -148,13 +148,6 @@ export default function TeamMemberLayout({ children }: TeamMemberLayoutProps) {
             <MessageSquare className="w-5 h-5 flex-shrink-0 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
             <span className="font-medium text-sm">Messages</span>
           </Link>
-          <Link
-            to="/assigned-numbers"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/40 transition-all duration-200 group"
-          >
-            <Phone className="w-5 h-5 flex-shrink-0 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
-            <span className="font-medium text-sm">My Numbers</span>
-          </Link>
         </nav>
 
         {/* Footer */}
