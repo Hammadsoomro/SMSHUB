@@ -10,7 +10,6 @@ import {
   LogOut,
   Menu,
   X,
-  FileText,
   Wallet,
   Sun,
   Moon,
