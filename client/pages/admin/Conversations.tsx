@@ -423,9 +423,9 @@ export default function Conversations() {
               !activePhoneNumberRef.current &&
               processedPhones.length > 0
             ) {
-              const assignedPhone = processedPhones.find(
-                (p) => p.id === data.phoneNumberId,
-              ) || processedPhones[0];
+              const assignedPhone =
+                processedPhones.find((p) => p.id === data.phoneNumberId) ||
+                processedPhones[0];
               setActivePhoneNumber(assignedPhone.phoneNumber);
               loadContactsForPhoneNumber(assignedPhone.id);
             }
