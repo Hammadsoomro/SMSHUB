@@ -199,6 +199,12 @@ export async function createServer() {
     adminOnly,
     handlePurchaseNumber,
   );
+  app.get(
+    "/api/admin/twilio-balance",
+    authMiddleware,
+    adminOnly,
+    handleGetTwilioBalance,
+  );
 
   return app;
 }
