@@ -50,11 +50,16 @@ class Storage {
 
     // Fallback to MongoDB's _id for backward compatibility with existing users
     if (!user) {
-      user = (await UserModel.findById(id)) as any;
+      try {
+        user = (await UserModel.findById(id)) as any;
+      } catch (error) {
+        // findById may fail if id is not a valid ObjectId
+        return undefined;
+      }
 
-      // If found by _id but doesn't have custom id field, update it
+      // If found by _id but doesn't have custom id field, ensure it's set to _id
       if (user && !user.id) {
-        user.id = id;
+        user.id = user._id.toString();
         await user.save();
       }
     }
