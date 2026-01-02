@@ -14,6 +14,32 @@ const COUNTRY_CODES: Record<string, { code: string; name: string }> = {
   FR: { code: "FR", name: "France" },
 };
 
+export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+
+    // Get admin's Twilio credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res
+        .status(400)
+        .json({ error: "Please connect your Twilio credentials first" });
+    }
+
+    // Fetch balance from Twilio
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      credentials.authToken,
+    );
+    const balance = await twilioClient.getAccountBalance();
+
+    res.json({ balance });
+  } catch (error) {
+    console.error("Get Twilio balance error:", error);
+    res.status(500).json({ error: "Failed to fetch Twilio balance" });
+  }
+};
+
 export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
