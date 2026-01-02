@@ -189,7 +189,6 @@ export default function Messages() {
     }
   };
 
-
   const filteredContacts = contacts.filter(
     (contact) =>
       contact.phoneNumber.includes(searchTerm) ||

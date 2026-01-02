@@ -5,6 +5,7 @@ A production-ready full-stack SMS management application built with React, Expre
 ## Features
 
 ✨ **Core Features**
+
 - 🔐 JWT Authentication with role-based access control (Admin & Team Member)
 - 📱 Real-time SMS messaging with Socket.io
 - 👥 Team management with member invitations
@@ -17,6 +18,7 @@ A production-ready full-stack SMS management application built with React, Expre
 ## Architecture
 
 ### Tech Stack
+
 - **Frontend**: React 18 + React Router 6 (SPA) + TypeScript + Vite + TailwindCSS 3
 - **Backend**: Express + Node.js
 - **Real-time**: Socket.io
@@ -70,6 +72,7 @@ shared/
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 16+
 - PNPM (recommended) or npm
 
@@ -104,23 +107,27 @@ pnpm test
 ## Usage Guide
 
 ### 1. Sign Up (Admin Account)
+
 - Navigate to `/signup`
 - Fill in your details
 - You automatically become an Admin
 - You're redirected to the Admin Dashboard
 
 ### 2. Connect Twilio Credentials
+
 - Go to **Credentials** page
 - Add your Twilio Account SID and Auth Token
 - [How to find your Twilio credentials](https://www.twilio.com/console/account/settings)
 - Credentials are securely stored and encrypted
 
 ### 3. Manage Phone Numbers
+
 - Navigate to **Numbers** page
 - View purchased numbers
 - Assign numbers to team members
 
 ### 4. Manage Team Members
+
 - Go to **Team Management** page
 - Click "Invite Team Member"
 - Fill in their details
@@ -128,6 +135,7 @@ pnpm test
 - Assign phone numbers to them
 
 ### 5. Team Members - Send/Receive SMS
+
 - Team members login with their credentials
 - They see the **Messages** page
 - Contact list on the left, conversation on the right
@@ -138,12 +146,14 @@ pnpm test
 ## API Endpoints
 
 ### Auth Routes
+
 ```
 POST   /api/auth/signup          - Create admin account
 POST   /api/auth/login           - Login user
 ```
 
 ### Admin Routes (Requires Admin Role)
+
 ```
 POST   /api/admin/credentials    - Save Twilio credentials
 GET    /api/admin/credentials    - Get saved credentials
@@ -154,6 +164,7 @@ DELETE /api/admin/team/:memberId - Remove team member
 ```
 
 ### Messages Routes (Authenticated)
+
 ```
 GET    /api/messages/contacts           - Get all contacts
 GET    /api/messages/conversation/:id   - Get conversation history
@@ -163,6 +174,7 @@ POST   /api/messages/send               - Send SMS message
 ## Authentication & Authorization
 
 ### JWT Token Structure
+
 ```json
 {
   "userId": "abc123",
@@ -174,42 +186,53 @@ POST   /api/messages/send               - Send SMS message
 ```
 
 ### Role-Based Access
+
 - **Admin**: Full access to dashboard, credentials, numbers, team management
 - **Team Member**: Access only to assigned phone numbers and conversations
 
 ## Real-time Features (Socket.io)
 
 ### Socket Events
+
 ```javascript
 // Client to Server
-socket.emit('message_sent', { phoneNumberId, to, body })
-socket.emit('incoming_sms', { phoneNumberId, from, body })
+socket.emit("message_sent", { phoneNumberId, to, body });
+socket.emit("incoming_sms", { phoneNumberId, from, body });
 
 // Server to Client
-socket.on('new_message', (data) => { /* ... */ })
-socket.on('incoming_sms_notification', (data) => { /* ... */ })
-socket.on('message_updated', (data) => { /* ... */ })
+socket.on("new_message", (data) => {
+  /* ... */
+});
+socket.on("incoming_sms_notification", (data) => {
+  /* ... */
+});
+socket.on("message_updated", (data) => {
+  /* ... */
+});
 ```
 
 ### Auto-subscribed Rooms
+
 - `user:${userId}` - Personal messages
 - `admin:${adminId}` - Admin notifications
 
 ## Data Models
 
 ### User
+
 ```typescript
 interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'team_member';
-  adminId?: string;  // For team members
+  role: "admin" | "team_member";
+  adminId?: string; // For team members
   createdAt: string;
 }
 ```
 
 ### TwilioCredentials
+
 ```typescript
 interface TwilioCredentials {
   id: string;
@@ -221,18 +244,20 @@ interface TwilioCredentials {
 ```
 
 ### PhoneNumber
+
 ```typescript
 interface PhoneNumber {
   id: string;
   adminId: string;
   phoneNumber: string;
-  assignedTo?: string;  // team member id
+  assignedTo?: string; // team member id
   purchasedAt: string;
   active: boolean;
 }
 ```
 
 ### Message
+
 ```typescript
 interface Message {
   id: string;
@@ -240,15 +265,16 @@ interface Message {
   from: string;
   to: string;
   body: string;
-  direction: 'inbound' | 'outbound';
+  direction: "inbound" | "outbound";
   timestamp: string;
-  sid?: string;  // Twilio SID
+  sid?: string; // Twilio SID
 }
 ```
 
 ## Design System
 
 ### Color Scheme
+
 - **Primary**: Blue (#4D5FFF)
 - **Secondary**: Purple (#A145FF)
 - **Accent**: Cyan (#4DCFFF)
@@ -256,6 +282,7 @@ interface Message {
 - **Sidebar**: Light gray with blue accent
 
 ### Typography
+
 - Font Family: Inter
 - Headings: Bold with 47.4% lightness
 - Body: Regular with 16.3% lightness
@@ -265,17 +292,20 @@ interface Message {
 The app currently uses in-memory storage. To migrate to a database:
 
 ### Option 1: PostgreSQL with Prisma
+
 ```bash
 npm install @prisma/client
 npm install -D prisma
 ```
 
 ### Option 2: MongoDB
+
 ```bash
 npm install mongoose
 ```
 
 ### Option 3: Supabase
+
 Connect via the MCP integration in Builder.io
 
 Update `server/storage.ts` to use your database client instead of Map.
@@ -283,14 +313,17 @@ Update `server/storage.ts` to use your database client instead of Map.
 ## Deployment
 
 ### Netlify
+
 1. Connect via Builder.io MCP
 2. Auto-deploys on git push
 
 ### Vercel
+
 1. Connect via Builder.io MCP
 2. Configure environment variables
 
 ### Self-hosted
+
 ```bash
 npm run build
 npm start
@@ -314,6 +347,7 @@ DATABASE_URL=...
 ## Security Considerations
 
 ✅ **Implemented**
+
 - JWT authentication with expiration
 - Password hashing with SHA-256
 - Role-based access control
@@ -321,6 +355,7 @@ DATABASE_URL=...
 - CORS enabled
 
 ⚠️ **For Production**
+
 - Use bcrypt instead of SHA-256 for password hashing
 - Implement rate limiting on auth endpoints
 - Add HTTPS only in production
@@ -333,6 +368,7 @@ DATABASE_URL=...
 ## Future Enhancements
 
 📋 **Planned Features**
+
 - [ ] Message scheduling
 - [ ] Group messaging
 - [ ] Advanced analytics and reporting
@@ -347,15 +383,18 @@ DATABASE_URL=...
 ## Troubleshooting
 
 ### "Invalid credentials" on login
+
 - Check email and password are correct
 - Ensure user exists in the system
 
 ### Messages not sending
+
 - Verify Twilio credentials are correct
 - Check internet connectivity
 - Ensure phone number is assigned
 
 ### Socket.io not connecting
+
 - Check WebSocket is enabled
 - Verify authentication token is valid
 - Check browser console for errors

@@ -17,8 +17,9 @@ export default function Insights() {
           </div>
           <h2 className="text-2xl font-bold mb-2">Analytics Coming Soon</h2>
           <p className="text-muted-foreground max-w-md mx-auto">
-            We're building comprehensive analytics and insights for your SMS messaging. 
-            Soon you'll be able to track message volume, response times, team performance, and more.
+            We're building comprehensive analytics and insights for your SMS
+            messaging. Soon you'll be able to track message volume, response
+            times, team performance, and more.
           </p>
         </Card>
 
@@ -47,7 +48,9 @@ export default function Insights() {
           <Card className="p-6 opacity-50">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-sm text-muted-foreground">Avg Response Time</p>
+                <p className="text-sm text-muted-foreground">
+                  Avg Response Time
+                </p>
                 <p className="text-2xl font-bold mt-2">-</p>
               </div>
               <TrendingUp className="w-5 h-5 text-muted-foreground" />

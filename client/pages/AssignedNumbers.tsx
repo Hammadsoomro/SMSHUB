@@ -3,12 +3,7 @@ import { useNavigate } from "react-router-dom";
 import TeamMemberLayout from "@/components/TeamMemberLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Phone,
-  Loader2,
-  AlertCircle,
-  MessageSquare,
-} from "lucide-react";
+import { Phone, Loader2, AlertCircle, MessageSquare } from "lucide-react";
 
 interface PhoneNumber {
   id: string;
@@ -79,8 +74,8 @@ export default function AssignedNumbers() {
                   No Numbers Assigned
                 </h3>
                 <p className="text-sm text-blue-700">
-                  Your admin hasn't assigned any phone numbers to you yet.
-                  Once assigned, they will appear here.
+                  Your admin hasn't assigned any phone numbers to you yet. Once
+                  assigned, they will appear here.
                 </p>
               </div>
             </div>
