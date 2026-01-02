@@ -36,20 +36,6 @@ export default function NumbersAssigned() {
 
   useEffect(() => {
     fetchData();
-    
-    // Socket.io listeners for real-time updates
-    socketService.on("number_assigned", (data: any) => {
-      handleNumberAssignmentUpdate(data);
-    });
-
-    socketService.on("number_unassigned", (data: any) => {
-      handleNumberUnassignmentUpdate(data);
-    });
-
-    return () => {
-      socketService.off("number_assigned");
-      socketService.off("number_unassigned");
-    };
   }, []);
 
   const fetchData = async () => {
