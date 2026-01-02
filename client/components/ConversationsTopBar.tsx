@@ -22,6 +22,7 @@ import {
   RefreshCw,
   CheckCircle2,
   ArrowLeft,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
