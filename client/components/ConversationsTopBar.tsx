@@ -264,6 +264,14 @@ export default function ConversationsTopBar({
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh Page
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
