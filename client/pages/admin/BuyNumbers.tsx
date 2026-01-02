@@ -192,6 +192,26 @@ export default function BuyNumbers() {
     }
   };
 
+  const fetchTwilioBalance = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/twilio-balance", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTwilioBalance(data.balance || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching Twilio balance:", err);
+      // Fallback: if no Twilio balance endpoint, show wallet balance
+      if (wallet) {
+        setTwilioBalance(wallet.balance);
+      }
+    }
+  };
+
   const fetchAvailableNumbers = async (countryCode: string, state?: string) => {
     if (!countryCode) return;
 
