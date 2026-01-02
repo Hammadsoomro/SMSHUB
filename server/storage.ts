@@ -45,6 +45,13 @@ class Storage {
     return userWithoutPassword as User;
   }
 
+  async updateUser(user: User): Promise<void> {
+    const { password, ...userWithoutPassword } = user as any;
+    await UserModel.findByIdAndUpdate(user.id, userWithoutPassword, {
+      new: true,
+    });
+  }
+
   // Twilio Credentials
   async setTwilioCredentials(credentials: TwilioCredentials): Promise<void> {
     await TwilioCredentialsModel.updateOne(

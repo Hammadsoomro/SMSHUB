@@ -5,7 +5,7 @@ import { connectDB } from "./db";
 import { Server as IOServer } from "socket.io";
 
 // Auth routes
-import { handleSignup, handleLogin, handleGetProfile } from "./routes/auth";
+import { handleSignup, handleLogin, handleGetProfile, handleUpdateProfile } from "./routes/auth";
 
 // Admin routes
 import {
@@ -34,6 +34,7 @@ import {
 import {
   handleGetAvailableNumbers,
   handlePurchaseNumber,
+  handleGetTwilioBalance,
 } from "./routes/phone-purchase";
 
 // Messages routes
@@ -89,6 +90,7 @@ export async function createServer() {
   app.post("/api/auth/signup", handleSignup);
   app.post("/api/auth/login", handleLogin);
   app.get("/api/auth/profile", authMiddleware, handleGetProfile);
+  app.patch("/api/auth/update-profile", authMiddleware, handleUpdateProfile);
 
   // Webhook routes (public - for Twilio callbacks)
   app.get("/api/webhooks/inbound-sms", handleWebhookHealth); // Health check
@@ -197,6 +199,12 @@ export async function createServer() {
     authMiddleware,
     adminOnly,
     handlePurchaseNumber,
+  );
+  app.get(
+    "/api/admin/twilio-balance",
+    authMiddleware,
+    adminOnly,
+    handleGetTwilioBalance,
   );
 
   return app;

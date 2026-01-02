@@ -426,6 +426,51 @@ export class TwilioClient {
   }
 
   /**
+   * Get account balance from Twilio
+   */
+  async getAccountBalance(): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
+        "base64",
+      );
+
+      const options = {
+        hostname: "api.twilio.com",
+        path: `/2010-04-01/Accounts/${this.accountSid}.json`,
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      };
+
+      const req = https.request(options, (res) => {
+        let data = "";
+
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        res.on("end", () => {
+          try {
+            const response = JSON.parse(data);
+            // Twilio returns balance as a negative number (credit)
+            const balance = response.balance ? Math.abs(parseFloat(response.balance)) : 0;
+            resolve(balance);
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+
+      req.on("error", (error) => {
+        reject(error);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
    * Purchase a phone number from Twilio
    */
   async purchasePhoneNumber(phoneNumber: string): Promise<TwilioResponse> {

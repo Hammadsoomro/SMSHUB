@@ -151,3 +151,39 @@ export const handleGetProfile: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const handleUpdateProfile: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const { name, email } = req.body as { name?: string; email?: string };
+
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update user fields
+    if (name) {
+      user.name = name;
+    }
+    if (email) {
+      user.email = email;
+    }
+
+    await storage.updateUser(user);
+
+    const userResponse: User = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      adminId: user.adminId,
+      createdAt: user.createdAt,
+    };
+
+    res.json({ user: userResponse });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

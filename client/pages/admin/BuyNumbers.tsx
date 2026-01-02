@@ -139,6 +139,7 @@ export default function BuyNumbers() {
     AvailablePhoneNumber[]
   >([]);
   const [wallet, setWallet] = useState<WalletType | null>(null);
+  const [twilioBalance, setTwilioBalance] = useState<number | null>(null);
   const [isLoadingNumbers, setIsLoadingNumbers] = useState(false);
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
   const [error, setError] = useState("");
@@ -165,7 +166,8 @@ export default function BuyNumbers() {
           navigate("/login", { replace: true });
           return;
         }
-        fetchWallet();
+        await fetchWallet();
+        await fetchTwilioBalance();
         setIsLoadingWallet(false);
       } catch {
         navigate("/login", { replace: true });
@@ -188,6 +190,26 @@ export default function BuyNumbers() {
       }
     } catch (err) {
       console.error("Error fetching wallet:", err);
+    }
+  };
+
+  const fetchTwilioBalance = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/twilio-balance", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTwilioBalance(data.balance || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching Twilio balance:", err);
+      // Fallback: if no Twilio balance endpoint, show wallet balance
+      if (wallet) {
+        setTwilioBalance(wallet.balance);
+      }
     }
   };
 
@@ -278,8 +300,8 @@ export default function BuyNumbers() {
   };
 
   const handlePurchaseNumber = async (number: AvailablePhoneNumber) => {
-    if (!wallet) {
-      setError("Wallet information not loaded. Please refresh the page.");
+    if (twilioBalance === null) {
+      setError("Twilio balance information not loaded. Please refresh the page.");
       return;
     }
 
@@ -289,9 +311,9 @@ export default function BuyNumbers() {
       return;
     }
 
-    if (wallet.balance < cost) {
+    if (twilioBalance < cost) {
       setError(
-        `Insufficient wallet balance. Need $${cost.toFixed(2)}, have $${wallet.balance.toFixed(2)}`,
+        `Insufficient Twilio balance. Need $${cost.toFixed(2)}, have $${twilioBalance.toFixed(2)}`,
       );
       return;
     }
@@ -328,6 +350,9 @@ export default function BuyNumbers() {
       if (data.wallet) {
         setWallet(data.wallet);
       }
+      // Refetch Twilio balance after purchase
+      await fetchTwilioBalance();
+
       setPurchasedNumbers((prev) => new Set(prev).add(number.phoneNumber));
       setSuccess(`✅ Successfully purchased ${number.phoneNumber}`);
 
@@ -396,8 +421,8 @@ export default function BuyNumbers() {
           </div>
         </div>
 
-        {/* Wallet Card */}
-        {wallet && (
+        {/* Twilio Balance Card */}
+        {twilioBalance !== null && (
           <Card className="p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 mb-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -406,10 +431,13 @@ export default function BuyNumbers() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    Wallet Balance
+                    Twilio Balance
                   </p>
                   <p className="text-2xl font-bold">
-                    ${wallet.balance.toFixed(2)} {wallet.currency}
+                    ${twilioBalance.toFixed(2)} USD
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your Twilio account balance
                   </p>
                 </div>
               </div>
@@ -626,7 +654,7 @@ export default function BuyNumbers() {
             <div className="grid gap-4">
               {filteredNumbers.map((num, idx) => {
                 const cost = parseFloat(num.cost);
-                const hasBalance = wallet && wallet.balance >= cost;
+                const hasBalance = twilioBalance !== null && twilioBalance >= cost;
                 const isPurchased = purchasedNumbers.has(num.phoneNumber);
 
                 return (
