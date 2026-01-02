@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import Conversations from "./pages/admin/Conversations";
 import Credentials from "./pages/admin/Credentials";
 import BuyNumbers from "./pages/admin/BuyNumbers";
+import BoughtNumbers from "./pages/admin/BoughtNumbers";
 import Wallet from "./pages/admin/Wallet";
 import TeamManagement from "./pages/admin/TeamManagement";
 import Settings from "./pages/admin/Settings";
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/admin/conversations" element={<Conversations />} />
           <Route path="/admin/credentials" element={<Credentials />} />
           <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
+          <Route path="/admin/bought-numbers" element={<BoughtNumbers />} />
           <Route path="/admin/wallet" element={<Wallet />} />
           <Route path="/admin/team" element={<TeamManagement />} />
           <Route path="/admin/settings" element={<Settings />} />
