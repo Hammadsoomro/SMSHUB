@@ -236,117 +236,22 @@ export default function Numbers() {
     }
   };
 
-  const filteredNumbers = numbers.filter((num) =>
-    num.phoneNumber.includes(searchTerm),
-  );
+  const filteredNumbers = numbers
+    .filter((num) => num.assignedTo)
+    .filter((num) => num.phoneNumber.includes(searchTerm));
 
   return (
     <AdminLayout>
       <div>
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Active Numbers</h1>
+            <h1 className="text-3xl font-bold mb-2">Assigned Numbers</h1>
             <p className="text-muted-foreground">
-              Manage your active Twilio phone numbers
+              Manage numbers assigned to team members
             </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowAddForm(!showAddForm);
-                setError("");
-                setSuccess("");
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Existing
-            </Button>
-            <Button
-              onClick={() => navigate("/admin/buy-numbers")}
-              className="bg-gradient-to-r from-primary to-secondary"
-            >
-              Buy New Number
-            </Button>
           </div>
         </div>
 
-        {/* Add Existing Number Form */}
-        {showAddForm && (
-          <Card className="p-6 mb-8 border-primary/30">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">
-                Add Existing Phone Number
-              </h2>
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-4 flex items-center gap-2">
-                <Check className="w-4 h-4 text-green-600" />
-                <p className="text-sm text-green-800">{success}</p>
-              </div>
-            )}
-
-            <form onSubmit={handleAddExistingNumber} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium block mb-2">
-                  Phone Number
-                </label>
-                <Input
-                  type="tel"
-                  placeholder="+1 825 435 1943"
-                  value={phoneNumberInput}
-                  onChange={(e) => setPhoneNumberInput(e.target.value)}
-                  disabled={isAdding}
-                  className="h-10"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Enter the full phone number (e.g., +1 825 435 1943)
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  type="submit"
-                  disabled={isAdding}
-                  className="bg-gradient-to-r from-primary to-secondary"
-                >
-                  {isAdding ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Number
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowAddForm(false)}
-                  disabled={isAdding}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </Card>
-        )}
 
         {/* Assign Number Modal */}
         {showAssignModal && (
@@ -443,17 +348,16 @@ export default function Numbers() {
         )}
 
         {/* Info Card */}
-        {numbers.length === 0 && (
+        {filteredNumbers.length === 0 && numbers.length > 0 && (
           <Card className="p-6 bg-blue-50 border-blue-200 mb-8">
             <div className="flex gap-4">
               <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-semibold text-blue-900 mb-1">
-                  No Numbers Yet
+                  No Assigned Numbers
                 </h3>
                 <p className="text-sm text-blue-700">
-                  First connect your Twilio credentials in the Credentials
-                  section, then you can purchase and manage phone numbers here.
+                  You haven't assigned any phone numbers to team members yet. Go to the Wallet section to buy numbers, then assign them to your team.
                 </p>
               </div>
             </div>
