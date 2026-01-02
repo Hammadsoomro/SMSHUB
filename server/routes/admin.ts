@@ -395,6 +395,32 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
 
     await storage.updatePhoneNumberWithAssignment(phoneNumberId, teamMemberId);
 
+    // Emit socket event to notify team member of assignment
+    const io = getSocketIOInstance();
+    if (io) {
+      if (teamMemberId) {
+        // Notify team member that a phone number has been assigned to them
+        console.log(
+          `📡 Emitting phone number assignment event to team member ${teamMemberId}`,
+        );
+        io.to(`user:${teamMemberId}`).emit("phone_number_assigned", {
+          phoneNumberId,
+          phoneNumber: updatedNumber.phoneNumber,
+          action: "assigned",
+        });
+      } else if (phoneNumber.assignedTo) {
+        // Notify team member that their phone number has been unassigned
+        console.log(
+          `📡 Emitting phone number unassignment event to team member ${phoneNumber.assignedTo}`,
+        );
+        io.to(`user:${phoneNumber.assignedTo}`).emit("phone_number_assigned", {
+          phoneNumberId,
+          phoneNumber: updatedNumber.phoneNumber,
+          action: "unassigned",
+        });
+      }
+    }
+
     res.json({ phoneNumber: updatedNumber });
   } catch (error) {
     console.error("Assign number error:", error);
