@@ -190,19 +190,29 @@ class Storage {
     phoneNumberId: string,
     teamMemberId?: string,
   ): Promise<void> {
+    const query = { $or: [{ id: phoneNumberId }, { _id: phoneNumberId }] };
+
     if (teamMemberId) {
       // Assign to team member
-      await PhoneNumberModel.findOneAndUpdate(
-        { id: phoneNumberId },
+      const result = await PhoneNumberModel.findOneAndUpdate(
+        query,
         { assignedTo: teamMemberId },
         { new: true },
       );
+      console.log(
+        `[DEBUG] Updated phone number ${phoneNumberId} with assignedTo=${teamMemberId}. Result:`,
+        result ? { id: result.id, assignedTo: result.assignedTo } : "NOT FOUND",
+      );
     } else {
       // Unassign - remove the assignedTo field
-      await PhoneNumberModel.findOneAndUpdate(
-        { id: phoneNumberId },
+      const result = await PhoneNumberModel.findOneAndUpdate(
+        query,
         { $unset: { assignedTo: "" } },
         { new: true },
+      );
+      console.log(
+        `[DEBUG] Unassigned phone number ${phoneNumberId}. Result:`,
+        result ? { id: result.id, assignedTo: result.assignedTo } : "NOT FOUND",
       );
     }
   }
