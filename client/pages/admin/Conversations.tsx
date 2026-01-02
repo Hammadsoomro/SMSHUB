@@ -401,6 +401,19 @@ export default function Conversations() {
         console.log("🔔 Unread counts updated:", data);
         updatePageTitle();
       });
+
+      socketService.on("phone_number_assigned", (data: any) => {
+        console.log("📞 Phone number assignment updated:", data);
+        // Reload phone numbers to reflect the assignment/unassignment
+        const currentActivePhone = activePhoneNumberRef.current;
+        if (data.action === "assigned") {
+          toast.success(`Phone number ${data.phoneNumber} assigned to you`);
+        } else {
+          toast.info(`Phone number ${data.phoneNumber} unassigned from you`);
+        }
+        // Reload phone numbers to show the newly assigned number
+        loadInitialData();
+      });
     } catch (error) {
       console.error("Error initializing Socket.IO:", error);
       setIsConnecting(false);
