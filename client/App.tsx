@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import Conversations from "./pages/admin/Conversations";
 import Credentials from "./pages/admin/Credentials";
 import Numbers from "./pages/admin/Numbers";
+import NumbersAssigned from "./pages/admin/NumbersAssigned";
 import BuyNumbers from "./pages/admin/BuyNumbers";
 import Wallet from "./pages/admin/Wallet";
 import TeamManagement from "./pages/admin/TeamManagement";
