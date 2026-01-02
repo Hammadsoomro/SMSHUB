@@ -33,7 +33,9 @@ class Storage {
   async getUserByEmail(
     email: string,
   ): Promise<(User & { password: string }) | undefined> {
-    const user = (await UserModel.findOne({ email: email.toLowerCase() })) as any;
+    const user = (await UserModel.findOne({
+      email: email.toLowerCase(),
+    })) as any;
     if (!user) return undefined;
 
     // Ensure user has an id field (for backward compatibility with existing users)
@@ -46,9 +48,11 @@ class Storage {
     const userObj = user.toObject();
 
     // Debug logging
-    console.log(`[DEBUG getUserByEmail] Email: ${email}, Role: ${userObj.role}, ID: ${userObj.id}`);
+    console.log(
+      `[DEBUG getUserByEmail] Email: ${email}, Role: ${userObj.role}, ID: ${userObj.id}`,
+    );
 
-    return userObj as (User & { password: string });
+    return userObj as User & { password: string };
   }
 
   async getUserById(id: string): Promise<User | undefined> {
@@ -82,15 +86,19 @@ class Storage {
     let result = await UserModel.findOneAndUpdate(
       { id: user.id },
       userWithoutPassword,
-      { new: true }
+      { new: true },
     );
 
     // Fallback to MongoDB's _id for backward compatibility
     if (!result) {
       try {
-        result = await UserModel.findByIdAndUpdate(user.id, userWithoutPassword, {
-          new: true,
-        });
+        result = await UserModel.findByIdAndUpdate(
+          user.id,
+          userWithoutPassword,
+          {
+            new: true,
+          },
+        );
 
         // If found by _id but doesn't have custom id field, ensure it's set to _id
         if (result && !result.id) {

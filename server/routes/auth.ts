@@ -88,7 +88,9 @@ export const handleLogin: RequestHandler = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    console.log(`[DEBUG login] User ${email}: id=${user.id}, role=${user.role}`);
+    console.log(
+      `[DEBUG login] User ${email}: id=${user.id}, role=${user.role}`,
+    );
 
     const token = generateToken({
       userId: user.id,
