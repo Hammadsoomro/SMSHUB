@@ -72,46 +72,6 @@ export default function NumbersAssigned() {
     }
   };
 
-  const handleNumberAssignmentUpdate = (data: any) => {
-    const { phoneNumberId, teamMemberId } = data;
-    
-    // Update the phone numbers list
-    setAllPhoneNumbers(prev => 
-      prev.map(num => 
-        num.id === phoneNumberId ? { ...num, assignedTo: teamMemberId } : num
-      )
-    );
-
-    // Update team members with numbers
-    setTeamMembers(prev =>
-      prev.map(member => ({
-        ...member,
-        assignedNumbers: member.id === teamMemberId
-          ? [...member.assignedNumbers, allPhoneNumbers.find(n => n.id === phoneNumberId)!]
-          : member.assignedNumbers.filter(n => n.id !== phoneNumberId),
-      }))
-    );
-  };
-
-  const handleNumberUnassignmentUpdate = (data: any) => {
-    const { phoneNumberId, previousMemberId } = data;
-    
-    // Update the phone numbers list
-    setAllPhoneNumbers(prev =>
-      prev.map(num =>
-        num.id === phoneNumberId ? { ...num, assignedTo: undefined } : num
-      )
-    );
-
-    // Update team members with numbers
-    setTeamMembers(prev =>
-      prev.map(member =>
-        member.id === previousMemberId
-          ? { ...member, assignedNumbers: member.assignedNumbers.filter(n => n.id !== phoneNumberId) }
-          : member
-      )
-    );
-  };
 
   const handleAssignClick = (phoneNumberId: string) => {
     setSelectedNumberId(phoneNumberId);
