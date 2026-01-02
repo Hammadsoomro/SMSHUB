@@ -177,9 +177,11 @@ export default function Numbers() {
         `✅ Number ${data.phoneNumber.phoneNumber} ${actionText} team member!`,
       );
 
+      // Refetch numbers after a short delay to ensure server consistency
       setTimeout(() => {
+        fetchNumbers();
         setSuccess("");
-      }, 3000);
+      }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
