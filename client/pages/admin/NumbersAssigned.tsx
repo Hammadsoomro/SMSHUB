@@ -25,7 +25,7 @@ export default function NumbersAssigned() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Assignment Modal State
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedNumberId, setSelectedNumberId] = useState<string | null>(null);
@@ -55,11 +55,15 @@ export default function NumbersAssigned() {
       });
       if (!teamRes.ok) throw new Error("Failed to fetch team members");
       const teamData = await teamRes.json();
-      
+
       // Organize numbers by team member
-      const membersWithNumbers: TeamMemberWithNumbers[] = (teamData.members || []).map((member: TeamMember) => ({
+      const membersWithNumbers: TeamMemberWithNumbers[] = (
+        teamData.members || []
+      ).map((member: TeamMember) => ({
         ...member,
-        assignedNumbers: (numbersData.numbers || []).filter((num: PhoneNumber) => num.assignedTo === member.id),
+        assignedNumbers: (numbersData.numbers || []).filter(
+          (num: PhoneNumber) => num.assignedTo === member.id,
+        ),
       }));
 
       setTeamMembers(membersWithNumbers);
@@ -69,7 +73,6 @@ export default function NumbersAssigned() {
       setIsLoading(false);
     }
   };
-
 
   const handleAssignClick = (phoneNumberId: string) => {
     setSelectedNumberId(phoneNumberId);
@@ -111,7 +114,9 @@ export default function NumbersAssigned() {
       setSelectedNumberId(null);
       setSelectedMemberId("");
 
-      const memberName = teamMembers.find(m => m.id === selectedMemberId)?.name || "Team member";
+      const memberName =
+        teamMembers.find((m) => m.id === selectedMemberId)?.name ||
+        "Team member";
       setSuccess(`✅ Number assigned to ${memberName}!`);
 
       setTimeout(() => setSuccess(""), 3000);
@@ -156,10 +161,11 @@ export default function NumbersAssigned() {
     }
   };
 
-  const unassignedNumbers = allPhoneNumbers.filter(num => !num.assignedTo);
-  const filteredMembers = teamMembers.filter(member =>
-    member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const unassignedNumbers = allPhoneNumbers.filter((num) => !num.assignedTo);
+  const filteredMembers = teamMembers.filter(
+    (member) =>
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -295,7 +301,8 @@ export default function NumbersAssigned() {
                   No Team Members
                 </h3>
                 <p className="text-sm text-blue-700">
-                  Create team members first in Team Management to assign phone numbers.
+                  Create team members first in Team Management to assign phone
+                  numbers.
                 </p>
               </div>
             </div>
@@ -355,7 +362,9 @@ export default function NumbersAssigned() {
                     </div>
                     <div>
                       <p className="font-semibold text-lg">{member.name}</p>
-                      <p className="text-xs text-muted-foreground">{member.email}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {member.email}
+                      </p>
                     </div>
                     <span
                       className={`ml-auto px-3 py-1 rounded-full text-xs font-medium ${
@@ -426,7 +435,8 @@ export default function NumbersAssigned() {
                               {num.phoneNumber}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Purchased {new Date(num.purchasedAt).toLocaleDateString()}
+                              Purchased{" "}
+                              {new Date(num.purchasedAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -462,7 +472,8 @@ export default function NumbersAssigned() {
                     All Numbers Assigned
                   </h3>
                   <p className="text-sm text-blue-700 mb-4">
-                    Great! All your available numbers have been assigned to team members.
+                    Great! All your available numbers have been assigned to team
+                    members.
                   </p>
                 </Card>
               </div>

@@ -378,7 +378,9 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     const phoneNumber = numbers.find((n) => n.id === phoneNumberId);
 
     if (!phoneNumber) {
-      console.error(`[DEBUG] Phone number ${phoneNumberId} not found for admin ${adminId}`);
+      console.error(
+        `[DEBUG] Phone number ${phoneNumberId} not found for admin ${adminId}`,
+      );
       return res.status(404).json({ error: "Phone number not found" });
     }
 
@@ -388,10 +390,15 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
       const member = members.find((m) => m.id === teamMemberId);
 
       console.log(`[DEBUG] Looking for team member: ${teamMemberId}`);
-      console.log(`[DEBUG] Available team members:`, members.map((m) => ({ id: m.id, name: m.name })));
+      console.log(
+        `[DEBUG] Available team members:`,
+        members.map((m) => ({ id: m.id, name: m.name })),
+      );
 
       if (!member) {
-        console.error(`[DEBUG] Team member ${teamMemberId} not found for admin ${adminId}`);
+        console.error(
+          `[DEBUG] Team member ${teamMemberId} not found for admin ${adminId}`,
+        );
         return res.status(404).json({ error: "Team member not found" });
       }
     }
