@@ -298,11 +298,35 @@ export default function Conversations() {
       const socket = socketService.connect(token);
 
       if (!socket) {
-        console.error("Failed to get socket instance");
-        setIsConnecting(false);
-        toast.error("Unable to establish socket connection");
+        // Socket creation initiated but not immediately available
+        // Wait a moment and retry once
+        console.warn(
+          "Socket instance not immediately available, retrying...",
+        );
+        setTimeout(() => {
+          const retrySocket = socketService.getSocket();
+          if (retrySocket) {
+            console.log("Socket available after retry");
+            setupSocketListeners(retrySocket);
+          } else {
+            console.error("Failed to get socket instance after retry");
+            setIsConnecting(false);
+            toast.error("Unable to establish socket connection");
+          }
+        }, 500);
         return;
       }
+
+      setupSocketListeners(socket);
+    } catch (error) {
+      console.error("Error initializing Socket.IO:", error);
+      setIsConnecting(false);
+      toast.error("Failed to initialize real-time connection");
+    }
+  };
+
+  const setupSocketListeners = (socket: any) => {
+    try {
 
       // Remove old listeners to avoid duplicates
       socket.off("connect");
