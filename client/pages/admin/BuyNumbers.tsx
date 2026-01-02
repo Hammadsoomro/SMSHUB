@@ -350,6 +350,9 @@ export default function BuyNumbers() {
       if (data.wallet) {
         setWallet(data.wallet);
       }
+      // Refetch Twilio balance after purchase
+      await fetchTwilioBalance();
+
       setPurchasedNumbers((prev) => new Set(prev).add(number.phoneNumber));
       setSuccess(`✅ Successfully purchased ${number.phoneNumber}`);
 
