@@ -33,6 +33,24 @@ export default function TeamMemberLayout({ children }: TeamMemberLayoutProps) {
     fetchAssignedNumbers();
   }, []);
 
+  useEffect(() => {
+    // Listen for phone number assignment updates
+    socketService.on("phone_number_assigned", (data: any) => {
+      console.log("📞 Phone number assignment updated:", data);
+      if (data.action === "assigned") {
+        toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
+      } else {
+        toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
+      }
+      // Refresh assigned numbers
+      fetchAssignedNumbers();
+    });
+
+    return () => {
+      socketService.off("phone_number_assigned");
+    };
+  }, []);
+
   const fetchAssignedNumbers = async () => {
     try {
       setIsLoadingNumbers(true);
