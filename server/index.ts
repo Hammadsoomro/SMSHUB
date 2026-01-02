@@ -34,6 +34,7 @@ import {
 import {
   handleGetAvailableNumbers,
   handlePurchaseNumber,
+  handleGetTwilioBalance,
 } from "./routes/phone-purchase";
 
 // Messages routes
