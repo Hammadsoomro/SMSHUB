@@ -108,18 +108,6 @@ export default function NumbersAssigned() {
       }
 
       const data = await response.json();
-      
-      // Update local state
-      setAllPhoneNumbers(prev =>
-        prev.map(n => n.id === selectedNumberId ? data.phoneNumber : n)
-      );
-
-      // Emit Socket.io event for real-time update
-      socketService.emit("number_assigned", {
-        phoneNumberId: selectedNumberId,
-        teamMemberId: selectedMemberId,
-        phoneNumber: data.phoneNumber.phoneNumber,
-      });
 
       setShowAssignModal(false);
       setSelectedNumberId(null);
@@ -129,9 +117,9 @@ export default function NumbersAssigned() {
       setSuccess(`✅ Number assigned to ${memberName}!`);
 
       setTimeout(() => setSuccess(""), 3000);
-      
-      // Refresh data
-      setTimeout(() => fetchData(), 1000);
+
+      // Refresh data from server
+      fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
