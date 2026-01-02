@@ -139,6 +139,7 @@ export default function BuyNumbers() {
     AvailablePhoneNumber[]
   >([]);
   const [wallet, setWallet] = useState<WalletType | null>(null);
+  const [twilioBalance, setTwilioBalance] = useState<number | null>(null);
   const [isLoadingNumbers, setIsLoadingNumbers] = useState(false);
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
   const [error, setError] = useState("");
