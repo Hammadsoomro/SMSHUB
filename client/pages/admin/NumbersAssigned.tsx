@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneNumber, TeamMember } from "@shared/api";
-import socketService from "@/services/socketService";
 
 interface TeamMemberWithNumbers extends TeamMember {
   assignedNumbers: PhoneNumber[];
