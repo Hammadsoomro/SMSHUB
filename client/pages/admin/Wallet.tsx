@@ -85,7 +85,12 @@ export default function Wallet() {
       const token = localStorage.getItem("token");
       console.log("🔄 Fetching Twilio balance...");
       const response = await fetch("/api/wallet/twilio-balance", {
-        headers: { Authorization: `Bearer ${token}` },
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache",
+        },
+        cache: "no-store",
       });
 
       if (response.ok) {
