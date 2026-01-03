@@ -134,7 +134,15 @@ export default function Wallet() {
 
         {success && (
           <Card className="p-6 bg-green-50 border-green-200 mb-8 flex items-center gap-4">
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
             <p className="text-sm text-green-700">{success}</p>
+          </Card>
+        )}
+
+        {error && (
+          <Card className="p-6 bg-red-50 border-red-200 mb-8 flex items-center gap-4">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            <p className="text-sm text-red-700">{error}</p>
           </Card>
         )}
 
@@ -150,11 +158,18 @@ export default function Wallet() {
                   </p>
                 </div>
                 <p className="text-5xl font-bold">
-                  ${twilioBalance.toFixed(2)}
+                  ${twilioBalance.toFixed(2)} USD
                 </p>
-                <p className="text-sm text-blue-100 mt-2">
-                  Live balance from your connected Twilio account
-                </p>
+                <div className="flex items-center gap-4 mt-3">
+                  <p className="text-sm text-blue-100">
+                    Live balance from your Twilio account
+                  </p>
+                  {lastRefreshTime && (
+                    <p className="text-xs text-blue-100 opacity-75">
+                      Last updated: {lastRefreshTime}
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="flex flex-col gap-2">
                 <Button
@@ -166,12 +181,12 @@ export default function Wallet() {
                   {isRefreshing ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Refreshing...
+                      Fetching...
                     </>
                   ) : (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Refresh
+                      Refresh Balance
                     </>
                   )}
                 </Button>
@@ -193,11 +208,12 @@ export default function Wallet() {
                 <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-semibold text-yellow-900 mb-1">
-                    Twilio Credentials Not Connected
+                    {error ? "Unable to Fetch Balance" : "Twilio Not Connected"}
                   </h3>
                   <p className="text-sm text-yellow-700">
-                    Connect your Twilio credentials in Settings to see your
-                    account balance and usage.
+                    {error
+                      ? error
+                      : "Connect your Twilio credentials in Settings to view your account balance."}
                   </p>
                 </div>
               </div>
@@ -205,7 +221,7 @@ export default function Wallet() {
                 onClick={() => navigate("/admin/settings")}
                 className="bg-yellow-600 hover:bg-yellow-700"
               >
-                Connect Twilio
+                {error ? "Retry" : "Connect Twilio"}
               </Button>
             </div>
           </Card>
