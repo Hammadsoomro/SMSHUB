@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Phone,
   ChevronDown,
-  Home,
   Settings,
   Bell,
   BellOff,
@@ -86,18 +85,6 @@ export default function ConversationsTopBar({
                 </span>
               </Button>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/admin")}
-                className="flex items-center gap-2 text-primary hover:text-primary/80 cursor-pointer"
-                title="Go to dashboard"
-              >
-                <Home className="w-4 h-4" />
-                <span className="text-sm font-medium hidden sm:inline">
-                  Dashboard
-                </span>
-              </Button>
             </div>
           )}
 
