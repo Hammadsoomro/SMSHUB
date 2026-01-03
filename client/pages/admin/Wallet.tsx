@@ -183,7 +183,29 @@ export default function Wallet() {
         )}
 
         {/* Twilio Balance Card */}
-        {twilioConnected && twilioBalance !== null ? (
+        {credentialsConnected === false ? (
+          <Card className="p-6 bg-red-50 border-red-200 mb-8">
+            <div className="flex gap-4 items-center justify-between">
+              <div className="flex gap-4">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-red-900 mb-1">
+                    Twilio Credentials Not Found
+                  </h3>
+                  <p className="text-sm text-red-700">
+                    Your Twilio Account SID and Auth Token are not saved. Please connect your Twilio credentials in Settings to view your account balance.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate("/admin/settings")}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Go to Settings
+              </Button>
+            </div>
+          </Card>
+        ) : twilioConnected && twilioBalance !== null ? (
           <Card className="p-8 bg-gradient-to-r from-blue-500 to-blue-600 text-white mb-8 border-0">
             <div className="flex items-start justify-between">
               <div className="flex-1">
