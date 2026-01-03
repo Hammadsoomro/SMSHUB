@@ -19,6 +19,14 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     const adminId = req.userId!;
     console.log(`📞 Fetching Twilio balance for admin: ${adminId}`);
 
+    // Prevent caching for this endpoint - balance changes dynamically
+    res.set({
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+      "ETag": undefined,
+    });
+
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
