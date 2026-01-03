@@ -73,7 +73,12 @@ export default function Wallet() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("/api/wallet/transactions", {
-        headers: { Authorization: `Bearer ${token}` },
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Cache-Control": "no-cache",
+        },
+        cache: "no-store",
       });
 
       if (response.ok) {
