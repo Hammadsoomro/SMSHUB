@@ -3,14 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  AlertCircle,
-  Phone,
-  Loader2,
-  Search,
-  Check,
-  X,
-} from "lucide-react";
+import { AlertCircle, Phone, Loader2, Search, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneNumber, TeamMember } from "@shared/api";
 
@@ -133,7 +126,6 @@ export default function BoughtNumbers() {
       setIsAssigning(false);
     }
   };
-
 
   const filteredNumbers = numbers.filter((num) =>
     num.phoneNumber.includes(searchTerm),
@@ -261,7 +253,9 @@ export default function BoughtNumbers() {
                   No Numbers Yet
                 </h3>
                 <p className="text-sm text-blue-700">
-                  You haven't bought any phone numbers yet. Click "Buy New Number" to get started, or connect your Twilio credentials in Settings.
+                  You haven't bought any phone numbers yet. Click "Buy New
+                  Number" to get started, or connect your Twilio credentials in
+                  Settings.
                 </p>
               </div>
             </div>
@@ -335,10 +329,12 @@ export default function BoughtNumbers() {
                         Assigned To
                       </p>
                       <p className="text-sm font-semibold text-green-700">
-                        {teamMembers.find((m) => m.id === num.assignedTo)?.name || "Unknown"}
+                        {teamMembers.find((m) => m.id === num.assignedTo)
+                          ?.name || "Unknown"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {teamMembers.find((m) => m.id === num.assignedTo)?.email || ""}
+                        {teamMembers.find((m) => m.id === num.assignedTo)
+                          ?.email || ""}
                       </p>
                     </>
                   ) : (

@@ -84,7 +84,6 @@ export default function ConversationsTopBar({
                   Back
                 </span>
               </Button>
-
             </div>
           )}
 
