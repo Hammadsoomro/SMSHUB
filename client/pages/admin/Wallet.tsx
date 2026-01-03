@@ -63,28 +63,44 @@ export default function Wallet() {
   const fetchTwilioBalance = async () => {
     try {
       const token = localStorage.getItem("token");
+      console.log("🔄 Fetching Twilio balance...");
       const response = await fetch("/api/wallet/twilio-balance", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data.balance !== undefined) {
+        console.log("✅ Balance response received:", data);
+        if (data.balance !== undefined && data.balance !== null) {
+          console.log(
+            `💰 Balance set to: $${data.balance.toFixed(2)} USD`,
+          );
           setTwilioBalance(data.balance);
           setTwilioConnected(true);
           setError("");
           setLastRefreshTime(new Date().toLocaleTimeString());
+        } else {
+          console.warn(
+            "⚠️ Balance is undefined or null in response:",
+            data,
+          );
+          setError("Received empty balance from Twilio");
+          setTwilioConnected(false);
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
+        console.error(
+          `❌ Error ${response.status}:`,
+          errorData,
+        );
         setTwilioConnected(false);
-        setError(errorData.error || "Failed to fetch Twilio balance");
-        console.error("Twilio balance fetch error:", errorData);
+        setError(errorData.error || `HTTP ${response.status}: Failed to fetch balance`);
       }
     } catch (err) {
       setTwilioConnected(false);
-      setError("Connection error - unable to reach Twilio API");
-      console.error("Twilio balance error:", err);
+      const errorMsg = err instanceof Error ? err.message : "Unknown error";
+      console.error("❌ Twilio balance error:", err);
+      setError(`Connection error: ${errorMsg}`);
     }
   };
 
