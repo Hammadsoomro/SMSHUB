@@ -25,6 +25,7 @@ export default function Wallet() {
   const [error, setError] = useState("");
   const [twilioConnected, setTwilioConnected] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<string | null>(null);
+  const [credentialsConnected, setCredentialsConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
     const validateAuth = async () => {
@@ -34,9 +35,28 @@ export default function Wallet() {
           navigate("/login", { replace: true });
           return;
         }
+
+        // First check if credentials are connected
+        const credResponse = await fetch("/api/admin/credentials", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (credResponse.ok) {
+          const credData = await credResponse.json();
+          const hasCredentials = !!credData.credentials;
+          console.log(
+            `📋 Credentials check: ${hasCredentials ? "✅ Connected" : "❌ Not connected"}`,
+          );
+          setCredentialsConnected(hasCredentials);
+        } else {
+          console.warn("⚠️ Failed to check credentials");
+          setCredentialsConnected(false);
+        }
+
         await Promise.all([fetchTransactions(), fetchTwilioBalance()]);
         setIsLoading(false);
-      } catch {
+      } catch (err) {
+        console.error("Error in validateAuth:", err);
         navigate("/login", { replace: true });
       }
     };
