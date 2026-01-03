@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Link as LinkIcon,
   DollarSign,
+  CheckCircle,
 } from "lucide-react";
 import { WalletTransaction } from "@shared/api";
 
@@ -21,7 +22,9 @@ export default function Wallet() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
   const [twilioConnected, setTwilioConnected] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<string | null>(null);
 
   useEffect(() => {
     const validateAuth = async () => {
@@ -69,22 +72,32 @@ export default function Wallet() {
         if (data.balance !== undefined) {
           setTwilioBalance(data.balance);
           setTwilioConnected(true);
+          setError("");
+          setLastRefreshTime(new Date().toLocaleTimeString());
         }
       } else {
+        const errorData = await response.json().catch(() => ({}));
         setTwilioConnected(false);
+        setError(errorData.error || "Failed to fetch Twilio balance");
+        console.error("Twilio balance fetch error:", errorData);
       }
-    } catch {
+    } catch (err) {
       setTwilioConnected(false);
+      setError("Connection error - unable to reach Twilio API");
+      console.error("Twilio balance error:", err);
     }
   };
 
   const handleRefreshBalance = async () => {
     setIsRefreshing(true);
+    setError("");
     try {
       await fetchTwilioBalance();
       setSuccess("✅ Twilio balance refreshed!");
       setTimeout(() => setSuccess(""), 3000);
-    } catch {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to refresh balance";
+      setError(errorMessage);
       setTimeout(() => setSuccess(""), 3000);
     } finally {
       setIsRefreshing(false);
