@@ -453,18 +453,41 @@ export class TwilioClient {
         res.on("end", () => {
           try {
             const response = JSON.parse(data);
+
+            // Check for HTTP errors first
+            if (res.statusCode && res.statusCode >= 400) {
+              console.error(
+                `Twilio API error (${res.statusCode}):`,
+                response.code,
+                response.message,
+              );
+              return reject(
+                new Error(
+                  `Twilio API error: ${response.message || "Unknown error"}`,
+                ),
+              );
+            }
+
             // Twilio returns balance as a negative number (credit)
-            const balance = response.balance
+            // Example: -71.4305 means $71.4305 available
+            const balanceValue = response.balance
               ? Math.abs(parseFloat(response.balance))
               : 0;
-            resolve(balance);
+
+            console.log(
+              `✅ Twilio balance fetched: $${balanceValue.toFixed(4)} (raw: ${response.balance})`,
+            );
+
+            resolve(balanceValue);
           } catch (error) {
+            console.error("Error parsing Twilio response:", error, "Data:", data);
             reject(error);
           }
         });
       });
 
       req.on("error", (error) => {
+        console.error("Twilio API request error:", error);
         reject(error);
       });
 
