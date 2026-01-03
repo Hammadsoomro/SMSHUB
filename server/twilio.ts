@@ -480,7 +480,12 @@ export class TwilioClient {
 
             resolve(balanceValue);
           } catch (error) {
-            console.error("Error parsing Twilio response:", error, "Data:", data);
+            console.error(
+              "Error parsing Twilio response:",
+              error,
+              "Data:",
+              data,
+            );
             reject(error);
           }
         });

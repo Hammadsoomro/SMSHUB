@@ -22,9 +22,9 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     // Prevent caching for this endpoint - balance changes dynamically
     res.set({
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      "Pragma": "no-cache",
-      "Expires": "0",
-      "ETag": undefined,
+      Pragma: "no-cache",
+      Expires: "0",
+      ETag: undefined,
     });
 
     // Get admin's Twilio credentials
@@ -47,19 +47,15 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     );
     const balance = await twilioClient.getAccountBalance();
 
-    console.log(
-      `✅ Successfully fetched balance: $${balance.toFixed(2)} USD`,
-    );
+    console.log(`✅ Successfully fetched balance: $${balance.toFixed(2)} USD`);
     res.json({ balance });
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     console.error(`❌ Get Twilio balance error: ${errorMessage}`);
-    res
-      .status(500)
-      .json({
-        error: `Failed to fetch Twilio balance: ${errorMessage}`,
-      });
+    res.status(500).json({
+      error: `Failed to fetch Twilio balance: ${errorMessage}`,
+    });
   }
 };
 
