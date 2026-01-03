@@ -17,14 +17,20 @@ const COUNTRY_CODES: Record<string, { code: string; name: string }> = {
 export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
+    console.log(`📞 Fetching Twilio balance for admin: ${adminId}`);
 
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
+      console.warn(`⚠️ No Twilio credentials found for admin: ${adminId}`);
       return res
         .status(400)
         .json({ error: "Please connect your Twilio credentials first" });
     }
+
+    console.log(
+      `✅ Credentials found for admin ${adminId}, fetching balance...`,
+    );
 
     // Fetch balance from Twilio
     const twilioClient = new TwilioClient(
@@ -33,10 +39,19 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     );
     const balance = await twilioClient.getAccountBalance();
 
+    console.log(
+      `✅ Successfully fetched balance: $${balance.toFixed(2)} USD`,
+    );
     res.json({ balance });
   } catch (error) {
-    console.error("Get Twilio balance error:", error);
-    res.status(500).json({ error: "Failed to fetch Twilio balance" });
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error(`❌ Get Twilio balance error: ${errorMessage}`);
+    res
+      .status(500)
+      .json({
+        error: `Failed to fetch Twilio balance: ${errorMessage}`,
+      });
   }
 };
 
