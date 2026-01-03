@@ -38,7 +38,12 @@ export default function Wallet() {
 
         // First check if credentials are connected
         const credResponse = await fetch("/api/admin/credentials", {
-          headers: { Authorization: `Bearer ${token}` },
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+          },
+          cache: "no-store",
         });
 
         if (credResponse.ok) {
