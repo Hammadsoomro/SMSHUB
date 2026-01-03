@@ -94,7 +94,9 @@ export default function Wallet() {
     try {
       const token = localStorage.getItem("token");
       console.log("🔄 Fetching Twilio balance...");
-      const response = await fetch("/api/wallet/twilio-balance", {
+      // Add timestamp to bypass cache
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/wallet/twilio-balance?t=${timestamp}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
