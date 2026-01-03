@@ -2,9 +2,9 @@ name: NodeJS with Webpack
 
 on:
   push:
-    branches: [ "zen-zone" ]
+    branches: ["zen-zone"]
   pull_request:
-    branches: [ "zen-zone" ]
+    branches: ["zen-zone"]
 
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2

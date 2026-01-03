@@ -301,7 +301,9 @@ export default function BuyNumbers() {
 
   const handlePurchaseNumber = async (number: AvailablePhoneNumber) => {
     if (twilioBalance === null) {
-      setError("Twilio balance information not loaded. Please refresh the page.");
+      setError(
+        "Twilio balance information not loaded. Please refresh the page.",
+      );
       return;
     }
 
@@ -654,7 +656,8 @@ export default function BuyNumbers() {
             <div className="grid gap-4">
               {filteredNumbers.map((num, idx) => {
                 const cost = parseFloat(num.cost);
-                const hasBalance = twilioBalance !== null && twilioBalance >= cost;
+                const hasBalance =
+                  twilioBalance !== null && twilioBalance >= cost;
                 const isPurchased = purchasedNumbers.has(num.phoneNumber);
 
                 return (

@@ -38,7 +38,7 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
     } catch (dbError) {
       console.warn(
         `Database lookup failed for user ${payload.userId}, using token data:`,
-        dbError
+        dbError,
       );
       // Fall through to use token data as fallback
     }

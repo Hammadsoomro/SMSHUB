@@ -1,14 +1,9 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  MessageSquare,
-  Phone,
-  LogOut,
-  Sun,
-  Moon,
-  Loader2,
-} from "lucide-react";
+import { MessageSquare, Phone, LogOut, Sun, Moon, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import socketService from "@/services/socketService";
 
 interface TeamMemberLayoutProps {
   children: ReactNode;
@@ -36,6 +31,24 @@ export default function TeamMemberLayout({ children }: TeamMemberLayoutProps) {
 
   useEffect(() => {
     fetchAssignedNumbers();
+  }, []);
+
+  useEffect(() => {
+    // Listen for phone number assignment updates
+    socketService.on("phone_number_assigned", (data: any) => {
+      console.log("📞 Phone number assignment updated:", data);
+      if (data.action === "assigned") {
+        toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
+      } else {
+        toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
+      }
+      // Refresh assigned numbers
+      fetchAssignedNumbers();
+    });
+
+    return () => {
+      socketService.off("phone_number_assigned");
+    };
   }, []);
 
   const fetchAssignedNumbers = async () => {

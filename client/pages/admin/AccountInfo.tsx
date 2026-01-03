@@ -2,7 +2,14 @@ import { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Calendar, Copy, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  User,
+  Mail,
+  Calendar,
+  Copy,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { User as UserType } from "@shared/api";
 
 export default function AccountInfo() {
@@ -74,7 +81,9 @@ export default function AccountInfo() {
 
             {/* Account ID */}
             <div>
-              <label className="text-sm font-semibold mb-2 block">Account ID</label>
+              <label className="text-sm font-semibold mb-2 block">
+                Account ID
+              </label>
               <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
                 <code className="flex-1 font-mono text-sm">{user.id}</code>
                 <Button
@@ -127,7 +136,8 @@ export default function AccountInfo() {
               <div>
                 <h3 className="font-semibold text-blue-900 mb-2">Admin Role</h3>
                 <p className="text-sm text-blue-700">
-                  As an admin, you have full control over your team, phone numbers, and Twilio credentials.
+                  As an admin, you have full control over your team, phone
+                  numbers, and Twilio credentials.
                 </p>
               </div>
             </div>
@@ -139,7 +149,8 @@ export default function AccountInfo() {
               <div>
                 <h3 className="font-semibold text-purple-900 mb-2">Security</h3>
                 <p className="text-sm text-purple-700">
-                  Keep your credentials secure and never share your account credentials with others.
+                  Keep your credentials secure and never share your account
+                  credentials with others.
                 </p>
               </div>
             </div>
@@ -150,9 +161,13 @@ export default function AccountInfo() {
         <Card className="p-6 mt-8 border-destructive/30 bg-destructive/5">
           <h3 className="font-semibold text-destructive mb-4">Danger Zone</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Once you delete your account, there is no going back. Please be certain.
+            Once you delete your account, there is no going back. Please be
+            certain.
           </p>
-          <Button variant="outline" className="text-destructive hover:bg-destructive/10">
+          <Button
+            variant="outline"
+            className="text-destructive hover:bg-destructive/10"
+          >
             Delete Account
           </Button>
         </Card>

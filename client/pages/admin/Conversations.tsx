@@ -298,12 +298,33 @@ export default function Conversations() {
       const socket = socketService.connect(token);
 
       if (!socket) {
-        console.error("Failed to get socket instance");
-        setIsConnecting(false);
-        toast.error("Unable to establish socket connection");
+        // Socket creation initiated but not immediately available
+        // Wait a moment and retry once
+        console.warn("Socket instance not immediately available, retrying...");
+        setTimeout(() => {
+          const retrySocket = socketService.getSocket();
+          if (retrySocket) {
+            console.log("Socket available after retry");
+            setupSocketListeners(retrySocket);
+          } else {
+            console.error("Failed to get socket instance after retry");
+            setIsConnecting(false);
+            toast.error("Unable to establish socket connection");
+          }
+        }, 500);
         return;
       }
 
+      setupSocketListeners(socket);
+    } catch (error) {
+      console.error("Error initializing Socket.IO:", error);
+      setIsConnecting(false);
+      toast.error("Failed to initialize real-time connection");
+    }
+  };
+
+  const setupSocketListeners = (socket: any) => {
+    try {
       // Remove old listeners to avoid duplicates
       socket.off("connect");
       socket.off("disconnect");
@@ -400,6 +421,39 @@ export default function Conversations() {
       socketService.on("unreadUpdated", (data: any) => {
         console.log("🔔 Unread counts updated:", data);
         updatePageTitle();
+      });
+
+      socketService.on("phone_number_assigned", (data: any) => {
+        console.log("📞 Phone number assignment updated:", data);
+        // Reload phone numbers to reflect the assignment/unassignment
+        if (data.action === "assigned") {
+          toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
+        } else {
+          toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
+        }
+        // Reload phone numbers and reload initial data to sync with server
+        ApiService.getAccessiblePhoneNumbers()
+          .then((phoneNumbersData) => {
+            const processedPhones = phoneNumbersData.map((phone: any) => ({
+              ...phone,
+            }));
+            setPhoneNumbers(processedPhones);
+            // If a new number was assigned, automatically select it
+            if (
+              data.action === "assigned" &&
+              !activePhoneNumberRef.current &&
+              processedPhones.length > 0
+            ) {
+              const assignedPhone =
+                processedPhones.find((p) => p.id === data.phoneNumberId) ||
+                processedPhones[0];
+              setActivePhoneNumber(assignedPhone.phoneNumber);
+              loadContactsForPhoneNumber(assignedPhone.id);
+            }
+          })
+          .catch((error) => {
+            console.error("Error reloading phone numbers:", error);
+          });
       });
     } catch (error) {
       console.error("Error initializing Socket.IO:", error);

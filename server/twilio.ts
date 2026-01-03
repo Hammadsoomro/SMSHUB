@@ -454,7 +454,9 @@ export class TwilioClient {
           try {
             const response = JSON.parse(data);
             // Twilio returns balance as a negative number (credit)
-            const balance = response.balance ? Math.abs(parseFloat(response.balance)) : 0;
+            const balance = response.balance
+              ? Math.abs(parseFloat(response.balance))
+              : 0;
             resolve(balance);
           } catch (error) {
             reject(error);

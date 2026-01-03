@@ -1,6 +1,7 @@
 import crypto from "crypto";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 interface JWTPayload {
   userId: string;
@@ -20,10 +21,15 @@ function base64UrlEncode(str: string): string {
 
 function base64UrlDecode(str: string): string {
   str += new Array(5 - (str.length % 4)).join("=");
-  return Buffer.from(str.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString();
+  return Buffer.from(
+    str.replace(/-/g, "+").replace(/_/g, "/"),
+    "base64",
+  ).toString();
 }
 
-export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string {
+export function generateToken(
+  payload: Omit<JWTPayload, "iat" | "exp">,
+): string {
   const now = Math.floor(Date.now() / 1000);
   const jwtPayload: JWTPayload = {
     ...payload,
