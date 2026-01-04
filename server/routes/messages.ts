@@ -162,10 +162,13 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       });
     }
 
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
     // Send SMS via Twilio
     const twilioClient = new TwilioClient(
       credentials.accountSid,
-      credentials.authToken,
+      decryptedAuthToken,
     );
     const twilioResponse = await twilioClient.sendSMS(
       to,
