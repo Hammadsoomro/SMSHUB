@@ -1099,7 +1099,6 @@ export default function Conversations() {
                 </div>
                 <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                   <span>Press Enter to send, Shift+Enter for new line</span>
-                  <span>Balance: ${walletBalance.toFixed(2)}</span>
                 </div>
               </div>
             </>
