@@ -164,9 +164,8 @@ export default function BuyNumbers() {
           navigate("/login", { replace: true });
           return;
         }
-        await fetchWallet();
         await fetchTwilioBalance();
-        setIsLoadingWallet(false);
+        setIsLoading(false);
       } catch {
         navigate("/login", { replace: true });
       }
@@ -174,22 +173,6 @@ export default function BuyNumbers() {
 
     validateAuth();
   }, [navigate]);
-
-  const fetchWallet = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/wallet", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setWallet(data.wallet);
-      }
-    } catch (err) {
-      console.error("Error fetching wallet:", err);
-    }
-  };
 
   const fetchTwilioBalance = async () => {
     try {
