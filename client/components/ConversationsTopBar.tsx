@@ -17,7 +17,6 @@ import {
   Sun,
   Moon,
   User as UserIcon,
-  DollarSign,
   RefreshCw,
   CheckCircle2,
   ArrowLeft,
