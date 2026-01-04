@@ -604,11 +604,11 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
     );
 
     const sentToday = sentMessages.filter(
-      (m) => new Date(m.timestamp || m.sentAt || m.createdAt) >= todayStart,
+      (m) => getMessageDate(m) >= todayStart,
     ).length;
 
     const receivedToday = receivedMessages.filter(
-      (m) => new Date(m.timestamp || m.receivedAt || m.createdAt) >= todayStart,
+      (m) => getMessageDate(m) >= todayStart,
     ).length;
 
     // Calculate response rate
