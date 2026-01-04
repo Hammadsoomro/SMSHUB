@@ -26,6 +26,7 @@ import {
   handleAssignNumber,
   handleUpdateNumberSettings,
   handleGetDashboardStats,
+  handleGetInsights,
   handleDeleteAccount,
 } from "./routes/admin";
 
