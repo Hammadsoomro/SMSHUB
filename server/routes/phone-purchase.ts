@@ -332,10 +332,13 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
         .json({ error: "Please connect your Twilio credentials first" });
     }
 
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
     // Purchase number from Twilio
     const twilioClient = new TwilioClient(
       credentials.accountSid,
-      credentials.authToken,
+      decryptedAuthToken,
     );
     const purchaseResponse =
       await twilioClient.purchasePhoneNumber(phoneNumber);
