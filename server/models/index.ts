@@ -6,8 +6,6 @@ import {
   TeamMember,
   Message,
   Contact,
-  Wallet,
-  WalletTransaction,
 } from "@shared/api";
 
 // User Schema
