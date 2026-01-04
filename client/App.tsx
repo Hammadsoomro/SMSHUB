@@ -22,6 +22,7 @@ import TeamManagement from "./pages/admin/TeamManagement";
 import Settings from "./pages/admin/Settings";
 import AccountInfo from "./pages/admin/AccountInfo";
 import Insights from "./pages/admin/Insights";
+import TwilioBalance from "./pages/admin/TwilioBalance";
 
 const queryClient = new QueryClient();
 
