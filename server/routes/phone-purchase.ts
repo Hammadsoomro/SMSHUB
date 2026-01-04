@@ -335,12 +335,6 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
         .json({ error: "This number is already purchased by you" });
     }
 
-    // Get wallet
-    const wallet = await storage.getOrCreateWallet(adminId);
-    if (wallet.balance < cost) {
-      return res.status(400).json({ error: "Insufficient wallet balance" });
-    }
-
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
