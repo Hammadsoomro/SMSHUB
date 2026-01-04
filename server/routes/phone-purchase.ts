@@ -17,7 +17,6 @@ const COUNTRY_CODES: Record<string, { code: string; name: string }> = {
 export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    console.log(`📞 Fetching Twilio balance for admin: ${adminId}`);
 
     // Prevent caching for this endpoint - balance changes dynamically
     res.set({
@@ -30,17 +29,10 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
-      console.warn(`⚠️ No Twilio credentials found for admin: ${adminId}`);
       return res
         .status(400)
         .json({ error: "Please connect your Twilio credentials first" });
     }
-
-    console.log(
-      `✅ Credentials found for admin ${adminId}`,
-      `Account SID: ${credentials.accountSid.substring(0, 6)}...`,
-      `fetching balance...`,
-    );
 
     // Fetch balance from Twilio
     const twilioClient = new TwilioClient(
@@ -48,16 +40,10 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
       credentials.authToken,
     );
 
-    console.log("🔄 Making request to Twilio API for account balance...");
     const balance = await twilioClient.getAccountBalance();
-
-    console.log(
-      `✅ Successfully fetched balance: $${balance.toFixed(4)} USD (raw value: ${balance})`,
-    );
 
     // Validate balance is a positive number
     if (typeof balance !== "number" || isNaN(balance) || balance < 0) {
-      console.error(`❌ Invalid balance value returned: ${balance}`);
       return res.status(500).json({
         error: "Invalid balance value received from Twilio API",
       });
@@ -67,12 +53,7 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error(`❌ Get Twilio balance error: ${errorMessage}`);
-
-    // Log stack trace for debugging
-    if (error instanceof Error) {
-      console.error("Stack trace:", error.stack);
-    }
+    console.error("Get Twilio balance error:", errorMessage);
 
     res.status(500).json({
       error: `Failed to fetch Twilio balance: ${errorMessage}`,
