@@ -35,8 +35,24 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
         .json({ error: "Please connect your Twilio credentials first" });
     }
 
+    // Validate that credentials have the required fields
+    if (!credentials.accountSid || !credentials.authToken) {
+      return res.status(400).json({
+        error:
+          "Incomplete Twilio credentials. Please reconnect your account.",
+      });
+    }
+
     // Decrypt the auth token
     const decryptedAuthToken = decrypt(credentials.authToken);
+
+    // Additional validation for decrypted token
+    if (!decryptedAuthToken || decryptedAuthToken.trim().length === 0) {
+      return res.status(400).json({
+        error:
+          "Invalid Twilio auth token. Please reconnect your credentials.",
+      });
+    }
 
     // Fetch balance from Twilio
     const twilioClient = new TwilioClient(
@@ -60,7 +76,7 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     console.error("Get Twilio balance error:", errorMessage);
 
     res.status(500).json({
-      error: `Failed to fetch Twilio balance: ${errorMessage}`,
+      error: `Failed to fetch Twilio balance: ${errorMessage}. Please verify your credentials are correct.`,
     });
   }
 };
