@@ -631,7 +631,7 @@ export default function BuyNumbers() {
                           <p className="text-xs text-muted-foreground mt-2">
                             Monthly cost:{" "}
                             <span className="font-semibold">
-                              ${cost.toFixed(2)} {wallet?.currency}
+                              ${cost.toFixed(2)}
                             </span>
                           </p>
 
