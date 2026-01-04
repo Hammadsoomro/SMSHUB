@@ -262,14 +262,6 @@ export default function Conversations() {
         );
       }
 
-      // Load wallet balance
-      try {
-        const walletData = await ApiService.getWallet();
-        setWalletBalance(walletData.balance || 0);
-      } catch (error) {
-        console.error("Error loading wallet balance:", error);
-        setWalletBalance(0);
-      }
     } catch (error) {
       console.error("Error loading initial data:", error);
       toast.error(
