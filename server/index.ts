@@ -181,11 +181,8 @@ export async function createServer() {
     handleGetAssignedPhoneNumber,
   );
 
-  // Wallet routes (requires authentication)
-  app.get("/api/wallet", authMiddleware, handleGetWallet);
-  app.post("/api/wallet/add-funds", authMiddleware, handleAddFunds);
-  app.get("/api/wallet/transactions", authMiddleware, handleGetTransactions);
-  app.get("/api/wallet/twilio-balance", authMiddleware, handleGetTwilioBalance);
+  // Twilio balance route (requires authentication)
+  app.get("/api/admin/twilio-balance", authMiddleware, adminOnly, handleGetTwilioBalance);
 
   // Phone purchase routes (requires authentication)
   app.get(
