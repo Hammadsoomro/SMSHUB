@@ -325,10 +325,6 @@ export default function BuyNumbers() {
         throw new Error(errorData.error || "Failed to purchase number");
       }
 
-      const data = await response.json();
-      if (data.wallet) {
-        setWallet(data.wallet);
-      }
       // Refetch Twilio balance after purchase
       await fetchTwilioBalance();
 
