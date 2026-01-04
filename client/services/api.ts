@@ -1,10 +1,5 @@
 import { Contact, Message, PhoneNumber, User } from "@shared/api";
 
-interface Wallet {
-  balance: number;
-  currency: string;
-}
-
 interface ApiResponse<T> {
   data?: T;
   error?: string;
