@@ -202,5 +202,47 @@ export async function createServer() {
     handlePurchaseNumber,
   );
 
+  // Debug endpoint for Twilio credentials (dev only)
+  app.get(
+    "/api/admin/twilio-debug",
+    authMiddleware,
+    adminOnly,
+    async (req, res) => {
+      try {
+        const adminId = req.userId!;
+        const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+
+        if (!credentials) {
+          return res.json({
+            hasCredentials: false,
+            message: "No Twilio credentials found"
+          });
+        }
+
+        // Test if credentials are valid by making a test API call
+        const twilioClient = new TwilioClient(
+          credentials.accountSid,
+          credentials.authToken,
+        );
+
+        console.log("🔍 Debug: Testing Twilio connection...");
+        const balance = await twilioClient.getAccountBalance();
+
+        return res.json({
+          hasCredentials: true,
+          accountSid: credentials.accountSid.substring(0, 6) + "...",
+          balance: balance,
+          connectedAt: credentials.connectedAt,
+        });
+      } catch (error) {
+        console.error("Debug endpoint error:", error);
+        res.status(500).json({
+          error: error instanceof Error ? error.message : "Unknown error",
+          hasCredentials: "unknown",
+        });
+      }
+    },
+  );
+
   return app;
 }
