@@ -176,10 +176,6 @@ class ApiService {
     return response.number;
   }
 
-  async getWallet(): Promise<Wallet> {
-    const response = await this.request<{ wallet: Wallet }>("/api/wallet");
-    return response.wallet;
-  }
 }
 
 export default new ApiService();
