@@ -16,39 +16,19 @@ export const handleWebhookHealth: RequestHandler = async (req, res) => {
  * Receives form data from Twilio and stores the message in the database
  */
 export const handleInboundSMS: RequestHandler = async (req, res) => {
-  console.log("\n\n🔔 ===== TWILIO WEBHOOK HIT ===== 🔔");
-  console.log("⏰ Timestamp:", new Date().toISOString());
-  console.log("📤 Request Method:", req.method);
-  console.log("📨 Full request body:", JSON.stringify(req.body, null, 2));
-  console.log("🔔 ===== WEBHOOK RECEIVED ===== 🔔\n\n");
-
   try {
     const { From, To, Body, MessageSid } = req.body;
 
     // Validate required fields
     if (!From || !To || !Body) {
-      console.warn("Missing required fields in Twilio webhook:", {
-        From,
-        To,
-        Body,
-      });
       return res.status(400).send("Missing required fields");
     }
-
-    console.log(`✅ Received inbound SMS from ${From} to ${To}: ${Body}`);
 
     // Find the phone number in the database
     const phoneNumber = await storage.getPhoneNumberByPhoneNumber(To);
     if (!phoneNumber) {
-      console.error(`❌ Phone number ${To} not found in database`);
-      console.error(
-        "This means the Twilio number hasn't been added to your account",
-      );
       return res.status(404).send("Phone number not found");
     }
-    console.log(
-      `✅ Found phone number: ${phoneNumber.phoneNumber} (ID: ${phoneNumber.id})`,
-    );
 
     // Store the message
     const message: Message = {
@@ -63,7 +43,6 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     };
 
     await storage.addMessage(message);
-    console.log(`✅ Message saved to database: ${message.id}`);
 
     // Get or create contact
     const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
