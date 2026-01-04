@@ -18,7 +18,6 @@ import Conversations from "./pages/admin/Conversations";
 import Credentials from "./pages/admin/Credentials";
 import BuyNumbers from "./pages/admin/BuyNumbers";
 import BoughtNumbers from "./pages/admin/BoughtNumbers";
-import Wallet from "./pages/admin/Wallet";
 import TeamManagement from "./pages/admin/TeamManagement";
 import Settings from "./pages/admin/Settings";
 import AccountInfo from "./pages/admin/AccountInfo";
