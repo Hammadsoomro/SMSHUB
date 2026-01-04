@@ -79,9 +79,6 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     // Emit socket.io events to notify connected clients in real-time
     const io = getSocketIOInstance();
     if (io && phoneNumber.assignedTo) {
-      console.log(
-        `📡 Emitting socket.io event to user ${phoneNumber.assignedTo}`,
-      );
       io.to(`user:${phoneNumber.assignedTo}`).emit("new_message", {
         id: message.id,
         phoneNumberId: phoneNumber.id,
@@ -105,7 +102,6 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
       });
     } else if (io && phoneNumber.adminId) {
       // If no assignee, emit to admin
-      console.log(`📡 No assignee, emitting to admin ${phoneNumber.adminId}`);
       io.to(`admin:${phoneNumber.adminId}`).emit("new_message", {
         id: message.id,
         phoneNumberId: phoneNumber.id,
@@ -126,8 +122,6 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
         lastMessageTime: savedContact.lastMessageTime,
         unreadCount: savedContact.unreadCount,
       });
-    } else {
-      console.warn(`⚠️ No socket.io instance available or no assignee/admin`);
     }
 
     // Return TwiML response to Twilio
@@ -135,14 +129,9 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response></Response>`;
 
-    console.log(`✅✅✅ WEBHOOK PROCESSED SUCCESSFULLY ✅✅✅`);
     res.type("application/xml").send(twimlResponse);
   } catch (error) {
-    console.error("❌ Inbound SMS webhook error:", error);
-    console.error("Error details:", {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
+    console.error("Inbound SMS webhook error:", error);
     res.status(500).send("Internal server error");
   }
 };
