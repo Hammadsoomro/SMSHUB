@@ -161,6 +161,12 @@ export async function createServer() {
     adminOnly,
     handleGetDashboardStats,
   );
+  app.delete(
+    "/api/admin/delete-account",
+    authMiddleware,
+    adminOnly,
+    handleDeleteAccount,
+  );
 
   // Messages routes (requires authentication)
   app.get("/api/messages/contacts", authMiddleware, handleGetContacts);
