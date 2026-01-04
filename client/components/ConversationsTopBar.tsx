@@ -217,7 +217,7 @@ export default function ConversationsTopBar({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/admin/settings")}
                 className="cursor-pointer"
               >
                 <UserIcon className="w-4 h-4 mr-2" />
@@ -226,7 +226,7 @@ export default function ConversationsTopBar({
               {profile.role === "admin" && (
                 <>
                   <DropdownMenuItem
-                    onClick={() => navigate("/buy-numbers")}
+                    onClick={() => navigate("/admin/buy-numbers")}
                     className="cursor-pointer"
                   >
                     <Phone className="w-4 h-4 mr-2" />

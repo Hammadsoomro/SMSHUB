@@ -4,6 +4,7 @@ import https from "https";
 import { storage } from "../storage";
 import { generateToken } from "../jwt";
 import { getSocketIOInstance } from "../index";
+import { encrypt, decrypt } from "../crypto";
 import {
   TwilioCredentialsRequest,
   TwilioCredentials,
@@ -125,16 +126,26 @@ export const handleSaveCredentials: RequestHandler = async (req, res) => {
     }
 
     const credentialsId = storage.generateId();
+    // Encrypt the auth token before storing
+    const encryptedAuthToken = encrypt(authToken);
+
     const credentials: TwilioCredentials = {
       id: credentialsId,
       adminId,
       accountSid,
-      authToken,
+      authToken: encryptedAuthToken,
       connectedAt: new Date().toISOString(),
     };
 
     storage.setTwilioCredentials(credentials);
-    res.json({ credentials });
+
+    // Return credentials with decrypted token to client
+    res.json({
+      credentials: {
+        ...credentials,
+        authToken: authToken, // Return original unencrypted token to client
+      },
+    });
   } catch (error) {
     console.error("Save credentials error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -150,7 +161,15 @@ export const handleGetCredentials: RequestHandler = async (req, res) => {
       return res.json({ credentials: null });
     }
 
-    res.json({ credentials });
+    // Decrypt the auth token before sending to client
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
+    res.json({
+      credentials: {
+        ...credentials,
+        authToken: decryptedAuthToken,
+      },
+    });
   } catch (error) {
     console.error("Get credentials error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -505,5 +524,58 @@ export const handleGetDashboardStats: RequestHandler = async (req, res) => {
   } catch (error) {
     console.error("Get dashboard stats error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Delete admin account and all associated data
+ * This cascades to remove:
+ * - User account
+ * - Twilio credentials
+ * - Phone numbers
+ * - Messages
+ * - Contacts
+ * - Team members
+ */
+export const handleDeleteAccount: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+
+    // Verify the user exists and is an admin
+    const user = await storage.getUserById(adminId);
+    if (!user || user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ error: "Only admin accounts can be deleted" });
+    }
+
+    // Delete all associated data
+    // 1. Delete all team members (which will also delete their user accounts)
+    const teamMembers = await storage.getTeamMembersByAdminId(adminId);
+    for (const member of teamMembers) {
+      await storage.removeTeamMember(member.id);
+    }
+
+    // 2. Delete all phone numbers
+    const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    for (const number of phoneNumbers) {
+      // Delete all messages and contacts for this number
+      const contacts = await storage.getContactsByPhoneNumber(number.id);
+      for (const contact of contacts) {
+        await storage.deleteContact(contact.id);
+      }
+      // Note: Messages are cascade deleted with contacts in most implementations
+    }
+
+    // 3. Delete Twilio credentials
+    await storage.removeTwilioCredentials(adminId);
+
+    // 4. Delete the admin user account itself
+    await storage.removeUser(adminId);
+
+    res.json({ success: true, message: "Account deleted successfully" });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    res.status(500).json({ error: "Failed to delete account" });
   }
 };

@@ -43,11 +43,6 @@ class Storage {
     // Convert Mongoose document to plain JavaScript object
     const userObj = user.toObject();
 
-    // Debug logging
-    console.log(
-      `[DEBUG getUserByEmail] Email: ${email}, Role: ${userObj.role}, ID: ${userObj.id}`,
-    );
-
     return userObj as User & { password: string };
   }
 
@@ -104,6 +99,21 @@ class Storage {
       } catch (error) {
         // findByIdAndUpdate may fail if id is not a valid ObjectId
         throw error;
+      }
+    }
+  }
+
+  async removeUser(userId: string): Promise<void> {
+    // Try to delete by custom id field first
+    let result = await UserModel.deleteOne({ id: userId });
+
+    // If not found by custom id, try MongoDB's _id
+    if (result.deletedCount === 0) {
+      try {
+        await UserModel.deleteOne({ _id: userId });
+      } catch (error) {
+        // If neither works, user doesn't exist
+        // This is not necessarily an error for deletion
       }
     }
   }

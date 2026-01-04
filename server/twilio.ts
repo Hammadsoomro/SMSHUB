@@ -454,23 +454,10 @@ export class TwilioClient {
 
         res.on("end", () => {
           try {
-            console.log(`\n=== Twilio API Response Debug ===`);
-            console.log(`Status: ${res.statusCode}`);
-            console.log(`Raw Data: ${data}`);
-
             const response = JSON.parse(data);
-
-            console.log("Parsed Response:", JSON.stringify(response, null, 2));
-            console.log("Available Fields:", Object.keys(response).join(", "));
-            console.log(`================================\n`);
 
             // Check for HTTP errors first
             if (res.statusCode && res.statusCode >= 400) {
-              console.error(
-                `❌ Twilio API error (${res.statusCode}):`,
-                response.code,
-                response.message,
-              );
               return reject(
                 new Error(
                   `Twilio API error: ${response.message || "Unknown error"}`,
@@ -483,18 +470,6 @@ export class TwilioClient {
             let balanceRaw = response.balance;
 
             if (balanceRaw === undefined || balanceRaw === null) {
-              console.error(
-                "❌ Balance field missing from Twilio Balance API response",
-              );
-              console.error(
-                "Available fields in response:",
-                Object.keys(response),
-              );
-              console.error(
-                "Full response object:",
-                JSON.stringify(response, null, 2),
-              );
-
               return reject(
                 new Error(
                   `Balance field not found in Twilio Balance API response. Available fields: ${Object.keys(response).join(", ")}`,
@@ -508,9 +483,6 @@ export class TwilioClient {
 
             // Validate that the parsed value is a valid number
             if (isNaN(balanceValue)) {
-              console.error(
-                `❌ Invalid balance value from Twilio: ${balanceRaw}`,
-              );
               return reject(
                 new Error(
                   `Invalid balance value from Twilio API: ${balanceRaw}`,
@@ -518,25 +490,15 @@ export class TwilioClient {
               );
             }
 
-            console.log(
-              `✅ Twilio balance fetched successfully: $${balanceValue.toFixed(4)} (raw: ${balanceRaw})`,
-            );
-
             resolve(balanceValue);
           } catch (error) {
-            console.error(
-              "❌ Error parsing Twilio response:",
-              error,
-              "Raw data:",
-              data,
-            );
+            console.error("Error parsing Twilio response:", error);
             reject(error);
           }
         });
       });
 
       req.on("error", (error) => {
-        console.error("Twilio API request error:", error);
         reject(error);
       });
 

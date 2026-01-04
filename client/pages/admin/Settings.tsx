@@ -5,6 +5,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   AlertCircle,
   Loader2,
   Check,
@@ -41,6 +51,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState<
     "profile" | "credentials" | "account"
   >("profile");
+  const [isDeleting, setIsDeleting] = useState(false);
   const {
     register,
     handleSubmit,
@@ -95,6 +106,35 @@ export default function Settings() {
       }
     } catch (err) {
       console.error("Failed to fetch credentials:", err);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/admin/delete-account", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(`Failed to delete account: ${error.error || "Unknown error"}`);
+        setIsDeleting(false);
+        return;
+      }
+
+      // Account deleted successfully
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
+    } catch (error) {
+      alert("Error deleting account. Please try again.");
+      setIsDeleting(false);
     }
   };
 
@@ -853,15 +893,52 @@ export default function Settings() {
                 Danger Zone
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Once you delete your account, there is no going back. Please be
-                certain.
+                Once you delete your account, there is no going back. All your
+                data, including phone numbers, messages, and team members will
+                be permanently deleted. Please be certain.
               </p>
-              <Button
-                variant="outline"
-                className="text-destructive hover:bg-destructive/10"
-              >
-                Delete Account
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="text-destructive hover:bg-destructive/10"
+                  >
+                    Delete Account
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Account?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      your account and all associated data (phone numbers,
+                      messages, team members, and credentials).
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="bg-destructive/10 border border-destructive/30 rounded p-3 mb-4">
+                    <p className="text-sm font-semibold text-destructive">
+                      Are you absolutely sure?
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      disabled={isDeleting}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete Account"
+                      )}
+                    </AlertDialogAction>
+                  </div>
+                </AlertDialogContent>
+              </AlertDialog>
             </Card>
           </div>
         )}

@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { storage } from "../storage";
 import { TwilioClient } from "../twilio";
+import { decrypt } from "../crypto";
 import { AvailablePhoneNumber, PhoneNumber } from "@shared/api";
 
 // Country codes mapping for Twilio
@@ -17,7 +18,6 @@ const COUNTRY_CODES: Record<string, { code: string; name: string }> = {
 export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    console.log(`📞 Fetching Twilio balance for admin: ${adminId}`);
 
     // Prevent caching for this endpoint - balance changes dynamically
     res.set({
@@ -30,34 +30,24 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
-      console.warn(`⚠️ No Twilio credentials found for admin: ${adminId}`);
       return res
         .status(400)
         .json({ error: "Please connect your Twilio credentials first" });
     }
 
-    console.log(
-      `✅ Credentials found for admin ${adminId}`,
-      `Account SID: ${credentials.accountSid.substring(0, 6)}...`,
-      `fetching balance...`,
-    );
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
 
     // Fetch balance from Twilio
     const twilioClient = new TwilioClient(
       credentials.accountSid,
-      credentials.authToken,
+      decryptedAuthToken,
     );
 
-    console.log("🔄 Making request to Twilio API for account balance...");
     const balance = await twilioClient.getAccountBalance();
-
-    console.log(
-      `✅ Successfully fetched balance: $${balance.toFixed(4)} USD (raw value: ${balance})`,
-    );
 
     // Validate balance is a positive number
     if (typeof balance !== "number" || isNaN(balance) || balance < 0) {
-      console.error(`❌ Invalid balance value returned: ${balance}`);
       return res.status(500).json({
         error: "Invalid balance value received from Twilio API",
       });
@@ -67,12 +57,7 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error(`❌ Get Twilio balance error: ${errorMessage}`);
-
-    // Log stack trace for debugging
-    if (error instanceof Error) {
-      console.error("Stack trace:", error.stack);
-    }
+    console.error("Get Twilio balance error:", errorMessage);
 
     res.status(500).json({
       error: `Failed to fetch Twilio balance: ${errorMessage}`,
@@ -100,6 +85,9 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
         .json({ error: "Please connect your Twilio credentials first" });
     }
 
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
     // Fetch available numbers from Twilio
     // Try multiple area codes if the first attempt doesn't return any numbers
     let availableNumbers: any = null;
@@ -109,7 +97,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     for (areaCodeIndex = 0; areaCodeIndex < maxRetries; areaCodeIndex++) {
       const twilioClient = new TwilioClient(
         credentials.accountSid,
-        credentials.authToken,
+        decryptedAuthToken,
       );
       availableNumbers = await twilioClient.getAvailableNumbers(
         countryCode,
@@ -122,28 +110,17 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
         availableNumbers.available_phone_numbers &&
         availableNumbers.available_phone_numbers.length > 0
       ) {
-        console.log(
-          `Found ${availableNumbers.available_phone_numbers.length} numbers for ${countryCode}/${state} using area code index ${areaCodeIndex}`,
-        );
         break;
       }
 
       // If we got an API error, don't retry
       if (availableNumbers.error || availableNumbers.error_message) {
-        console.warn(
-          `API error on retry ${areaCodeIndex}: ${availableNumbers.error_message}`,
-        );
         break;
       }
-
-      console.log(
-        `No numbers found for ${countryCode}/${state} with area code index ${areaCodeIndex}, retrying...`,
-      );
     }
 
     // Check for Twilio API errors
     if (availableNumbers.error || availableNumbers.error_message) {
-      console.error("Twilio API error:", availableNumbers);
       return res.status(400).json({
         error:
           availableNumbers.error_message ||
@@ -158,12 +135,6 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       !availableNumbers.available_phone_numbers ||
       !Array.isArray(availableNumbers.available_phone_numbers)
     ) {
-      console.warn(
-        "No phone numbers available for country:",
-        countryCode,
-        "Response:",
-        availableNumbers,
-      );
       return res.json({ numbers: [] });
     }
 
@@ -231,10 +202,6 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
         });
         allNumbers.push(...regionNumbers);
       }
-    }
-
-    if (allNumbers.length === 0) {
-      console.warn("No phone numbers found for country:", countryCode);
     }
 
     // Filter numbers by state/province if specified
@@ -364,10 +331,13 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
         .json({ error: "Please connect your Twilio credentials first" });
     }
 
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
     // Purchase number from Twilio
     const twilioClient = new TwilioClient(
       credentials.accountSid,
-      credentials.authToken,
+      decryptedAuthToken,
     );
     const purchaseResponse =
       await twilioClient.purchasePhoneNumber(phoneNumber);
