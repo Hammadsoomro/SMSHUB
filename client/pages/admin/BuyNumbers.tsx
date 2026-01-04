@@ -16,7 +16,6 @@ import {
   AlertCircle,
   Phone,
   Loader2,
-  Wallet,
   Search,
   Check,
   MessageSquare,
