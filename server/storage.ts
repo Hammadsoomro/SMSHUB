@@ -43,11 +43,6 @@ class Storage {
     // Convert Mongoose document to plain JavaScript object
     const userObj = user.toObject();
 
-    // Debug logging
-    console.log(
-      `[DEBUG getUserByEmail] Email: ${email}, Role: ${userObj.role}, ID: ${userObj.id}`,
-    );
-
     return userObj as User & { password: string };
   }
 
