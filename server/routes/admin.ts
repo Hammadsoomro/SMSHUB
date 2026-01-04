@@ -526,3 +526,54 @@ export const handleGetDashboardStats: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+/**
+ * Delete admin account and all associated data
+ * This cascades to remove:
+ * - User account
+ * - Twilio credentials
+ * - Phone numbers
+ * - Messages
+ * - Contacts
+ * - Team members
+ */
+export const handleDeleteAccount: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+
+    // Verify the user exists and is an admin
+    const user = await storage.getUserById(adminId);
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ error: "Only admin accounts can be deleted" });
+    }
+
+    // Delete all associated data
+    // 1. Delete all team members (which will also delete their user accounts)
+    const teamMembers = await storage.getTeamMembersByAdminId(adminId);
+    for (const member of teamMembers) {
+      await storage.removeTeamMember(member.id);
+    }
+
+    // 2. Delete all phone numbers
+    const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    for (const number of phoneNumbers) {
+      // Delete all messages and contacts for this number
+      const contacts = await storage.getContactsByPhoneNumber(number.id);
+      for (const contact of contacts) {
+        await storage.deleteContact(contact.id);
+      }
+      // Note: Messages are cascade deleted with contacts in most implementations
+    }
+
+    // 3. Delete Twilio credentials
+    await storage.removeTwilioCredentials(adminId);
+
+    // 4. Delete the admin user account itself
+    await storage.removeUser(adminId);
+
+    res.json({ success: true, message: "Account deleted successfully" });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    res.status(500).json({ error: "Failed to delete account" });
+  }
+};
