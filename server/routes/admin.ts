@@ -543,7 +543,9 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
     // Collect all messages for all phone numbers
     let allMessages: any[] = [];
     for (const phoneNumber of phoneNumbers) {
-      const messages = await storage.getMessagesByPhoneNumber(phoneNumber.id || phoneNumber._id);
+      const messages = await storage.getMessagesByPhoneNumber(
+        phoneNumber.id || phoneNumber._id,
+      );
       allMessages = allMessages.concat(messages || []);
     }
 
@@ -652,9 +654,7 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
 
     const messagesByHour = Object.entries(hourMap)
       .map(([hour, count]) => ({ hour, count }))
-      .sort(
-        (a, b) => parseInt(a.hour) - parseInt(b.hour),
-      );
+      .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
 
     // Messages by status
     const statusMap: Record<string, number> = {};
@@ -663,10 +663,12 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
       statusMap[status] = (statusMap[status] || 0) + 1;
     });
 
-    const messagesByStatus = Object.entries(statusMap).map(([status, count]) => ({
-      status: status.charAt(0).toUpperCase() + status.slice(1),
-      count,
-    }));
+    const messagesByStatus = Object.entries(statusMap).map(
+      ([status, count]) => ({
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+        count,
+      }),
+    );
 
     // Daily messages
     const dailyMap: Record<string, { sent: number; received: number }> = {};

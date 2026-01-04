@@ -237,7 +237,9 @@ export default function Insights() {
                     <p className="text-sm text-muted-foreground font-medium">
                       Messages Today
                     </p>
-                    <p className="text-3xl font-bold mt-2">{metrics.sentToday}</p>
+                    <p className="text-3xl font-bold mt-2">
+                      {metrics.sentToday}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-2">
                       Sent in this period
                     </p>
@@ -293,7 +295,9 @@ export default function Insights() {
             <div className="grid lg:grid-cols-2 gap-8 mb-8">
               {/* Daily Messages Chart */}
               <Card className="p-6 border hover:shadow-lg transition-shadow">
-                <h3 className="text-lg font-semibold mb-6">Daily Message Volume</h3>
+                <h3 className="text-lg font-semibold mb-6">
+                  Daily Message Volume
+                </h3>
                 {metrics.dailyMessages.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={metrics.dailyMessages}>
@@ -302,7 +306,12 @@ export default function Insights() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="sent" stackId="a" fill="#3b82f6" name="Sent" />
+                      <Bar
+                        dataKey="sent"
+                        stackId="a"
+                        fill="#3b82f6"
+                        name="Sent"
+                      />
                       <Bar
                         dataKey="received"
                         stackId="a"
@@ -320,7 +329,9 @@ export default function Insights() {
 
               {/* Message Status Distribution */}
               <Card className="p-6 border hover:shadow-lg transition-shadow">
-                <h3 className="text-lg font-semibold mb-6">Message Status Distribution</h3>
+                <h3 className="text-lg font-semibold mb-6">
+                  Message Status Distribution
+                </h3>
                 {metrics.messagesByStatus.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>

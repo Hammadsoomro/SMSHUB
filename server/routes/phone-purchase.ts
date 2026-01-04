@@ -38,8 +38,7 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     // Validate that credentials have the required fields
     if (!credentials.accountSid || !credentials.authToken) {
       return res.status(400).json({
-        error:
-          "Incomplete Twilio credentials. Please reconnect your account.",
+        error: "Incomplete Twilio credentials. Please reconnect your account.",
       });
     }
 
@@ -49,8 +48,7 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     // Additional validation for decrypted token
     if (!decryptedAuthToken || decryptedAuthToken.trim().length === 0) {
       return res.status(400).json({
-        error:
-          "Invalid Twilio auth token. Please reconnect your credentials.",
+        error: "Invalid Twilio auth token. Please reconnect your credentials.",
       });
     }
 
@@ -104,8 +102,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     // Validate that credentials have the required fields
     if (!credentials.accountSid || !credentials.authToken) {
       return res.status(400).json({
-        error:
-          "Incomplete Twilio credentials. Please reconnect your account.",
+        error: "Incomplete Twilio credentials. Please reconnect your account.",
       });
     }
 
@@ -115,8 +112,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     // Additional validation for decrypted token
     if (!decryptedAuthToken || decryptedAuthToken.trim().length === 0) {
       return res.status(400).json({
-        error:
-          "Invalid Twilio auth token. Please reconnect your credentials.",
+        error: "Invalid Twilio auth token. Please reconnect your credentials.",
       });
     }
 
@@ -366,8 +362,7 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
     // Validate that credentials have the required fields
     if (!credentials.accountSid || !credentials.authToken) {
       return res.status(400).json({
-        error:
-          "Incomplete Twilio credentials. Please reconnect your account.",
+        error: "Incomplete Twilio credentials. Please reconnect your account.",
       });
     }
 
@@ -377,8 +372,7 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
     // Additional validation for decrypted token
     if (!decryptedAuthToken || decryptedAuthToken.trim().length === 0) {
       return res.status(400).json({
-        error:
-          "Invalid Twilio auth token. Please reconnect your credentials.",
+        error: "Invalid Twilio auth token. Please reconnect your credentials.",
       });
     }
 

@@ -6,7 +6,11 @@ interface AdBannerProps {
   slot?: string;
 }
 
-export default function AdBanner({ width, height, slot = "ca-pub-8199077937393778" }: AdBannerProps) {
+export default function AdBanner({
+  width,
+  height,
+  slot = "ca-pub-8199077937393778",
+}: AdBannerProps) {
   const adContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,7 +31,7 @@ export default function AdBanner({ width, height, slot = "ca-pub-819907793739377
       style={{
         width: `${width}px`,
         height: `${height}px`,
-        minHeight: `${height}px`
+        minHeight: `${height}px`,
       }}
     >
       <ins
