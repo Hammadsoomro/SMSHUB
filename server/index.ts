@@ -28,12 +28,6 @@ import {
   handleGetDashboardStats,
 } from "./routes/admin";
 
-// Wallet routes
-import {
-  handleGetWallet,
-  handleAddFunds,
-  handleGetTransactions,
-} from "./routes/wallet";
 
 // Phone purchase routes
 import {
