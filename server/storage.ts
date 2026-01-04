@@ -9,8 +9,6 @@ import {
   TeamMemberModel,
   MessageModel,
   ContactModel,
-  WalletModel,
-  WalletTransactionModel,
 } from "./models";
 import {
   User,
@@ -19,8 +17,6 @@ import {
   TeamMember,
   Message,
   Contact,
-  Wallet,
-  WalletTransaction,
 } from "@shared/api";
 
 class Storage {
