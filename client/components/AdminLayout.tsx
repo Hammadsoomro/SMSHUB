@@ -23,7 +23,6 @@ const ADMIN_MENU = [
   { href: "/admin/conversations", label: "Conversations", icon: MessageSquare },
   { href: "/admin/bought-numbers", label: "Bought Numbers", icon: Phone },
   { href: "/admin/buy-numbers", label: "Buy Numbers", icon: Phone },
-  { href: "/admin/wallet", label: "Wallet", icon: Wallet },
   { href: "/admin/team", label: "Team Management", icon: Users },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
