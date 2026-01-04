@@ -108,6 +108,21 @@ class Storage {
     }
   }
 
+  async removeUser(userId: string): Promise<void> {
+    // Try to delete by custom id field first
+    let result = await UserModel.deleteOne({ id: userId });
+
+    // If not found by custom id, try MongoDB's _id
+    if (result.deletedCount === 0) {
+      try {
+        await UserModel.deleteOne({ _id: userId });
+      } catch (error) {
+        // If neither works, user doesn't exist
+        // This is not necessarily an error for deletion
+      }
+    }
+  }
+
   // Twilio Credentials
   async setTwilioCredentials(credentials: TwilioCredentials): Promise<void> {
     await TwilioCredentialsModel.updateOne(
