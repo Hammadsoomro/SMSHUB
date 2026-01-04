@@ -52,6 +52,7 @@ import { handleInboundSMS, handleWebhookHealth } from "./routes/webhooks";
 
 // Middleware
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
+import { validateTwilioSignature } from "./middleware/twilio-signature";
 import { handleDemo } from "./routes/demo";
 
 // Global socket.io instance for webhook access
@@ -91,8 +92,10 @@ export async function createServer() {
   app.patch("/api/auth/update-profile", authMiddleware, handleUpdateProfile);
 
   // Webhook routes (public - for Twilio callbacks)
-  app.get("/api/webhooks/inbound-sms", handleWebhookHealth); // Health check
-  app.post("/api/webhooks/inbound-sms", handleInboundSMS);
+  // Note: Health check doesn't need signature validation
+  app.get("/api/webhooks/inbound-sms", handleWebhookHealth);
+  // Inbound SMS endpoint requires Twilio signature validation
+  app.post("/api/webhooks/inbound-sms", validateTwilioSignature, handleInboundSMS);
 
   // Admin routes (requires admin role)
   app.post(
