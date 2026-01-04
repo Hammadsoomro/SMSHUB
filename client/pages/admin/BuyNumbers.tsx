@@ -374,7 +374,7 @@ export default function BuyNumbers() {
       matchesCapabilityFilter(num),
   );
 
-  if (isLoadingWallet) {
+  if (isLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[400px]">
