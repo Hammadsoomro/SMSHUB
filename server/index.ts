@@ -201,11 +201,84 @@ export async function createServer() {
     adminOnly,
     handlePurchaseNumber,
   );
+
+  // Debug endpoint for Twilio credentials (dev only)
   app.get(
-    "/api/admin/twilio-balance",
+    "/api/admin/twilio-debug",
     authMiddleware,
     adminOnly,
-    handleGetTwilioBalance,
+    async (req, res) => {
+      try {
+        const adminId = req.userId!;
+        const credentials =
+          await storage.getTwilioCredentialsByAdminId(adminId);
+
+        if (!credentials) {
+          return res.json({
+            hasCredentials: false,
+            message: "No Twilio credentials found",
+            steps: [
+              "1. Go to Admin Settings",
+              "2. Connect your Twilio credentials",
+              "3. Verify Account SID and Auth Token are correct",
+            ],
+          });
+        }
+
+        console.log("🔍 Debug: Testing Twilio connection...");
+        console.log(
+          `Account SID: ${credentials.accountSid.substring(0, 6)}...`,
+        );
+
+        // Test if credentials are valid by making a test API call
+        const twilioClient = new TwilioClient(
+          credentials.accountSid,
+          credentials.authToken,
+        );
+
+        try {
+          const balance = await twilioClient.getAccountBalance();
+          console.log("✅ Balance fetched successfully:", balance);
+
+          return res.json({
+            hasCredentials: true,
+            accountSid: credentials.accountSid.substring(0, 6) + "...",
+            balance: balance,
+            connectedAt: credentials.connectedAt,
+            status: "SUCCESS",
+          });
+        } catch (balanceError) {
+          console.error("❌ Balance fetch failed:", balanceError);
+
+          // Return detailed error information
+          return res.json({
+            hasCredentials: true,
+            accountSid: credentials.accountSid.substring(0, 6) + "...",
+            balance: null,
+            connectedAt: credentials.connectedAt,
+            status: "BALANCE_FETCH_FAILED",
+            error:
+              balanceError instanceof Error
+                ? balanceError.message
+                : "Unknown error",
+            troubleshooting: [
+              "1. Verify credentials are correct in Admin Settings",
+              "2. Check Account SID starts with 'AC' and has 34 chars",
+              "3. Check Auth Token is at least 32 characters",
+              "4. Verify your Twilio account is active (not suspended)",
+              "5. Try reconnecting credentials",
+              "6. Check if your Twilio account type supports balance queries",
+            ],
+          });
+        }
+      } catch (error) {
+        console.error("Debug endpoint error:", error);
+        res.status(500).json({
+          error: error instanceof Error ? error.message : "Unknown error",
+          hasCredentials: "unknown",
+        });
+      }
+    },
   );
 
   return app;

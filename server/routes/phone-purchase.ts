@@ -37,7 +37,9 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
     }
 
     console.log(
-      `✅ Credentials found for admin ${adminId}, fetching balance...`,
+      `✅ Credentials found for admin ${adminId}`,
+      `Account SID: ${credentials.accountSid.substring(0, 6)}...`,
+      `fetching balance...`,
     );
 
     // Fetch balance from Twilio
@@ -45,14 +47,33 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
       credentials.accountSid,
       credentials.authToken,
     );
+
+    console.log("🔄 Making request to Twilio API for account balance...");
     const balance = await twilioClient.getAccountBalance();
 
-    console.log(`✅ Successfully fetched balance: $${balance.toFixed(2)} USD`);
+    console.log(
+      `✅ Successfully fetched balance: $${balance.toFixed(4)} USD (raw value: ${balance})`,
+    );
+
+    // Validate balance is a positive number
+    if (typeof balance !== "number" || isNaN(balance) || balance < 0) {
+      console.error(`❌ Invalid balance value returned: ${balance}`);
+      return res.status(500).json({
+        error: "Invalid balance value received from Twilio API",
+      });
+    }
+
     res.json({ balance });
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     console.error(`❌ Get Twilio balance error: ${errorMessage}`);
+
+    // Log stack trace for debugging
+    if (error instanceof Error) {
+      console.error("Stack trace:", error.stack);
+    }
+
     res.status(500).json({
       error: `Failed to fetch Twilio balance: ${errorMessage}`,
     });

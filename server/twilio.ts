@@ -427,6 +427,7 @@ export class TwilioClient {
 
   /**
    * Get account balance from Twilio
+   * Uses the Balance endpoint which returns the actual balance information
    */
   async getAccountBalance(): Promise<number> {
     return new Promise((resolve, reject) => {
@@ -434,9 +435,10 @@ export class TwilioClient {
         "base64",
       );
 
+      // Use the Balance endpoint, not the Account endpoint
       const options = {
         hostname: "api.twilio.com",
-        path: `/2010-04-01/Accounts/${this.accountSid}.json`,
+        path: `/2010-04-01/Accounts/${this.accountSid}/Balance.json`,
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
@@ -452,12 +454,20 @@ export class TwilioClient {
 
         res.on("end", () => {
           try {
+            console.log(`\n=== Twilio API Response Debug ===`);
+            console.log(`Status: ${res.statusCode}`);
+            console.log(`Raw Data: ${data}`);
+
             const response = JSON.parse(data);
+
+            console.log("Parsed Response:", JSON.stringify(response, null, 2));
+            console.log("Available Fields:", Object.keys(response).join(", "));
+            console.log(`================================\n`);
 
             // Check for HTTP errors first
             if (res.statusCode && res.statusCode >= 400) {
               console.error(
-                `Twilio API error (${res.statusCode}):`,
+                `❌ Twilio API error (${res.statusCode}):`,
                 response.code,
                 response.message,
               );
@@ -468,22 +478,56 @@ export class TwilioClient {
               );
             }
 
+            // The Balance endpoint returns balance as a string (negative number for credit)
+            // Try different field names that Twilio might use
+            let balanceRaw = response.balance;
+
+            if (balanceRaw === undefined || balanceRaw === null) {
+              console.error(
+                "❌ Balance field missing from Twilio Balance API response",
+              );
+              console.error(
+                "Available fields in response:",
+                Object.keys(response),
+              );
+              console.error(
+                "Full response object:",
+                JSON.stringify(response, null, 2),
+              );
+
+              return reject(
+                new Error(
+                  `Balance field not found in Twilio Balance API response. Available fields: ${Object.keys(response).join(", ")}`,
+                ),
+              );
+            }
+
             // Twilio returns balance as a negative number (credit)
             // Example: -71.4305 means $71.4305 available
-            const balanceValue = response.balance
-              ? Math.abs(parseFloat(response.balance))
-              : 0;
+            const balanceValue = Math.abs(parseFloat(balanceRaw));
+
+            // Validate that the parsed value is a valid number
+            if (isNaN(balanceValue)) {
+              console.error(
+                `❌ Invalid balance value from Twilio: ${balanceRaw}`,
+              );
+              return reject(
+                new Error(
+                  `Invalid balance value from Twilio API: ${balanceRaw}`,
+                ),
+              );
+            }
 
             console.log(
-              `✅ Twilio balance fetched: $${balanceValue.toFixed(4)} (raw: ${response.balance})`,
+              `✅ Twilio balance fetched successfully: $${balanceValue.toFixed(4)} (raw: ${balanceRaw})`,
             );
 
             resolve(balanceValue);
           } catch (error) {
             console.error(
-              "Error parsing Twilio response:",
+              "❌ Error parsing Twilio response:",
               error,
-              "Data:",
+              "Raw data:",
               data,
             );
             reject(error);
