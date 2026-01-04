@@ -41,10 +41,10 @@ export default function Landing() {
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          name: "SMSHub",
+          name: "Connectlify",
           description:
             "Professional SMS messaging platform for teams. Send bulk SMS, manage phone numbers, and automate communication.",
-          url: "https://smshub.io",
+          url: "https://connectlify.io",
           applicationCategory: "BusinessApplication",
           offers: {
             "@type": "Offer",
@@ -67,7 +67,7 @@ export default function Landing() {
               <MessageSquare className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              SMSHub
+              Connectlify
             </span>
           </div>
           <div className="flex items-center gap-4">
