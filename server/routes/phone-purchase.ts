@@ -103,28 +103,17 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
         availableNumbers.available_phone_numbers &&
         availableNumbers.available_phone_numbers.length > 0
       ) {
-        console.log(
-          `Found ${availableNumbers.available_phone_numbers.length} numbers for ${countryCode}/${state} using area code index ${areaCodeIndex}`,
-        );
         break;
       }
 
       // If we got an API error, don't retry
       if (availableNumbers.error || availableNumbers.error_message) {
-        console.warn(
-          `API error on retry ${areaCodeIndex}: ${availableNumbers.error_message}`,
-        );
         break;
       }
-
-      console.log(
-        `No numbers found for ${countryCode}/${state} with area code index ${areaCodeIndex}, retrying...`,
-      );
     }
 
     // Check for Twilio API errors
     if (availableNumbers.error || availableNumbers.error_message) {
-      console.error("Twilio API error:", availableNumbers);
       return res.status(400).json({
         error:
           availableNumbers.error_message ||
@@ -139,12 +128,6 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       !availableNumbers.available_phone_numbers ||
       !Array.isArray(availableNumbers.available_phone_numbers)
     ) {
-      console.warn(
-        "No phone numbers available for country:",
-        countryCode,
-        "Response:",
-        availableNumbers,
-      );
       return res.json({ numbers: [] });
     }
 
@@ -214,9 +197,6 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       }
     }
 
-    if (allNumbers.length === 0) {
-      console.warn("No phone numbers found for country:", countryCode);
-    }
 
     // Filter numbers by state/province if specified
     let filteredNumbers = allNumbers;
