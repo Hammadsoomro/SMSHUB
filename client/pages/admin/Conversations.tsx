@@ -695,9 +695,9 @@ export default function Conversations() {
       0,
     );
     if (totalUnread > 0) {
-      document.title = `(${totalUnread}) Connectlify - Messages`;
+      document.title = `(${totalUnread}) SMSHub - Messages`;
     } else {
-      document.title = "Connectlify - Messages";
+      document.title = "SMSHub - Messages";
     }
   };
 
@@ -753,7 +753,7 @@ export default function Conversations() {
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <div>
-            <h3 className="text-lg font-semibold">Loading Connectlify</h3>
+            <h3 className="text-lg font-semibold">Loading SMSHub</h3>
             <p className="text-sm text-muted-foreground">
               Setting up your conversations...
             </p>
@@ -1110,7 +1110,7 @@ export default function Conversations() {
 
                 <div>
                   <h2 className="text-2xl font-bold mb-2">
-                    Welcome to Connectlify
+                    Welcome to SMSHub
                   </h2>
                   <p className="text-muted-foreground">
                     Select a contact from the sidebar to start messaging, or add
