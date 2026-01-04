@@ -235,11 +235,6 @@ export default function ConversationsTopBar({
                 </>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Balance: ${walletBalance.toFixed(2)}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => window.location.reload()}
                 className="cursor-pointer"
