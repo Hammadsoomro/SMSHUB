@@ -777,7 +777,6 @@ export default function Conversations() {
         activePhoneNumber={activePhoneNumber}
         onPhoneNumberSelect={switchPhoneNumber}
         profile={profile}
-        walletBalance={walletBalance}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
         notifications={notifications}
