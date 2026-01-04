@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { storage } from "../storage";
 import { TwilioClient } from "../twilio";
+import { decrypt } from "../crypto";
 import { AvailablePhoneNumber, PhoneNumber } from "@shared/api";
 
 // Country codes mapping for Twilio
