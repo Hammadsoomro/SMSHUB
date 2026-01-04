@@ -31,7 +31,6 @@ interface ConversationsTopBarProps {
   activePhoneNumber: string | null;
   onPhoneNumberSelect: (phoneNumber: string) => void;
   profile: User;
-  walletBalance: number;
   isDarkMode: boolean;
   onToggleTheme: () => void;
   notifications: boolean;
