@@ -75,7 +75,6 @@ export default function Conversations() {
   const [isConnecting, setIsConnecting] = useState(false);
 
   // UI State
-  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
     return stored === "dark";
