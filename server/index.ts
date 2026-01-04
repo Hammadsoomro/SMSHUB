@@ -26,6 +26,7 @@ import {
   handleAssignNumber,
   handleUpdateNumberSettings,
   handleGetDashboardStats,
+  handleDeleteAccount,
 } from "./routes/admin";
 
 // Phone purchase routes
