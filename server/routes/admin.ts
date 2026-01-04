@@ -633,9 +633,7 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
 
     Object.values(conversationMap).forEach((messages) => {
       const sorted = messages.sort(
-        (a, b) =>
-          new Date(a.timestamp || a.sentAt || a.createdAt).getTime() -
-          new Date(b.timestamp || b.sentAt || b.createdAt).getTime(),
+        (a, b) => getMessageDate(a).getTime() - getMessageDate(b).getTime(),
       );
 
       for (let i = 0; i < sorted.length - 1; i++) {
@@ -643,11 +641,7 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
           sorted[i].direction === "outbound" &&
           sorted[i + 1].direction === "inbound"
         ) {
-          const responseTime =
-            new Date(
-              sorted[i + 1].timestamp || sorted[i + 1].receivedAt || sorted[i + 1].createdAt,
-            ).getTime() -
-            new Date(sorted[i].timestamp || sorted[i].sentAt || sorted[i].createdAt).getTime();
+          const responseTime = getMessageDate(sorted[i + 1]).getTime() - getMessageDate(sorted[i]).getTime();
           totalResponseTime += responseTime;
           responseCount++;
         }
