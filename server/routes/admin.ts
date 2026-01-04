@@ -528,6 +528,19 @@ export const handleGetDashboardStats: RequestHandler = async (req, res) => {
 };
 
 // Get Messaging Insights Analytics
+// Helper function to safely parse message dates
+const getMessageDate = (msg: any, fallback?: Date): Date => {
+  const timestamp = msg.timestamp || msg.sentAt || msg.createdAt;
+  if (!timestamp) return fallback || new Date();
+
+  const date = new Date(timestamp);
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    return fallback || new Date();
+  }
+  return date;
+};
+
 export const handleGetInsights: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
