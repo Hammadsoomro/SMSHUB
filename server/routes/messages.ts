@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import { storage } from "../storage";
+import { decrypt } from "../crypto";
 import { SendMessageRequest, Message, Contact, PhoneNumber } from "@shared/api";
 import { TwilioClient } from "../twilio";
 
