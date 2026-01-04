@@ -527,6 +527,190 @@ export const handleGetDashboardStats: RequestHandler = async (req, res) => {
   }
 };
 
+// Get Messaging Insights Analytics
+export const handleGetInsights: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { timeRange = "7days" } = req.query as { timeRange?: string };
+
+    // Get all phone numbers for this admin
+    const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+
+    if (phoneNumbers.length === 0) {
+      return res.status(400).json({ error: "No phone numbers found" });
+    }
+
+    // Collect all messages for all phone numbers
+    let allMessages: any[] = [];
+    for (const phoneNumber of phoneNumbers) {
+      const messages = await storage.getMessagesByPhoneNumber(
+        phoneNumber.id || phoneNumber._id,
+      );
+      allMessages = allMessages.concat(messages || []);
+    }
+
+    if (allMessages.length === 0) {
+      return res.status(400).json({ error: "No messages found" });
+    }
+
+    // Calculate time range
+    const now = new Date();
+    let startDate = new Date(now);
+    switch (timeRange) {
+      case "24hours":
+        startDate.setHours(now.getHours() - 24);
+        break;
+      case "30days":
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case "90days":
+        startDate.setDate(now.getDate() - 90);
+        break;
+      case "7days":
+      default:
+        startDate.setDate(now.getDate() - 7);
+        break;
+    }
+
+    // Filter messages by date range
+    const filteredMessages = allMessages.filter((msg) => {
+      const msgDate = new Date(msg.sentAt || msg.createdAt || now);
+      return msgDate >= startDate;
+    });
+
+    // Calculate metrics
+    const totalMessages = allMessages.length;
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const sentMessages = filteredMessages.filter(
+      (m) => m.direction === "outbound" || m.from,
+    );
+    const receivedMessages = filteredMessages.filter(
+      (m) => m.direction === "inbound" || m.to,
+    );
+
+    const sentToday = sentMessages.filter(
+      (m) => new Date(m.sentAt || m.createdAt) >= todayStart,
+    ).length;
+
+    const receivedToday = receivedMessages.filter(
+      (m) => new Date(m.receivedAt || m.createdAt) >= todayStart,
+    ).length;
+
+    // Calculate response rate
+    const responseRate =
+      sentMessages.length > 0
+        ? (receivedMessages.length / sentMessages.length) * 100
+        : 0;
+
+    // Calculate average response time
+    let totalResponseTime = 0;
+    let responseCount = 0;
+
+    // Group messages by conversation and calculate response times
+    const conversationMap: Record<string, any[]> = {};
+    filteredMessages.forEach((msg) => {
+      const key = msg.contactId || msg.from || msg.to;
+      if (!conversationMap[key]) {
+        conversationMap[key] = [];
+      }
+      conversationMap[key].push(msg);
+    });
+
+    Object.values(conversationMap).forEach((messages) => {
+      const sorted = messages.sort(
+        (a, b) =>
+          new Date(a.sentAt || a.createdAt).getTime() -
+          new Date(b.sentAt || b.createdAt).getTime(),
+      );
+
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (
+          sorted[i].direction === "outbound" &&
+          sorted[i + 1].direction === "inbound"
+        ) {
+          const responseTime =
+            new Date(
+              sorted[i + 1].receivedAt || sorted[i + 1].createdAt,
+            ).getTime() -
+            new Date(sorted[i].sentAt || sorted[i].createdAt).getTime();
+          totalResponseTime += responseTime;
+          responseCount++;
+        }
+      }
+    });
+
+    const avgResponseTime =
+      responseCount > 0 ? totalResponseTime / responseCount / 60000 : 0; // Convert to minutes
+
+    // Messages by hour
+    const hourMap: Record<string, number> = {};
+    filteredMessages.forEach((msg) => {
+      const date = new Date(msg.sentAt || msg.createdAt);
+      const hour = `${date.getHours()}:00`;
+      hourMap[hour] = (hourMap[hour] || 0) + 1;
+    });
+
+    const messagesByHour = Object.entries(hourMap)
+      .map(([hour, count]) => ({ hour, count }))
+      .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
+
+    // Messages by status
+    const statusMap: Record<string, number> = {};
+    filteredMessages.forEach((msg) => {
+      const status = msg.status || "unknown";
+      statusMap[status] = (statusMap[status] || 0) + 1;
+    });
+
+    const messagesByStatus = Object.entries(statusMap).map(
+      ([status, count]) => ({
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+        count,
+      }),
+    );
+
+    // Daily messages
+    const dailyMap: Record<string, { sent: number; received: number }> = {};
+    filteredMessages.forEach((msg) => {
+      const date = new Date(msg.sentAt || msg.createdAt);
+      const dateStr = date.toISOString().split("T")[0];
+
+      if (!dailyMap[dateStr]) {
+        dailyMap[dateStr] = { sent: 0, received: 0 };
+      }
+
+      if (msg.direction === "outbound" || msg.from) {
+        dailyMap[dateStr].sent++;
+      } else {
+        dailyMap[dateStr].received++;
+      }
+    });
+
+    const dailyMessages = Object.entries(dailyMap)
+      .map(([date, data]) => ({
+        date,
+        ...data,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    res.json({
+      totalMessages,
+      sentToday,
+      receivedToday,
+      avgResponseTime: Math.round(avgResponseTime),
+      responseRate: Math.round(responseRate * 10) / 10,
+      activeNumbers: phoneNumbers.length,
+      messagesByHour,
+      messagesByStatus,
+      dailyMessages,
+    });
+  } catch (error) {
+    console.error("Get insights error:", error);
+    res.status(500).json({ error: "Failed to fetch insights" });
+  }
+};
+
 /**
  * Delete admin account and all associated data
  * This cascades to remove:

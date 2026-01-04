@@ -26,6 +26,7 @@ import {
   handleAssignNumber,
   handleUpdateNumberSettings,
   handleGetDashboardStats,
+  handleGetInsights,
   handleDeleteAccount,
 } from "./routes/admin";
 
@@ -165,6 +166,7 @@ export async function createServer() {
     adminOnly,
     handleGetDashboardStats,
   );
+  app.get("/api/admin/insights", authMiddleware, adminOnly, handleGetInsights);
   app.delete(
     "/api/admin/delete-account",
     authMiddleware,

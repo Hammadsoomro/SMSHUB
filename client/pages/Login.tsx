@@ -99,7 +99,7 @@ export default function Login() {
             <MessageSquare className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            SMSHub
+            Connectlify
           </span>
         </Link>
 
@@ -107,7 +107,7 @@ export default function Login() {
         <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
           <h1 className="text-2xl font-bold mb-2">Welcome Back</h1>
           <p className="text-muted-foreground mb-6">
-            Sign in to your SMSHub account
+            Sign in to your Connectlify account
           </p>
 
           {error && (
