@@ -3,42 +3,43 @@ import { useEffect, useRef } from "react";
 interface AdBannerProps {
   width: number;
   height: number;
+  slot?: string;
 }
 
-export default function AdBanner({ width, height }: AdBannerProps) {
+export default function AdBanner({ width, height, slot = "ca-pub-8199077937393778" }: AdBannerProps) {
   const adContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Try to load Google AdSense if available
-    const script = document.createElement("script");
-    script.async = true;
-    script.src =
-      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-    script.onload = () => {
-      if (window.adsbygoogle) {
-        try {
-          window.adsbygoogle.push({});
-        } catch (err) {
-          console.log("AdSense error:", err);
-        }
+    // Push adsbygoogle script to render ads
+    if (window.adsbygoogle) {
+      try {
+        window.adsbygoogle.push({});
+      } catch (err) {
+        console.log("AdSense render error:", err);
       }
-    };
-
-    if (!document.querySelector('script[src*="pagead2.googlesyndication"]')) {
-      document.head.appendChild(script);
     }
-  }, []);
+  }, [width, height, slot]);
 
   return (
     <div
       ref={adContainerRef}
       className="flex items-center justify-center bg-muted rounded-lg overflow-hidden"
-      style={{ width: `${width}px`, height: `${height}px` }}
+      style={{
+        width: `${width}px`,
+        height: `${height}px`,
+        minHeight: `${height}px`
+      }}
     >
-      {/* Placeholder for ads */}
-      <div className="text-center text-muted-foreground text-xs p-4">
-        <p>Advertisement Space</p>
-      </div>
+      <ins
+        className="adsbygoogle"
+        style={{
+          display: "inline-block",
+          width: `${width}px`,
+          height: `${height}px`,
+        }}
+        data-ad-client={slot}
+        data-ad-slot={slot}
+      />
     </div>
   );
 }
