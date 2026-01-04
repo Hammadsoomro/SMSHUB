@@ -452,17 +452,20 @@ export class TwilioClient {
 
         res.on("end", () => {
           try {
-            console.log(`Twilio API Response Status: ${res.statusCode}`);
-            console.log(`Twilio API Response Raw Data: ${data}`);
+            console.log(`\n=== Twilio API Response Debug ===`);
+            console.log(`Status: ${res.statusCode}`);
+            console.log(`Raw Data: ${data}`);
 
             const response = JSON.parse(data);
 
-            console.log("Twilio API Response Parsed:", JSON.stringify(response, null, 2));
+            console.log("Parsed Response:", JSON.stringify(response, null, 2));
+            console.log("Available Fields:", Object.keys(response).join(", "));
+            console.log(`================================\n`);
 
             // Check for HTTP errors first
             if (res.statusCode && res.statusCode >= 400) {
               console.error(
-                `Twilio API error (${res.statusCode}):`,
+                `❌ Twilio API error (${res.statusCode}):`,
                 response.code,
                 response.message,
               );
@@ -473,34 +476,47 @@ export class TwilioClient {
               );
             }
 
-            // Twilio returns balance as a negative number (credit)
-            // Example: -71.4305 means $71.4305 available
-            // Check if balance field exists (it can be 0, so we can't just use truthiness)
-            if (response.balance === undefined || response.balance === null) {
-              console.error("Balance field missing from Twilio response. Available fields:", Object.keys(response));
+            // Handle case where balance field is missing
+            // Try alternate field names that Twilio might use
+            let balanceRaw = response.balance || response.account_balance || response.availableBalance;
+
+            if (balanceRaw === undefined || balanceRaw === null) {
+              console.error("❌ Balance field missing from Twilio response");
+              console.error("Available fields in response:", Object.keys(response));
+              console.error("Full response object:", JSON.stringify(response, null, 2));
+
+              // If no balance field found, check if this might be a sub-account or different account type
+              if (response.type) {
+                console.warn(`Account type: ${response.type}`);
+              }
+
               return reject(
-                new Error("Balance field not found in Twilio API response. Check your Twilio account type or permissions."),
+                new Error(
+                  `Balance field not found in Twilio API response. This account type may not support balance queries. Available fields: ${Object.keys(response).slice(0, 5).join(", ")}...`,
+                ),
               );
             }
 
-            const balanceValue = Math.abs(parseFloat(response.balance));
+            // Twilio returns balance as a negative number (credit)
+            // Example: -71.4305 means $71.4305 available
+            const balanceValue = Math.abs(parseFloat(balanceRaw));
 
             // Validate that the parsed value is a valid number
             if (isNaN(balanceValue)) {
               console.error(
-                `Invalid balance value from Twilio: ${response.balance}`,
+                `❌ Invalid balance value from Twilio: ${balanceRaw}`,
               );
-              return reject(new Error("Invalid balance value from Twilio API"));
+              return reject(new Error(`Invalid balance value from Twilio API: ${balanceRaw}`));
             }
 
             console.log(
-              `✅ Twilio balance fetched: $${balanceValue.toFixed(4)} (raw: ${response.balance})`,
+              `✅ Twilio balance fetched successfully: $${balanceValue.toFixed(4)} (raw: ${balanceRaw})`,
             );
 
             resolve(balanceValue);
           } catch (error) {
             console.error(
-              "Error parsing Twilio response:",
+              "❌ Error parsing Twilio response:",
               error,
               "Raw data:",
               data,
