@@ -187,10 +187,6 @@ export default function BuyNumbers() {
       }
     } catch (err) {
       console.error("Error fetching Twilio balance:", err);
-      // Fallback: if no Twilio balance endpoint, show wallet balance
-      if (wallet) {
-        setTwilioBalance(wallet.balance);
-      }
     }
   };
 
