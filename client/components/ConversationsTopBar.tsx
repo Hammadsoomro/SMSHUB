@@ -43,7 +43,6 @@ export default function ConversationsTopBar({
   activePhoneNumber,
   onPhoneNumberSelect,
   profile,
-  walletBalance,
   isDarkMode,
   onToggleTheme,
   notifications,
