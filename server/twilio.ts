@@ -427,6 +427,7 @@ export class TwilioClient {
 
   /**
    * Get account balance from Twilio
+   * Uses the Balance endpoint which returns the actual balance information
    */
   async getAccountBalance(): Promise<number> {
     return new Promise((resolve, reject) => {
@@ -434,9 +435,10 @@ export class TwilioClient {
         "base64",
       );
 
+      // Use the Balance endpoint, not the Account endpoint
       const options = {
         hostname: "api.twilio.com",
-        path: `/2010-04-01/Accounts/${this.accountSid}.json`,
+        path: `/2010-04-01/Accounts/${this.accountSid}/Balance.json`,
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
