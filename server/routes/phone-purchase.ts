@@ -85,6 +85,9 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
         .json({ error: "Please connect your Twilio credentials first" });
     }
 
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
     // Fetch available numbers from Twilio
     // Try multiple area codes if the first attempt doesn't return any numbers
     let availableNumbers: any = null;
@@ -94,7 +97,7 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     for (areaCodeIndex = 0; areaCodeIndex < maxRetries; areaCodeIndex++) {
       const twilioClient = new TwilioClient(
         credentials.accountSid,
-        credentials.authToken,
+        decryptedAuthToken,
       );
       availableNumbers = await twilioClient.getAvailableNumbers(
         countryCode,
