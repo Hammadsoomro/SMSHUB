@@ -478,23 +478,18 @@ export class TwilioClient {
               );
             }
 
-            // Handle case where balance field is missing
-            // Try alternate field names that Twilio might use
-            let balanceRaw = response.balance || response.account_balance || response.availableBalance;
+            // The Balance endpoint returns balance as a string (negative number for credit)
+            // Try different field names that Twilio might use
+            let balanceRaw = response.balance;
 
             if (balanceRaw === undefined || balanceRaw === null) {
-              console.error("❌ Balance field missing from Twilio response");
+              console.error("❌ Balance field missing from Twilio Balance API response");
               console.error("Available fields in response:", Object.keys(response));
               console.error("Full response object:", JSON.stringify(response, null, 2));
 
-              // If no balance field found, check if this might be a sub-account or different account type
-              if (response.type) {
-                console.warn(`Account type: ${response.type}`);
-              }
-
               return reject(
                 new Error(
-                  `Balance field not found in Twilio API response. This account type may not support balance queries. Available fields: ${Object.keys(response).slice(0, 5).join(", ")}...`,
+                  `Balance field not found in Twilio Balance API response. Available fields: ${Object.keys(response).join(", ")}`,
                 ),
               );
             }
