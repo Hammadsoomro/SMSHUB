@@ -7,7 +7,7 @@ import mongoose from "mongoose";
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  context: HandlerContext,
 ) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
@@ -20,15 +20,14 @@ export const handler: Handler = async (
 
     // Check MongoDB connection
     const readyState = mongoose.connection.readyState;
-    checks.database = readyState === 1 ? "connected" : `disconnected (state: ${readyState})`;
+    checks.database =
+      readyState === 1 ? "connected" : `disconnected (state: ${readyState})`;
 
     // Calculate response time
     const responseTime = Date.now() - startTime;
 
     // Determine overall health
-    const isHealthy = 
-      checks.database === "connected" &&
-      responseTime < 5000;
+    const isHealthy = checks.database === "connected" && responseTime < 5000;
 
     return {
       statusCode: isHealthy ? 200 : 503,

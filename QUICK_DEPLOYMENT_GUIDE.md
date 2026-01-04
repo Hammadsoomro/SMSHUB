@@ -3,6 +3,7 @@
 Fast reference for deploying the serverless app to Netlify.
 
 ## Prerequisites
+
 - GitHub/GitLab repository with code pushed
 - Netlify account (netlify.com)
 - MongoDB Atlas cluster running
@@ -13,6 +14,7 @@ Fast reference for deploying the serverless app to Netlify.
 ## 1️⃣ Connect Repository (2 minutes)
 
 ### Option A: Via Netlify Dashboard
+
 1. Go to [netlify.com](https://netlify.com)
 2. Sign in / Create account
 3. Click "New site from Git"
@@ -21,6 +23,7 @@ Fast reference for deploying the serverless app to Netlify.
 6. Click "Deploy site"
 
 ### Option B: Via Netlify CLI
+
 ```bash
 npm install -g netlify-cli
 netlify login
@@ -33,6 +36,7 @@ netlify init
 ## 2️⃣ Set Environment Variables (2 minutes)
 
 ### In Netlify Dashboard:
+
 1. Go to: **Site Settings → Environment**
 2. Click "Add Environment Variables"
 3. Add these variables:
@@ -53,6 +57,7 @@ NODE_ENV=production
 ```
 
 ### Or Via CLI:
+
 ```bash
 netlify env:set MONGODB_URI "mongodb+srv://..."
 netlify env:set JWT_SECRET "your_secret_key"
@@ -74,6 +79,7 @@ git push origin main
 ```
 
 **Netlify automatically:**
+
 - Builds the client (`npm run build:client`)
 - Bundles serverless functions
 - Deploys to CDN
@@ -84,6 +90,7 @@ git push origin main
 ## 4️⃣ Verify Deployment (1 minute)
 
 ### Check Health Endpoint
+
 ```bash
 curl https://YOUR_SITE.netlify.app/api/health
 
@@ -99,12 +106,14 @@ curl https://YOUR_SITE.netlify.app/api/health
 ```
 
 ### Check Logs
+
 ```bash
 netlify logs --tail
 # Real-time function logs
 ```
 
 ### View Function Performance
+
 - Netlify Dashboard → **Functions**
 - See: Execution time, Memory usage, Cold starts
 
@@ -137,10 +146,12 @@ netlify functions:invoke api --querystring "path=/api/health"
 ## 6️⃣ Troubleshooting
 
 ### Site Not Found
+
 - Verify domain is configured in Netlify
 - Check DNS settings if using custom domain
 
 ### API Returns 500
+
 ```bash
 # Check logs
 netlify logs --tail
@@ -152,6 +163,7 @@ netlify logs --tail
 ```
 
 ### Slow Response Times
+
 ```bash
 # Monitor cold starts
 Netlify Dashboard → Functions → Metrics
@@ -163,6 +175,7 @@ Netlify Dashboard → Functions → Metrics
 ```
 
 ### CORS Errors
+
 - Already configured in code
 - If issues persist, check browser console for actual error
 
@@ -171,7 +184,9 @@ Netlify Dashboard → Functions → Metrics
 ## 7️⃣ Monitoring Setup (Optional)
 
 ### Uptime Monitoring
+
 Service: UptimeRobot, Pingdom, etc.
+
 ```
 URL: https://YOUR_SITE.netlify.app/api/health
 Frequency: Every 5 minutes
@@ -179,7 +194,9 @@ Alert: If down or slow
 ```
 
 ### Error Tracking
+
 Service: Sentry, Rollbar, etc.
+
 ```
 Capture 500 errors
 Alert on high error rate
@@ -190,18 +207,21 @@ Alert on high error rate
 ## Performance Tips
 
 ### Reduce Cold Start Time
+
 1. Keep dependencies minimal
 2. Use `external_node_modules` in netlify.toml ✅ (Already done)
 3. Increase memory if available
 4. Use database connection caching ✅ (Already done)
 
 ### Optimize Database Queries
+
 1. Add indexes to frequently queried fields
 2. Use `.lean()` for read-only queries
 3. Batch queries when possible
 4. Implement query caching
 
 ### Cache API Responses
+
 ```javascript
 // For 5-minute cache:
 cache.set("dashboard_stats", data, 300);
@@ -240,25 +260,25 @@ netlify.toml             ← Serverless config
 
 ## Key Files to Know
 
-| File | Purpose |
-|------|---------|
-| `netlify/functions/api.ts` | Main serverless handler |
-| `netlify/functions/health.ts` | Health check endpoint |
-| `netlify.toml` | Serverless configuration |
-| `server/db.ts` | MongoDB connection |
-| `server/utils/serverless.ts` | Utilities & caching |
-| `NETLIFY_SERVERLESS.md` | Full deployment guide |
+| File                          | Purpose                  |
+| ----------------------------- | ------------------------ |
+| `netlify/functions/api.ts`    | Main serverless handler  |
+| `netlify/functions/health.ts` | Health check endpoint    |
+| `netlify.toml`                | Serverless configuration |
+| `server/db.ts`                | MongoDB connection       |
+| `server/utils/serverless.ts`  | Utilities & caching      |
+| `NETLIFY_SERVERLESS.md`       | Full deployment guide    |
 
 ---
 
 ## Response Times
 
-| Scenario | Time |
-|----------|------|
+| Scenario                   | Time        |
+| -------------------------- | ----------- |
 | First request (cold start) | 2-3 seconds |
-| Subsequent requests (warm) | 100-200ms |
-| Health check | 45-50ms |
-| Database query | 20-100ms |
+| Subsequent requests (warm) | 100-200ms   |
+| Health check               | 45-50ms     |
+| Database query             | 20-100ms    |
 
 ---
 

@@ -66,8 +66,7 @@ export async function connectDB() {
 
     console.error("[DB] Failed to connect to MongoDB:", error);
 
-    const errorMessage =
-      error instanceof Error ? error.message : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`MongoDB connection failed: ${errorMessage}`);
   }
 }

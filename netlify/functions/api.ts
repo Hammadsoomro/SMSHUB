@@ -44,14 +44,16 @@ async function initializeApp() {
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  context: HandlerContext,
 ) => {
   // Set timeout context to maximum allowed
   context.callbackWaitsForEmptyEventLoop = false;
 
   try {
     // Log incoming request for debugging
-    console.log(`[${new Date().toISOString()}] ${event.httpMethod} ${event.path}`);
+    console.log(
+      `[${new Date().toISOString()}] ${event.httpMethod} ${event.path}`,
+    );
 
     // Initialize app on first invocation
     const app = await initializeApp();
@@ -76,7 +78,7 @@ export const handler: Handler = async (
 
     // Log response
     console.log(
-      `[${new Date().toISOString()}] ${event.httpMethod} ${event.path} - ${response.statusCode}`
+      `[${new Date().toISOString()}] ${event.httpMethod} ${event.path} - ${response.statusCode}`,
     );
 
     return response;
@@ -89,7 +91,8 @@ export const handler: Handler = async (
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Methods":
+          "GET, POST, PUT, PATCH, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
       body: JSON.stringify({
@@ -111,7 +114,7 @@ export const handler: Handler = async (
  */
 export const healthCheck: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  context: HandlerContext,
 ) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
@@ -141,7 +144,9 @@ export const healthCheck: Handler = async (
       body: JSON.stringify({
         status: "unhealthy",
         error:
-          error instanceof Error ? error.message : "Unknown initialization error",
+          error instanceof Error
+            ? error.message
+            : "Unknown initialization error",
       }),
     };
   }

@@ -121,6 +121,7 @@ git push origin main
 ```
 
 Then in Netlify dashboard:
+
 - Click "New site from Git"
 - Select your repository
 - Configure build settings
@@ -170,20 +171,20 @@ curl https://your-site.netlify.app/api/health
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/db` |
-| `JWT_SECRET` | Secret for JWT tokens | Any secure random string |
-| `TWILIO_ACCOUNT_SID` | Twilio SID | `ACxxxxxxxxxx` |
-| `TWILIO_AUTH_TOKEN` | Twilio Auth Token | Secure token from Twilio |
+| Variable             | Description               | Example                                          |
+| -------------------- | ------------------------- | ------------------------------------------------ |
+| `MONGODB_URI`        | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/db` |
+| `JWT_SECRET`         | Secret for JWT tokens     | Any secure random string                         |
+| `TWILIO_ACCOUNT_SID` | Twilio SID                | `ACxxxxxxxxxx`                                   |
+| `TWILIO_AUTH_TOKEN`  | Twilio Auth Token         | Secure token from Twilio                         |
 
 ### Optional Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment | `production` |
-| `PING_MESSAGE` | Ping endpoint response | `ping` |
-| `NETLIFY_ENV` | Netlify environment | Auto-set |
+| Variable       | Description            | Default      |
+| -------------- | ---------------------- | ------------ |
+| `NODE_ENV`     | Environment            | `production` |
+| `PING_MESSAGE` | Ping endpoint response | `ping`       |
+| `NETLIFY_ENV`  | Netlify environment    | Auto-set     |
 
 ### Setting Variables
 
@@ -234,6 +235,7 @@ GET /api/health
    - Monitor cold starts and invocations
 
 2. **External Monitoring**
+
    ```bash
    # Uptime monitoring service (e.g., Pingdom, UptimeRobot)
    # Configure to ping /api/health every 5 minutes
@@ -263,13 +265,15 @@ netlify functions:invoke api --querystring 'path=/api/admin/dashboard/stats'
 ### 1. Connection Management
 
 **MongoDB Connection Pooling**
+
 ```typescript
 // Automatically configured in server/db.ts
 // Reuses connections across warm invocations
 // Pool size: 2-10 connections (optimized for serverless)
 ```
 
-**Impact**: 
+**Impact**:
+
 - Cold start: ~2-3 seconds (first connection)
 - Warm start: ~100-200ms (reused connection)
 
@@ -284,6 +288,7 @@ Current configuration: **1024 MB** for API function
 ```
 
 Recommendations:
+
 - Small workloads: 512 MB
 - Medium workloads: 1024 MB (current)
 - Large workloads: 2048 MB (Netlify Pro only)
@@ -299,6 +304,7 @@ Current configuration: **30 seconds** for API
 ```
 
 For optimal performance:
+
 - Target response time: < 5 seconds
 - Database queries: < 10 seconds
 - File uploads: < 15 seconds
@@ -338,11 +344,13 @@ cache.clear(); // Clear all
 ```
 
 **Good Use Cases**:
+
 - Frequently accessed settings
 - Static data (phone number prefixes)
 - User session info
 
 **Avoid Caching**:
+
 - Real-time data
 - User authentication tokens
 - Sensitive information
@@ -375,6 +383,7 @@ const items = await ItemModel.find({ _id: { $in: ids } });
 **Problem**: First request takes 2-3 seconds
 
 **Solutions**:
+
 1. Increase memory allocation (netlify.toml)
 2. Use Netlify Pro for more memory/CPU
 3. Keep dependencies minimal
@@ -385,6 +394,7 @@ const items = await ItemModel.find({ _id: { $in: ids } });
 **Problem**: "MongoDB connection failed" error
 
 **Solutions**:
+
 ```typescript
 // Check connection status
 GET /api/health
@@ -403,6 +413,7 @@ netlify env:list
 **Problem**: Function runs out of memory
 
 **Solutions**:
+
 1. Increase memory: `memory = 1024` in netlify.toml
 2. Optimize queries (add indexes)
 3. Reduce batch sizes
@@ -413,6 +424,7 @@ netlify env:list
 **Problem**: "Function timeout" error after 30 seconds
 
 **Solutions**:
+
 1. Optimize database queries
 2. Add caching to reduce queries
 3. Increase timeout (if on Pro plan)
@@ -423,6 +435,7 @@ netlify env:list
 **Problem**: "CORS error" from client
 
 **Solutions**:
+
 1. Already configured in Express app
 2. Verify Netlify redirect rules
 3. Check browser console for actual error

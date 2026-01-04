@@ -53,7 +53,7 @@ export const serverlessConfig = {
  */
 export async function withTimeout<T>(
   promise: Promise<T>,
-  timeoutMs: number = serverlessConfig.request.timeout
+  timeoutMs: number = serverlessConfig.request.timeout,
 ): Promise<T> {
   let timeoutHandle: NodeJS.Timeout;
 
