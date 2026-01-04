@@ -52,6 +52,7 @@ const App = () => (
           <Route path="/admin/settings" element={<Settings />} />
           <Route path="/admin/account" element={<AccountInfo />} />
           <Route path="/admin/insights" element={<Insights />} />
+          <Route path="/admin/twilio-balance" element={<TwilioBalance />} />
 
           {/* Catch All */}
           <Route path="*" element={<NotFound />} />
