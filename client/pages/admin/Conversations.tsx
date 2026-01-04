@@ -1145,12 +1145,6 @@ export default function Conversations() {
                         {totalUnreadCount}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Wallet Balance:</span>
-                      <span className="font-semibold text-green-600">
-                        ${walletBalance.toFixed(2)}
-                      </span>
-                    </div>
                   </div>
                 </div>
 
