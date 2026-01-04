@@ -96,7 +96,11 @@ export async function createServer() {
   // Note: Health check doesn't need signature validation
   app.get("/api/webhooks/inbound-sms", handleWebhookHealth);
   // Inbound SMS endpoint requires Twilio signature validation
-  app.post("/api/webhooks/inbound-sms", validateTwilioSignature, handleInboundSMS);
+  app.post(
+    "/api/webhooks/inbound-sms",
+    validateTwilioSignature,
+    handleInboundSMS,
+  );
 
   // Admin routes (requires admin role)
   app.post(

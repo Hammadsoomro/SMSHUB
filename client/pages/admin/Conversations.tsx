@@ -1109,9 +1109,7 @@ export default function Conversations() {
                 </div>
 
                 <div>
-                  <h2 className="text-2xl font-bold mb-2">
-                    Welcome to SMSHub
-                  </h2>
+                  <h2 className="text-2xl font-bold mb-2">Welcome to SMSHub</h2>
                   <p className="text-muted-foreground">
                     Select a contact from the sidebar to start messaging, or add
                     a new contact to begin your conversation.

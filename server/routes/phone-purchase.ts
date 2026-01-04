@@ -204,7 +204,6 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       }
     }
 
-
     // Filter numbers by state/province if specified
     let filteredNumbers = allNumbers;
     if (state) {

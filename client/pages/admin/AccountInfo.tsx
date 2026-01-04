@@ -64,7 +64,7 @@ export default function AccountInfo() {
       alert("Error deleting account. Please try again.");
       setIsDeleting(false);
     }
-  }
+  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -205,8 +205,8 @@ export default function AccountInfo() {
           <h3 className="font-semibold text-destructive mb-4">Danger Zone</h3>
           <p className="text-sm text-muted-foreground mb-4">
             Once you delete your account, there is no going back. All your data,
-            including phone numbers, messages, and team members will be permanently deleted.
-            Please be certain.
+            including phone numbers, messages, and team members will be
+            permanently deleted. Please be certain.
           </p>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -221,9 +221,9 @@ export default function AccountInfo() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Account?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your
-                  account and all associated data (phone numbers, messages, team
-                  members, and credentials).
+                  This action cannot be undone. This will permanently delete
+                  your account and all associated data (phone numbers, messages,
+                  team members, and credentials).
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="bg-destructive/10 border border-destructive/30 rounded p-3 mb-4">

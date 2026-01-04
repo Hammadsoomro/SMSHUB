@@ -2,7 +2,9 @@ import crypto from "crypto";
 
 // Use environment variable for encryption key, fallback to a default for development
 // In production, this should be a strong, unique key stored securely
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "your-secret-encryption-key-change-in-production";
+const ENCRYPTION_KEY =
+  process.env.ENCRYPTION_KEY ||
+  "your-secret-encryption-key-change-in-production";
 
 // Ensure key is 32 bytes (256 bits) for AES-256
 const getEncryptionKey = (): Buffer => {
@@ -34,7 +36,11 @@ export function decrypt(encryptedText: string): string {
   }
 
   const iv = Buffer.from(parts[0], "hex");
-  const decipher = crypto.createDecipheriv("aes-256-cbc", getEncryptionKey(), iv);
+  const decipher = crypto.createDecipheriv(
+    "aes-256-cbc",
+    getEncryptionKey(),
+    iv,
+  );
 
   let decrypted = decipher.update(parts[1], "hex", "utf8");
   decrypted += decipher.final("utf8");

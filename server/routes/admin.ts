@@ -544,7 +544,9 @@ export const handleDeleteAccount: RequestHandler = async (req, res) => {
     // Verify the user exists and is an admin
     const user = await storage.getUserById(adminId);
     if (!user || user.role !== "admin") {
-      return res.status(403).json({ error: "Only admin accounts can be deleted" });
+      return res
+        .status(403)
+        .json({ error: "Only admin accounts can be deleted" });
     }
 
     // Delete all associated data
