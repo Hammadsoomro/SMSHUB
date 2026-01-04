@@ -91,7 +91,9 @@ export default function TwilioBalance() {
       setLastUpdated(new Date());
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An error occurred while fetching balance",
+        err instanceof Error
+          ? err.message
+          : "An error occurred while fetching balance",
       );
     } finally {
       setIsLoading(false);
@@ -301,7 +303,8 @@ export default function TwilioBalance() {
                   Add Credits
                 </h3>
                 <p className="text-sm text-green-700 mb-4">
-                  Visit your Twilio console to add credits or set up automatic recharge.
+                  Visit your Twilio console to add credits or set up automatic
+                  recharge.
                 </p>
                 <Button
                   variant="outline"
@@ -320,15 +323,18 @@ export default function TwilioBalance() {
 
         {/* Help Section */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Frequently Asked Questions</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            Frequently Asked Questions
+          </h3>
           <div className="space-y-4">
             <div>
               <p className="font-medium text-sm mb-2">
                 Why is my balance negative?
               </p>
               <p className="text-sm text-muted-foreground">
-                Your balance is the amount of credit available in your Twilio account.
-                As you send SMS messages, the cost is deducted from your balance.
+                Your balance is the amount of credit available in your Twilio
+                account. As you send SMS messages, the cost is deducted from
+                your balance.
               </p>
             </div>
             <div>
@@ -336,8 +342,9 @@ export default function TwilioBalance() {
                 How do I add more credits?
               </p>
               <p className="text-sm text-muted-foreground">
-                You can add credits through your Twilio console. Go to Billing &gt;
-                Billing History and add a payment method or set up auto-recharge.
+                You can add credits through your Twilio console. Go to Billing
+                &gt; Billing History and add a payment method or set up
+                auto-recharge.
               </p>
             </div>
             <div>
@@ -345,8 +352,9 @@ export default function TwilioBalance() {
                 Will my service stop if balance is zero?
               </p>
               <p className="text-sm text-muted-foreground">
-                Yes, you won't be able to send SMS messages when your balance reaches zero.
-                We recommend setting up auto-recharge to maintain continuous service.
+                Yes, you won't be able to send SMS messages when your balance
+                reaches zero. We recommend setting up auto-recharge to maintain
+                continuous service.
               </p>
             </div>
             <div>
@@ -354,8 +362,8 @@ export default function TwilioBalance() {
                 How often is the balance updated?
               </p>
               <p className="text-sm text-muted-foreground">
-                The balance shown here is fetched in real-time from your Twilio account.
-                Click Refresh to get the latest balance.
+                The balance shown here is fetched in real-time from your Twilio
+                account. Click Refresh to get the latest balance.
               </p>
             </div>
           </div>

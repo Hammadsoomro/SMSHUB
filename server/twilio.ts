@@ -483,9 +483,17 @@ export class TwilioClient {
             let balanceRaw = response.balance;
 
             if (balanceRaw === undefined || balanceRaw === null) {
-              console.error("❌ Balance field missing from Twilio Balance API response");
-              console.error("Available fields in response:", Object.keys(response));
-              console.error("Full response object:", JSON.stringify(response, null, 2));
+              console.error(
+                "❌ Balance field missing from Twilio Balance API response",
+              );
+              console.error(
+                "Available fields in response:",
+                Object.keys(response),
+              );
+              console.error(
+                "Full response object:",
+                JSON.stringify(response, null, 2),
+              );
 
               return reject(
                 new Error(
@@ -503,7 +511,11 @@ export class TwilioClient {
               console.error(
                 `❌ Invalid balance value from Twilio: ${balanceRaw}`,
               );
-              return reject(new Error(`Invalid balance value from Twilio API: ${balanceRaw}`));
+              return reject(
+                new Error(
+                  `Invalid balance value from Twilio API: ${balanceRaw}`,
+                ),
+              );
             }
 
             console.log(
