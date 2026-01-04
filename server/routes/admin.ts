@@ -647,7 +647,7 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
     // Messages by hour
     const hourMap: Record<string, number> = {};
     filteredMessages.forEach((msg) => {
-      const date = new Date(msg.sentAt || msg.createdAt);
+      const date = new Date(msg.timestamp || msg.sentAt || msg.createdAt);
       const hour = `${date.getHours()}:00`;
       hourMap[hour] = (hourMap[hour] || 0) + 1;
     });
