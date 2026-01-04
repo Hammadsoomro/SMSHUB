@@ -470,9 +470,23 @@ export class TwilioClient {
 
             // Twilio returns balance as a negative number (credit)
             // Example: -71.4305 means $71.4305 available
-            const balanceValue = response.balance
-              ? Math.abs(parseFloat(response.balance))
-              : 0;
+            // Check if balance field exists (it can be 0, so we can't just use truthiness)
+            if (response.balance === undefined || response.balance === null) {
+              console.error("Balance field missing from Twilio response:", response);
+              return reject(
+                new Error("Balance field not found in Twilio API response"),
+              );
+            }
+
+            const balanceValue = Math.abs(parseFloat(response.balance));
+
+            // Validate that the parsed value is a valid number
+            if (isNaN(balanceValue)) {
+              console.error(
+                `Invalid balance value from Twilio: ${response.balance}`,
+              );
+              return reject(new Error("Invalid balance value from Twilio API"));
+            }
 
             console.log(
               `✅ Twilio balance fetched: $${balanceValue.toFixed(4)} (raw: ${response.balance})`,
