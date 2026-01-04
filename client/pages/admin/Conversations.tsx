@@ -75,7 +75,6 @@ export default function Conversations() {
   const [isConnecting, setIsConnecting] = useState(false);
 
   // UI State
-  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
     return stored === "dark";
@@ -261,15 +260,6 @@ export default function Conversations() {
         throw new Error(
           `Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : "Unknown error"}`,
         );
-      }
-
-      // Load wallet balance
-      try {
-        const walletData = await ApiService.getWallet();
-        setWalletBalance(walletData.balance || 0);
-      } catch (error) {
-        console.error("Error loading wallet balance:", error);
-        setWalletBalance(0);
       }
     } catch (error) {
       console.error("Error loading initial data:", error);
@@ -786,7 +776,6 @@ export default function Conversations() {
         activePhoneNumber={activePhoneNumber}
         onPhoneNumberSelect={switchPhoneNumber}
         profile={profile}
-        walletBalance={walletBalance}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
         notifications={notifications}
@@ -1108,7 +1097,6 @@ export default function Conversations() {
                 </div>
                 <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                   <span>Press Enter to send, Shift+Enter for new line</span>
-                  <span>Balance: ${walletBalance.toFixed(2)}</span>
                 </div>
               </div>
             </>
@@ -1153,12 +1141,6 @@ export default function Conversations() {
                         }
                       >
                         {totalUnreadCount}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Wallet Balance:</span>
-                      <span className="font-semibold text-green-600">
-                        ${walletBalance.toFixed(2)}
                       </span>
                     </div>
                   </div>

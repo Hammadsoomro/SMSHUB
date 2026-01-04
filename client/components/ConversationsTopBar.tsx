@@ -17,7 +17,6 @@ import {
   Sun,
   Moon,
   User as UserIcon,
-  DollarSign,
   RefreshCw,
   CheckCircle2,
   ArrowLeft,
@@ -31,7 +30,6 @@ interface ConversationsTopBarProps {
   activePhoneNumber: string | null;
   onPhoneNumberSelect: (phoneNumber: string) => void;
   profile: User;
-  walletBalance: number;
   isDarkMode: boolean;
   onToggleTheme: () => void;
   notifications: boolean;
@@ -44,7 +42,6 @@ export default function ConversationsTopBar({
   activePhoneNumber,
   onPhoneNumberSelect,
   profile,
-  walletBalance,
   isDarkMode,
   onToggleTheme,
   notifications,
@@ -237,11 +234,6 @@ export default function ConversationsTopBar({
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Balance: ${walletBalance.toFixed(2)}
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => window.location.reload()}

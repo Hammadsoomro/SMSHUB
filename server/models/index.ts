@@ -6,8 +6,6 @@ import {
   TeamMember,
   Message,
   Contact,
-  Wallet,
-  WalletTransaction,
 } from "@shared/api";
 
 // User Schema
@@ -137,41 +135,3 @@ const contactSchema = new Schema<IContact>(
 contactSchema.index({ phoneNumberId: 1 });
 
 export const ContactModel = mongoose.model<IContact>("Contact", contactSchema);
-
-// Wallet Schema
-export interface IWallet extends Document, Wallet {}
-
-const walletSchema = new Schema<IWallet>(
-  {
-    adminId: { type: String, required: true, unique: true },
-    balance: { type: Number, required: true, default: 0 },
-    currency: { type: String, required: true, default: "USD" },
-    createdAt: { type: String, required: true },
-    updatedAt: { type: String, required: true },
-  },
-  { collection: "wallets" },
-);
-
-export const WalletModel = mongoose.model<IWallet>("Wallet", walletSchema);
-
-// Wallet Transaction Schema
-export interface IWalletTransaction extends Document, WalletTransaction {}
-
-const walletTransactionSchema = new Schema<IWalletTransaction>(
-  {
-    adminId: { type: String, required: true },
-    type: { type: String, enum: ["credit", "debit"], required: true },
-    amount: { type: Number, required: true },
-    description: { type: String, required: true },
-    reference: { type: String, sparse: true },
-    createdAt: { type: String, required: true },
-  },
-  { collection: "wallet_transactions" },
-);
-
-walletTransactionSchema.index({ adminId: 1, createdAt: -1 });
-
-export const WalletTransactionModel = mongoose.model<IWalletTransaction>(
-  "WalletTransaction",
-  walletTransactionSchema,
-);

@@ -335,12 +335,6 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
         .json({ error: "This number is already purchased by you" });
     }
 
-    // Get wallet
-    const wallet = await storage.getOrCreateWallet(adminId);
-    if (wallet.balance < cost) {
-      return res.status(400).json({ error: "Insufficient wallet balance" });
-    }
-
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
@@ -363,21 +357,6 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
       });
     }
 
-    // Deduct from wallet
-    const newBalance = wallet.balance - cost;
-    await storage.updateWalletBalance(adminId, newBalance);
-
-    // Add transaction record
-    await storage.addWalletTransaction({
-      id: storage.generateId(),
-      adminId,
-      type: "debit",
-      amount: cost,
-      description: `Phone number purchased: ${phoneNumber}`,
-      reference: phoneNumber,
-      createdAt: new Date().toISOString(),
-    });
-
     // Store phone number in database
     const newPhoneNumber: PhoneNumber = {
       id: storage.generateId(),
@@ -389,7 +368,7 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
 
     await storage.addPhoneNumber(newPhoneNumber);
 
-    res.json({ phoneNumber: newPhoneNumber, wallet: { balance: newBalance } });
+    res.json({ phoneNumber: newPhoneNumber });
   } catch (error) {
     console.error("Purchase number error:", error);
     res.status(500).json({ error: "Failed to purchase number" });

@@ -1,10 +1,5 @@
 import { Contact, Message, PhoneNumber, User } from "@shared/api";
 
-interface Wallet {
-  balance: number;
-  currency: string;
-}
-
 interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -179,11 +174,6 @@ class ApiService {
       },
     );
     return response.number;
-  }
-
-  async getWallet(): Promise<Wallet> {
-    const response = await this.request<{ wallet: Wallet }>("/api/wallet");
-    return response.wallet;
   }
 }
 

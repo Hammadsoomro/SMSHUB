@@ -16,14 +16,13 @@ import {
   AlertCircle,
   Phone,
   Loader2,
-  Wallet,
   Search,
   Check,
   MessageSquare,
   Image,
   PhoneCall,
 } from "lucide-react";
-import { AvailablePhoneNumber, Wallet as WalletType } from "@shared/api";
+import { AvailablePhoneNumber } from "@shared/api";
 
 const COUNTRIES = [
   { code: "US", name: "United States" },
@@ -138,10 +137,9 @@ export default function BuyNumbers() {
   const [availableNumbers, setAvailableNumbers] = useState<
     AvailablePhoneNumber[]
   >([]);
-  const [wallet, setWallet] = useState<WalletType | null>(null);
   const [twilioBalance, setTwilioBalance] = useState<number | null>(null);
   const [isLoadingNumbers, setIsLoadingNumbers] = useState(false);
-  const [isLoadingWallet, setIsLoadingWallet] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -166,9 +164,8 @@ export default function BuyNumbers() {
           navigate("/login", { replace: true });
           return;
         }
-        await fetchWallet();
         await fetchTwilioBalance();
-        setIsLoadingWallet(false);
+        setIsLoading(false);
       } catch {
         navigate("/login", { replace: true });
       }
@@ -176,22 +173,6 @@ export default function BuyNumbers() {
 
     validateAuth();
   }, [navigate]);
-
-  const fetchWallet = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/wallet", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setWallet(data.wallet);
-      }
-    } catch (err) {
-      console.error("Error fetching wallet:", err);
-    }
-  };
 
   const fetchTwilioBalance = async () => {
     try {
@@ -206,10 +187,6 @@ export default function BuyNumbers() {
       }
     } catch (err) {
       console.error("Error fetching Twilio balance:", err);
-      // Fallback: if no Twilio balance endpoint, show wallet balance
-      if (wallet) {
-        setTwilioBalance(wallet.balance);
-      }
     }
   };
 
@@ -348,10 +325,6 @@ export default function BuyNumbers() {
         throw new Error(errorData.error || "Failed to purchase number");
       }
 
-      const data = await response.json();
-      if (data.wallet) {
-        setWallet(data.wallet);
-      }
       // Refetch Twilio balance after purchase
       await fetchTwilioBalance();
 
@@ -401,7 +374,7 @@ export default function BuyNumbers() {
       matchesCapabilityFilter(num),
   );
 
-  if (isLoadingWallet) {
+  if (isLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -422,36 +395,6 @@ export default function BuyNumbers() {
             </p>
           </div>
         </div>
-
-        {/* Twilio Balance Card */}
-        {twilioBalance !== null && (
-          <Card className="p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/20 rounded-lg">
-                  <Wallet className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Twilio Balance
-                  </p>
-                  <p className="text-2xl font-bold">
-                    ${twilioBalance.toFixed(2)} USD
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Your Twilio account balance
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/admin/wallet")}
-              >
-                Add Funds
-              </Button>
-            </div>
-          </Card>
-        )}
 
         {/* Error Message */}
         {error && (
@@ -687,7 +630,7 @@ export default function BuyNumbers() {
                           <p className="text-xs text-muted-foreground mt-2">
                             Monthly cost:{" "}
                             <span className="font-semibold">
-                              ${cost.toFixed(2)} {wallet?.currency}
+                              ${cost.toFixed(2)}
                             </span>
                           </p>
 
