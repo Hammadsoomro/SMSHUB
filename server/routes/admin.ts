@@ -641,7 +641,9 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
           sorted[i].direction === "outbound" &&
           sorted[i + 1].direction === "inbound"
         ) {
-          const responseTime = getMessageDate(sorted[i + 1]).getTime() - getMessageDate(sorted[i]).getTime();
+          const responseTime =
+            getMessageDate(sorted[i + 1]).getTime() -
+            getMessageDate(sorted[i]).getTime();
           totalResponseTime += responseTime;
           responseCount++;
         }

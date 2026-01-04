@@ -109,7 +109,8 @@ export default function Insights() {
         });
       } else {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || `Server error: ${response.status}`;
+        const errorMessage =
+          errorData.error || `Server error: ${response.status}`;
         setError(errorMessage);
         console.error("Insights fetch error:", errorMessage);
       }
