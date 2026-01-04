@@ -423,35 +423,6 @@ export default function BuyNumbers() {
           </div>
         </div>
 
-        {/* Twilio Balance Card */}
-        {twilioBalance !== null && (
-          <Card className="p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/20 rounded-lg">
-                  <Wallet className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Twilio Balance
-                  </p>
-                  <p className="text-2xl font-bold">
-                    ${twilioBalance.toFixed(2)} USD
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Your Twilio account balance
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/admin/wallet")}
-              >
-                Add Funds
-              </Button>
-            </div>
-          </Card>
-        )}
 
         {/* Error Message */}
         {error && (
