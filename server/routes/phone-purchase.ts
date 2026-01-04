@@ -35,10 +35,13 @@ export const handleGetTwilioBalance: RequestHandler = async (req, res) => {
         .json({ error: "Please connect your Twilio credentials first" });
     }
 
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
     // Fetch balance from Twilio
     const twilioClient = new TwilioClient(
       credentials.accountSid,
-      credentials.authToken,
+      decryptedAuthToken,
     );
 
     const balance = await twilioClient.getAccountBalance();
