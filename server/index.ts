@@ -58,6 +58,10 @@ import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
 import { validateTwilioSignature } from "./middleware/twilio-signature";
 import { handleDemo } from "./routes/demo";
 
+// Storage and utilities
+import { storage } from "./storage";
+import { TwilioClient } from "./twilio";
+
 // Global socket.io instance for webhook access
 let globalIO: IOServer | null = null;
 
