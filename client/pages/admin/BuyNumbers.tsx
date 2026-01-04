@@ -22,7 +22,7 @@ import {
   Image,
   PhoneCall,
 } from "lucide-react";
-import { AvailablePhoneNumber, Wallet as WalletType } from "@shared/api";
+import { AvailablePhoneNumber } from "@shared/api";
 
 const COUNTRIES = [
   { code: "US", name: "United States" },
