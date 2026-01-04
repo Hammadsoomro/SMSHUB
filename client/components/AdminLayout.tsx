@@ -22,6 +22,7 @@ interface AdminLayoutProps {
 const ADMIN_MENU = [
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
   { href: "/admin/conversations", label: "Conversations", icon: MessageSquare },
+  { href: "/admin/insights", label: "Messaging Insights", icon: BarChart3 },
   { href: "/admin/bought-numbers", label: "Bought Numbers", icon: Phone },
   { href: "/admin/buy-numbers", label: "Buy Numbers", icon: Phone },
   { href: "/admin/twilio-balance", label: "Twilio Balance", icon: Wallet },
