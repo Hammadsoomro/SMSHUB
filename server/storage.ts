@@ -333,54 +333,6 @@ class Storage {
     await ContactModel.deleteOne({ id });
   }
 
-  // Wallet operations
-  async getOrCreateWallet(adminId: string): Promise<Wallet> {
-    let wallet = (await WalletModel.findOne({ adminId })) as Wallet | null;
-    if (!wallet) {
-      const newWallet = new WalletModel({
-        adminId,
-        balance: 0,
-        currency: "USD",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      wallet = (await newWallet.save()) as Wallet;
-    }
-    return wallet;
-  }
-
-  async getWallet(adminId: string): Promise<Wallet | undefined> {
-    return (await WalletModel.findOne({ adminId })) as Wallet | null;
-  }
-
-  async updateWalletBalance(
-    adminId: string,
-    newBalance: number,
-  ): Promise<void> {
-    await WalletModel.updateOne(
-      { adminId },
-      {
-        balance: newBalance,
-        updatedAt: new Date().toISOString(),
-      },
-      { upsert: true },
-    );
-  }
-
-  async addWalletTransaction(transaction: WalletTransaction): Promise<void> {
-    const newTransaction = new WalletTransactionModel(transaction);
-    await newTransaction.save();
-  }
-
-  async getWalletTransactions(
-    adminId: string,
-    limit: number = 50,
-  ): Promise<WalletTransaction[]> {
-    return (await WalletTransactionModel.find({ adminId })
-      .sort({ createdAt: -1 })
-      .limit(limit)) as WalletTransaction[];
-  }
-
   // Utility
   generateId(): string {
     return Math.random().toString(36).substr(2, 9);
