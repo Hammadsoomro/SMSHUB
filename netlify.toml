@@ -5,34 +5,78 @@
   node_version = "22"
 
 [functions]
-  external_node_modules = ["express", "cors", "mongoose", "socket.io", "dotenv", "twilio"]
+  # External modules to optimize bundling
+  external_node_modules = [
+    "express",
+    "cors",
+    "mongoose",
+    "socket.io",
+    "dotenv",
+    "twilio",
+    "jsonwebtoken",
+    "zod"
+  ]
   node_bundler = "esbuild"
 
-# Set longer timeout for API functions to handle database operations
+# Serverless function configuration
 [[functions]]
   name = "api"
   node_bundler = "esbuild"
   timeout = 30
+  # Memory allocation (optimization for MongoDB operations)
+  memory = 1024
 
+# Health check for monitoring
+[[functions]]
+  name = "health"
+  node_bundler = "esbuild"
+  timeout = 5
+
+# API route redirects to serverless function
 [[redirects]]
   force = true
   from = "/api/*"
   status = 200
   to = "/.netlify/functions/api/:splat"
 
+# API health endpoint
+[[redirects]]
+  force = true
+  from = "/api/health"
+  status = 200
+  to = "/.netlify/functions/health"
+
+# SPA fallback for client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
+# Production environment
 [context.production.environment]
   NODE_ENV = "production"
+  NETLIFY_ENV = "production"
 
 [context.production]
   command = "npm run build:client"
 
+# Deploy preview environment
+[context.deploy-preview.environment]
+  NODE_ENV = "production"
+  NETLIFY_ENV = "deploy-preview"
+
 [context.deploy-preview]
   command = "npm run build:client"
 
+# Branch deploy environment
+[context.branch-deploy.environment]
+  NODE_ENV = "production"
+  NETLIFY_ENV = "branch-deploy"
+
 [context.branch-deploy]
   command = "npm run build:client"
+
+# Development environment
+[context.development.environment]
+  NODE_ENV = "development"
+  NETLIFY_ENV = "development"
