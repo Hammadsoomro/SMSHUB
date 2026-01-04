@@ -396,7 +396,6 @@ export default function BuyNumbers() {
           </div>
         </div>
 
-
         {/* Error Message */}
         {error && (
           <Card className="p-6 bg-red-50 border-2 border-red-300 mb-8 animate-shake">

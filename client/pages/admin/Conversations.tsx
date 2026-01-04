@@ -261,7 +261,6 @@ export default function Conversations() {
           `Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : "Unknown error"}`,
         );
       }
-
     } catch (error) {
       console.error("Error loading initial data:", error);
       toast.error(

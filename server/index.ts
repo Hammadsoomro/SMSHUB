@@ -28,7 +28,6 @@ import {
   handleGetDashboardStats,
 } from "./routes/admin";
 
-
 // Phone purchase routes
 import {
   handleGetAvailableNumbers,
@@ -182,7 +181,12 @@ export async function createServer() {
   );
 
   // Twilio balance route (requires authentication)
-  app.get("/api/admin/twilio-balance", authMiddleware, adminOnly, handleGetTwilioBalance);
+  app.get(
+    "/api/admin/twilio-balance",
+    authMiddleware,
+    adminOnly,
+    handleGetTwilioBalance,
+  );
 
   // Phone purchase routes (requires authentication)
   app.get(

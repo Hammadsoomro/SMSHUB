@@ -175,7 +175,6 @@ class ApiService {
     );
     return response.number;
   }
-
 }
 
 export default new ApiService();
