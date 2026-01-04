@@ -3,6 +3,7 @@ import express, { Express } from "express";
 import cors from "cors";
 import { connectDB } from "./db";
 import { Server as IOServer } from "socket.io";
+import { createPerformanceMiddleware } from "./utils/serverless";
 
 // Auth routes
 import {
