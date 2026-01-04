@@ -101,8 +101,24 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
         .json({ error: "Please connect your Twilio credentials first" });
     }
 
+    // Validate that credentials have the required fields
+    if (!credentials.accountSid || !credentials.authToken) {
+      return res.status(400).json({
+        error:
+          "Incomplete Twilio credentials. Please reconnect your account.",
+      });
+    }
+
     // Decrypt the auth token
     const decryptedAuthToken = decrypt(credentials.authToken);
+
+    // Additional validation for decrypted token
+    if (!decryptedAuthToken || decryptedAuthToken.trim().length === 0) {
+      return res.status(400).json({
+        error:
+          "Invalid Twilio auth token. Please reconnect your credentials.",
+      });
+    }
 
     // Fetch available numbers from Twilio
     // Try multiple area codes if the first attempt doesn't return any numbers
