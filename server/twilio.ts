@@ -452,7 +452,12 @@ export class TwilioClient {
 
         res.on("end", () => {
           try {
+            console.log(`Twilio API Response Status: ${res.statusCode}`);
+            console.log(`Twilio API Response Raw Data: ${data}`);
+
             const response = JSON.parse(data);
+
+            console.log("Twilio API Response Parsed:", JSON.stringify(response, null, 2));
 
             // Check for HTTP errors first
             if (res.statusCode && res.statusCode >= 400) {
@@ -472,9 +477,9 @@ export class TwilioClient {
             // Example: -71.4305 means $71.4305 available
             // Check if balance field exists (it can be 0, so we can't just use truthiness)
             if (response.balance === undefined || response.balance === null) {
-              console.error("Balance field missing from Twilio response:", response);
+              console.error("Balance field missing from Twilio response. Available fields:", Object.keys(response));
               return reject(
-                new Error("Balance field not found in Twilio API response"),
+                new Error("Balance field not found in Twilio API response. Check your Twilio account type or permissions."),
               );
             }
 
@@ -497,7 +502,7 @@ export class TwilioClient {
             console.error(
               "Error parsing Twilio response:",
               error,
-              "Data:",
+              "Raw data:",
               data,
             );
             reject(error);
