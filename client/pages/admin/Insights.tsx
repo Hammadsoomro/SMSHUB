@@ -108,7 +108,10 @@ export default function Insights() {
           dailyMessages: [],
         });
       } else {
-        setError("Failed to fetch insights");
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `Server error: ${response.status}`;
+        setError(errorMessage);
+        console.error("Insights fetch error:", errorMessage);
       }
     } catch (err) {
       console.error("Error fetching insights:", err);
