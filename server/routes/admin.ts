@@ -673,7 +673,7 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
     // Daily messages
     const dailyMap: Record<string, { sent: number; received: number }> = {};
     filteredMessages.forEach((msg) => {
-      const date = new Date(msg.sentAt || msg.createdAt);
+      const date = new Date(msg.timestamp || msg.sentAt || msg.createdAt);
       const dateStr = date.toISOString().split("T")[0];
 
       if (!dailyMap[dateStr]) {
