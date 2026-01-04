@@ -587,7 +587,7 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
 
     // Filter messages by date range
     const filteredMessages = allMessages.filter((msg) => {
-      const msgDate = new Date(msg.timestamp || msg.sentAt || msg.createdAt || now);
+      const msgDate = getMessageDate(msg, now);
       return msgDate >= startDate;
     });
 
