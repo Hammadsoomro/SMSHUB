@@ -68,11 +68,25 @@ export default function TwilioBalance() {
         );
       }
 
+      if (response.status === 500) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error ||
+            "Twilio API error. Please check your credentials and try again.",
+        );
+      }
+
       if (!response.ok) {
-        throw new Error("Failed to fetch Twilio balance");
+        throw new Error(`Failed to fetch Twilio balance (${response.status})`);
       }
 
       const data: BalanceResponse = await response.json();
+
+      // Validate balance is a number
+      if (typeof data.balance !== "number" || isNaN(data.balance)) {
+        throw new Error("Invalid balance data received from server");
+      }
+
       setBalance(data.balance);
       setLastUpdated(new Date());
     } catch (err) {
