@@ -533,21 +533,18 @@ export const handleGetInsights: RequestHandler = async (req, res) => {
     const adminId = req.userId!;
     const { timeRange = "7days" } = req.query as { timeRange?: string };
 
-    // Get all contacts and messages for this admin
+    // Get all phone numbers for this admin
     const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
 
     if (phoneNumbers.length === 0) {
       return res.status(400).json({ error: "No phone numbers found" });
     }
 
-    // Collect all messages for all contacts
+    // Collect all messages for all phone numbers
     let allMessages: any[] = [];
     for (const phoneNumber of phoneNumbers) {
-      const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
-      for (const contact of contacts) {
-        const messages = await storage.getMessagesByContact(contact.id);
-        allMessages = allMessages.concat(messages || []);
-      }
+      const messages = await storage.getMessagesByPhoneNumber(phoneNumber.id || phoneNumber._id);
+      allMessages = allMessages.concat(messages || []);
     }
 
     if (allMessages.length === 0) {
