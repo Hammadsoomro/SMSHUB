@@ -4,6 +4,7 @@ import https from "https";
 import { storage } from "../storage";
 import { generateToken } from "../jwt";
 import { getSocketIOInstance } from "../index";
+import { encrypt, decrypt } from "../crypto";
 import {
   TwilioCredentialsRequest,
   TwilioCredentials,
@@ -125,16 +126,26 @@ export const handleSaveCredentials: RequestHandler = async (req, res) => {
     }
 
     const credentialsId = storage.generateId();
+    // Encrypt the auth token before storing
+    const encryptedAuthToken = encrypt(authToken);
+
     const credentials: TwilioCredentials = {
       id: credentialsId,
       adminId,
       accountSid,
-      authToken,
+      authToken: encryptedAuthToken,
       connectedAt: new Date().toISOString(),
     };
 
     storage.setTwilioCredentials(credentials);
-    res.json({ credentials });
+
+    // Return credentials with decrypted token to client
+    res.json({
+      credentials: {
+        ...credentials,
+        authToken: authToken, // Return original unencrypted token to client
+      },
+    });
   } catch (error) {
     console.error("Save credentials error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -150,7 +161,15 @@ export const handleGetCredentials: RequestHandler = async (req, res) => {
       return res.json({ credentials: null });
     }
 
-    res.json({ credentials });
+    // Decrypt the auth token before sending to client
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
+    res.json({
+      credentials: {
+        ...credentials,
+        authToken: decryptedAuthToken,
+      },
+    });
   } catch (error) {
     console.error("Get credentials error:", error);
     res.status(500).json({ error: "Internal server error" });
