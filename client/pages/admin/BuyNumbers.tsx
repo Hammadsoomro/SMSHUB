@@ -508,51 +508,69 @@ export default function BuyNumbers() {
                   label: "Voice",
                   icon: PhoneCall,
                   color: "text-green-600",
+                  disabled: false,
                 },
                 {
                   id: "sms" as const,
                   label: "SMS",
                   icon: MessageSquare,
                   color: "text-blue-600",
+                  disabled: false,
                 },
                 {
                   id: "mms" as const,
                   label: "MMS",
                   icon: Image,
                   color: "text-purple-600",
+                  disabled: false,
                 },
                 {
                   id: "fax" as const,
                   label: "Fax",
                   icon: Phone,
                   color: "text-orange-600",
+                  disabled: true,
                 },
               ].map((capability) => {
                 const Icon = capability.icon;
                 return (
                   <div
                     key={capability.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-background cursor-pointer transition-colors"
-                    onClick={() =>
-                      setCapabilityFilters((prev) => ({
-                        ...prev,
-                        [capability.id]: !prev[capability.id],
-                      }))
-                    }
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      capability.disabled
+                        ? "border-muted opacity-50 cursor-not-allowed bg-muted/30"
+                        : "border-border hover:bg-background cursor-pointer"
+                    }`}
+                    onClick={() => {
+                      if (!capability.disabled) {
+                        setCapabilityFilters((prev) => ({
+                          ...prev,
+                          [capability.id]: !prev[capability.id],
+                        }));
+                      }
+                    }}
                   >
                     <Checkbox
                       checked={capabilityFilters[capability.id]}
-                      onCheckedChange={(checked) =>
-                        setCapabilityFilters((prev) => ({
-                          ...prev,
-                          [capability.id]: checked === true,
-                        }))
-                      }
+                      onCheckedChange={(checked) => {
+                        if (!capability.disabled) {
+                          setCapabilityFilters((prev) => ({
+                            ...prev,
+                            [capability.id]: checked === true,
+                          }));
+                        }
+                      }}
+                      disabled={capability.disabled}
                     />
                     <div className="flex items-center gap-2 flex-1">
                       <Icon className={`w-4 h-4 ${capability.color}`} />
                       <span className="text-sm font-medium">
                         {capability.label}
+                        {capability.disabled && (
+                          <span className="ml-2 text-xs text-muted-foreground font-normal">
+                            (Not Available)
+                          </span>
+                        )}
                       </span>
                     </div>
                   </div>
