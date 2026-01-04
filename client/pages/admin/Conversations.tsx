@@ -695,9 +695,9 @@ export default function Conversations() {
       0,
     );
     if (totalUnread > 0) {
-      document.title = `(${totalUnread}) SMSHub - Messages`;
+      document.title = `(${totalUnread}) Connectlify - Messages`;
     } else {
-      document.title = "SMSHub - Messages";
+      document.title = "Connectlify - Messages";
     }
   };
 
@@ -753,7 +753,7 @@ export default function Conversations() {
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <div>
-            <h3 className="text-lg font-semibold">Loading SMSHub</h3>
+            <h3 className="text-lg font-semibold">Loading Connectlify</h3>
             <p className="text-sm text-muted-foreground">
               Setting up your conversations...
             </p>

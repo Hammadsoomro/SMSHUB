@@ -270,7 +270,7 @@ export default function Landing() {
             Ready to Transform Your SMS Business?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Join teams using SMSHub to manage their Twilio operations
+            Join teams using Connectlify to manage their Twilio operations
             efficiently
           </p>
           <Link to="/signup">
@@ -287,7 +287,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4 bg-background/50">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm text-muted-foreground">
-          <p>&copy; 2024 SMSHub. All rights reserved.</p>
+          <p>&copy; 2024 Connectlify. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-foreground smooth-transition">
               Privacy
