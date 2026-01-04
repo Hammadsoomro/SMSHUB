@@ -357,21 +357,6 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
       });
     }
 
-    // Deduct from wallet
-    const newBalance = wallet.balance - cost;
-    await storage.updateWalletBalance(adminId, newBalance);
-
-    // Add transaction record
-    await storage.addWalletTransaction({
-      id: storage.generateId(),
-      adminId,
-      type: "debit",
-      amount: cost,
-      description: `Phone number purchased: ${phoneNumber}`,
-      reference: phoneNumber,
-      createdAt: new Date().toISOString(),
-    });
-
     // Store phone number in database
     const newPhoneNumber: PhoneNumber = {
       id: storage.generateId(),
