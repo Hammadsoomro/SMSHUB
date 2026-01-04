@@ -368,7 +368,7 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
 
     await storage.addPhoneNumber(newPhoneNumber);
 
-    res.json({ phoneNumber: newPhoneNumber, wallet: { balance: newBalance } });
+    res.json({ phoneNumber: newPhoneNumber });
   } catch (error) {
     console.error("Purchase number error:", error);
     res.status(500).json({ error: "Failed to purchase number" });
