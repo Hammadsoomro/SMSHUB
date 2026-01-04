@@ -72,9 +72,9 @@ export default function ConversationsTopBar({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/admin")}
                 className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
-                title="Go back"
+                title="Go to dashboard"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span className="text-sm font-medium hidden sm:inline">
