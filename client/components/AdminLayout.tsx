@@ -12,6 +12,7 @@ import {
   X,
   Sun,
   Moon,
+  Wallet,
 } from "lucide-react";
 
 interface AdminLayoutProps {
