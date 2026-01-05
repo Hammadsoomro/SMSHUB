@@ -22,28 +22,25 @@
 [[functions]]
   name = "api"
   timeout = 30
-  # Memory allocation (optimization for MongoDB operations)
   memory = 1024
 
-# Health check for monitoring
 [[functions]]
   name = "health"
-  node_bundler = "esbuild"
   timeout = 5
 
 # API route redirects to serverless function
 [[redirects]]
-  force = true
   from = "/api/*"
-  status = 200
   to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
 
 # API health endpoint
 [[redirects]]
-  force = true
   from = "/api/health"
-  status = 200
   to = "/.netlify/functions/health"
+  status = 200
+  force = true
 
 # SPA fallback for client-side routing
 [[redirects]]
@@ -52,30 +49,28 @@
   status = 200
 
 # Production environment
-[context.production.environment]
-  NODE_ENV = "production"
-  NETLIFY_ENV = "production"
-
 [context.production]
   command = "npm run build:client"
+  [context.production.environment]
+    NODE_ENV = "production"
+    NETLIFY_ENV = "production"
 
 # Deploy preview environment
-[context.deploy-preview.environment]
-  NODE_ENV = "production"
-  NETLIFY_ENV = "deploy-preview"
-
 [context.deploy-preview]
   command = "npm run build:client"
+  [context.deploy-preview.environment]
+    NODE_ENV = "production"
+    NETLIFY_ENV = "deploy-preview"
 
 # Branch deploy environment
-[context.branch-deploy.environment]
-  NODE_ENV = "production"
-  NETLIFY_ENV = "branch-deploy"
-
 [context.branch-deploy]
   command = "npm run build:client"
+  [context.branch-deploy.environment]
+    NODE_ENV = "production"
+    NETLIFY_ENV = "branch-deploy"
 
 # Development environment
-[context.development.environment]
-  NODE_ENV = "development"
-  NETLIFY_ENV = "development"
+[context.development]
+  [context.development.environment]
+    NODE_ENV = "development"
+    NETLIFY_ENV = "development"
