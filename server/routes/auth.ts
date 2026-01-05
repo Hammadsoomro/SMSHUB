@@ -193,3 +193,41 @@ export const handleUpdateProfile: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const handleAblyToken: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const user = await storage.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Generate Ably token with user-specific capabilities
+    const ably = require("ably");
+    const client = new ably.Realtime.Promise({
+      key: process.env.ABLY_API_KEY,
+    });
+
+    // Create token request with appropriate capabilities
+    const tokenRequest = client.auth.createTokenRequest({
+      clientId: userId,
+      capability: {
+        // User can subscribe to their own channel and all public channels
+        "new_message": ["subscribe"],
+        "contacts": ["subscribe"],
+        "message_status": ["subscribe"],
+        "notifications": ["subscribe"],
+        [`user:${userId}`]: ["subscribe", "publish"],
+        [`phone:*`]: ["subscribe"],
+        [`admin:*`]: ["subscribe"],
+      },
+      ttl: 60 * 60 * 1000, // 1 hour
+    });
+
+    res.json(tokenRequest);
+  } catch (error) {
+    console.error("Ably token generation error:", error);
+    res.status(500).json({ error: "Failed to generate Ably token" });
+  }
+};
