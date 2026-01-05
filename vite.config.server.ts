@@ -32,8 +32,7 @@ export default defineConfig({
         // External dependencies that should not be bundled
         "express",
         "cors",
-        // Don't externalize socket.io - it needs to be bundled
-        // "socket.io" is NOT here intentionally
+        "socket.io", // Keep socket.io as external, use from node_modules
       ],
       output: {
         format: "es",
