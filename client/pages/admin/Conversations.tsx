@@ -305,142 +305,101 @@ export default function Conversations() {
     }
   };
 
-  const setupSocketListeners = (socket: any) => {
+  const setupAblyListeners = () => {
     try {
-      // Remove old listeners to avoid duplicates
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("connect_error");
+      const storedUser = localStorage.getItem("user");
+      const userProfile = storedUser ? JSON.parse(storedUser) : null;
+      const userId = userProfile?.id;
 
-      // Connection status handlers with debug logging
-      const handleConnect = () => {
-        console.log("✅ Socket.IO connected - real-time messaging is active!");
-        setIsConnecting(false);
-        toast.success(
-          "✨ Real-time messaging connected - SMS updates in real-time!",
-        );
-      };
-
-      const handleDisconnect = () => {
-        console.warn("❌ Socket.IO disconnected - will attempt to reconnect");
-        setIsConnecting(false);
-      };
-
-      const handleError = (error: any) => {
-        console.error("Socket.IO connection error:", error?.message || error);
-        setIsConnecting(false);
-      };
-
-      // Attach connection status listeners
-      socket.on("connect", handleConnect);
-      socket.on("disconnect", handleDisconnect);
-      socket.on("connect_error", handleError);
-
-      // Check if already connected and show toast if so
-      if (socket.connected) {
-        console.log("Socket is already connected, triggering connected state");
-        setIsConnecting(false);
-        setTimeout(() => {
-          toast.success("Real-time messaging is now active");
-        }, 100);
+      if (!userId) {
+        console.error("No user ID found for Ably subscriptions");
+        return;
       }
 
-      // Set up Socket.IO event listeners
-      socketService.on("new_message", (data: any) => {
-        console.log("📱 New message received:", data);
-
-        // Update contacts list using ref to get current state
-        const currentActivePhone = activePhoneNumberRef.current;
-        if (currentActivePhone) {
-          const phoneNum = phoneNumbersRef.current.find(
-            (p) => p.phoneNumber === currentActivePhone,
-          );
-          if (phoneNum) {
-            loadContactsForPhoneNumber(phoneNum.id);
+      // Subscribe to contact updates for the current user
+      const unsubscribeContacts = ablyService.subscribeToContactUpdates(
+        userId,
+        (data: any) => {
+          console.log("👥 Contacts updated:", data);
+          const currentActivePhone = activePhoneNumberRef.current;
+          if (currentActivePhone) {
+            const phoneNum = phoneNumbersRef.current.find(
+              (p) => p.phoneNumber === currentActivePhone,
+            );
+            if (phoneNum) {
+              loadContactsForPhoneNumber(phoneNum.id);
+            }
           }
-        }
+        },
+      );
 
-        // If message is for currently selected contact, reload messages
-        const currentSelectedContactId = selectedContactIdRef.current;
-        if (currentSelectedContactId === data.contactId) {
-          loadMessages(currentSelectedContactId);
-        }
-
-        // Show notification for incoming messages using ref to get current notifications setting
-        const currentNotifications = notificationsRef.current;
-        if (currentNotifications && !data.isOutgoing) {
-          showNotification(
-            "New Message",
-            `${data.senderName}: ${data.content}`,
-          );
-        }
-
-        // Update page title with unread count
-        updatePageTitle();
-      });
-
-      socketService.on("messageStatusUpdate", (data: any) => {
-        console.log("✓ Message status updated:", data);
+      // Subscribe to messages for the currently selected contact
+      const subscribeToMessages = () => {
         const currentSelectedContactId = selectedContactIdRef.current;
         if (currentSelectedContactId) {
-          loadMessages(currentSelectedContactId);
-        }
-      });
+          const unsubscribeMessages = ablyService.subscribeToConversation(
+            currentSelectedContactId,
+            userId,
+            (message: any) => {
+              console.log("📱 New message received:", message);
 
-      socketService.on("contact_updated", (data: any) => {
-        console.log("👥 Contacts updated:", data);
-        const currentActivePhone = activePhoneNumberRef.current;
-        if (currentActivePhone) {
-          const phoneNum = phoneNumbersRef.current.find(
-            (p) => p.phoneNumber === currentActivePhone,
+              // Reload messages for the current contact
+              if (currentSelectedContactId === message.contactId) {
+                loadMessages(currentSelectedContactId);
+              }
+
+              // Reload contacts to update last message and unread count
+              const currentActivePhone = activePhoneNumberRef.current;
+              if (currentActivePhone) {
+                const phoneNum = phoneNumbersRef.current.find(
+                  (p) => p.phoneNumber === currentActivePhone,
+                );
+                if (phoneNum) {
+                  loadContactsForPhoneNumber(phoneNum.id);
+                }
+              }
+
+              // Show notification for incoming messages
+              const currentNotifications = notificationsRef.current;
+              if (currentNotifications && message.direction === "inbound") {
+                showNotification(
+                  "New Message",
+                  `${message.from}: ${message.message.substring(0, 50)}`,
+                );
+              }
+
+              // Update page title
+              updatePageTitle();
+            },
           );
-          if (phoneNum) {
-            loadContactsForPhoneNumber(phoneNum.id);
-          }
-        }
-      });
 
-      socketService.on("unreadUpdated", (data: any) => {
-        console.log("🔔 Unread counts updated:", data);
-        updatePageTitle();
-      });
-
-      socketService.on("phone_number_assigned", (data: any) => {
-        console.log("📞 Phone number assignment updated:", data);
-        // Reload phone numbers to reflect the assignment/unassignment
-        if (data.action === "assigned") {
-          toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
-        } else {
-          toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
+          return unsubscribeMessages;
         }
-        // Reload phone numbers and reload initial data to sync with server
-        ApiService.getAccessiblePhoneNumbers()
-          .then((phoneNumbersData) => {
-            const processedPhones = phoneNumbersData.map((phone: any) => ({
-              ...phone,
-            }));
-            setPhoneNumbers(processedPhones);
-            // If a new number was assigned, automatically select it
-            if (
-              data.action === "assigned" &&
-              !activePhoneNumberRef.current &&
-              processedPhones.length > 0
-            ) {
-              const assignedPhone =
-                processedPhones.find((p) => p.id === data.phoneNumberId) ||
-                processedPhones[0];
-              setActivePhoneNumber(assignedPhone.phoneNumber);
-              loadContactsForPhoneNumber(assignedPhone.id);
-            }
-          })
-          .catch((error) => {
-            console.error("Error reloading phone numbers:", error);
-          });
-      });
+        return () => {};
+      };
+
+      let unsubscribeMessages = subscribeToMessages();
+
+      // Update message subscription when contact changes
+      const originalSelectedContactId = selectedContactIdRef.current;
+      const messageSubscriptionEffect = setInterval(() => {
+        const currentSelectedContactId = selectedContactIdRef.current;
+        if (currentSelectedContactId !== originalSelectedContactId) {
+          // Contact changed, resubscribe
+          unsubscribeMessages?.();
+          unsubscribeMessages = subscribeToMessages();
+        }
+      }, 500);
+
+      // Cleanup subscriptions on unmount
+      return () => {
+        clearInterval(messageSubscriptionEffect);
+        unsubscribeContacts?.();
+        unsubscribeMessages?.();
+      };
     } catch (error) {
-      console.error("Error initializing Socket.IO:", error);
-      setIsConnecting(false);
-      toast.error("Failed to initialize real-time connection");
+      console.error("Error initializing Ably listeners:", error);
+      toast.error("Failed to initialize real-time listeners");
     }
   };
 
