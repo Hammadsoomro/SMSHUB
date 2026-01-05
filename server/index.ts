@@ -82,6 +82,44 @@ export async function createServer() {
   // Middleware
   app.use(cors());
 
+  // ✅ CRITICAL: Pre-parse middleware for serverless (before express.json)
+  // Handles cases where body is passed as Buffer or string
+  app.use((req, res, next) => {
+    if (
+      (req.method === "POST" ||
+        req.method === "PUT" ||
+        req.method === "PATCH") &&
+      !req.body
+    ) {
+      let data = "";
+
+      req.on("data", (chunk) => {
+        data += chunk;
+      });
+
+      req.on("end", () => {
+        const contentType = req.get("content-type")?.toLowerCase() || "";
+
+        if (contentType.includes("application/json") && data) {
+          try {
+            (req as any).body = JSON.parse(data);
+            (req as any).rawBody = data;
+            console.log(
+              `[Pre-Parser] ✓ Pre-parsed JSON body (${data.length} chars)`,
+            );
+          } catch (e) {
+            console.error("[Pre-Parser] Failed to pre-parse:", e);
+            (req as any).body = {};
+          }
+        }
+
+        next();
+      });
+    } else {
+      next();
+    }
+  });
+
   // Increase default body size limits for production
   app.use(
     express.json({
