@@ -12,22 +12,26 @@ This guide ensures your Netlify serverless application is deployed with zero err
 ### Enhanced Production Features
 
 #### ✅ Comprehensive Timeout Protection
+
 ```typescript
-FUNCTION_TIMEOUT_MS: 25000      // 25 seconds
-APP_INIT_TIMEOUT_MS: 15000      // 15 seconds
-REQUEST_TIMEOUT_MS: 20000       // 20 seconds per request
+FUNCTION_TIMEOUT_MS: 25000; // 25 seconds
+APP_INIT_TIMEOUT_MS: 15000; // 15 seconds
+REQUEST_TIMEOUT_MS: 20000; // 20 seconds per request
 ```
+
 - No more hanging requests
 - Graceful timeout handling
 - Clear error messages
 
 #### ✅ Request Validation
+
 - Body size limits (10 MB max)
 - HTTP method validation
 - Malformed request detection
 - Proper HTTP status codes (400, 405, 413)
 
 #### ✅ Error Categorization
+
 - **Timeout errors**: 504 Gateway Timeout
 - **Database errors**: 503 Service Unavailable
 - **Memory errors**: 503 Service Unavailable
@@ -35,6 +39,7 @@ REQUEST_TIMEOUT_MS: 20000       // 20 seconds per request
 - **Unknown errors**: 500 Internal Server Error
 
 #### ✅ CORS & Security
+
 ```typescript
 // Automatic on every response:
 - Access-Control-Allow-Origin
@@ -49,22 +54,26 @@ REQUEST_TIMEOUT_MS: 20000       // 20 seconds per request
 ```
 
 #### ✅ Request Tracking
+
 - Unique Request ID for every request
 - Full request logging with timestamps
 - Response time tracking
 - Status emoji indicators (✓ ✗ →)
 
 #### ✅ OPTIONS Method Support
+
 - CORS preflight handling
 - No 405 errors on preflight
 - Automatic 204 response
 
 #### ✅ Environment Validation
+
 - Required variables checked on startup
 - Clear error messages if config missing
 - Prevents silent failures
 
 #### ✅ Health Check Endpoint
+
 - `/api/health` returns detailed status
 - Database connectivity check
 - Environment validation
@@ -75,6 +84,7 @@ REQUEST_TIMEOUT_MS: 20000       // 20 seconds per request
 ## 📋 Pre-Deployment Checklist
 
 ### 1. Local Testing
+
 ```bash
 # Run development server
 pnpm run dev
@@ -95,6 +105,7 @@ curl -X OPTIONS http://localhost:8080/api/messages/contacts \
 ### 2. Environment Variables Setup
 
 **Required Variables** (5 total):
+
 ```
 MONGODB_URI=mongodb+srv://USERNAME:PASSWORD@CLUSTER.mongodb.net/DATABASE
 JWT_SECRET=YOUR_SECURE_RANDOM_SECRET_32_CHARS_MIN
@@ -104,6 +115,7 @@ NODE_ENV=production
 ```
 
 **Optional Variables**:
+
 ```
 CORS_ORIGIN=https://yourdomain.com    # Default: *
 PING_MESSAGE=pong                       # Default: ping
@@ -152,6 +164,7 @@ mongoose.connect(process.env.MONGODB_URI)
 ### Step 1: Connect Repository
 
 **Option A: Via Netlify Dashboard**
+
 1. Go to https://netlify.com
 2. Sign in to your account
 3. Click **"New site from Git"**
@@ -160,6 +173,7 @@ mongoose.connect(process.env.MONGODB_URI)
 6. Click **"Deploy site"**
 
 **Option B: Via Netlify CLI**
+
 ```bash
 npm install -g netlify-cli
 netlify login
@@ -170,6 +184,7 @@ netlify init
 ### Step 2: Set Environment Variables
 
 **Via Dashboard**:
+
 1. Go to **Netlify Dashboard**
 2. Select your site
 3. Go to **Site Settings → Environment**
@@ -177,6 +192,7 @@ netlify init
 5. Add each variable (see Pre-Deployment Checklist above)
 
 **Via CLI**:
+
 ```bash
 netlify env:set MONGODB_URI "mongodb+srv://..."
 netlify env:set JWT_SECRET "your_secret"
@@ -188,6 +204,7 @@ netlify env:set NODE_ENV "production"
 ### Step 3: Deploy
 
 **Automatic** (recommended):
+
 ```bash
 git add .
 git commit -m "Production deployment ready"
@@ -196,6 +213,7 @@ git push origin main
 ```
 
 **Manual**:
+
 ```bash
 netlify deploy --prod
 ```
@@ -278,6 +296,7 @@ netlify logs --tail
 ### 4. Performance Metrics
 
 **Netlify Dashboard**:
+
 1. Go to **Functions** tab
 2. View execution metrics:
    - Duration (should be < 1000ms warm start)
@@ -317,6 +336,7 @@ netlify logs --tail
 ### Environment Variables
 
 **Production (.env.production)** - NOT committed:
+
 ```
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=...
@@ -327,6 +347,7 @@ CORS_ORIGIN=https://yourdomain.com
 ```
 
 **Development (.env.local)** - NOT committed:
+
 ```
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=test_secret
@@ -343,6 +364,7 @@ CORS_ORIGIN=*
 ### Issue: "Cannot find module 'express'"
 
 **Solution**:
+
 ```toml
 # In netlify.toml, ensure:
 [functions]
@@ -352,6 +374,7 @@ CORS_ORIGIN=*
 ### Issue: "MONGODB_URI is not set"
 
 **Solution**:
+
 ```bash
 # Verify variable is set
 netlify env:list
@@ -366,6 +389,7 @@ netlify deploy --prod
 ### Issue: "CORS errors from client"
 
 **Solution**:
+
 ```bash
 # Verify CORS headers in response
 curl -i https://your-site.netlify.app/api/health
@@ -380,6 +404,7 @@ curl -H "Origin: https://yourdomain.com" \
 ### Issue: "Function timeout"
 
 **Solution**:
+
 1. Check database query performance
 2. Add `.lean()` for read-only queries
 3. Implement caching for frequent data
@@ -389,12 +414,14 @@ curl -H "Origin: https://yourdomain.com" \
 ### Issue: "503 Service Unavailable"
 
 **Possible causes**:
+
 1. Database connection failed
 2. MongoDB credentials wrong
 3. IP not whitelisted in MongoDB Atlas
 4. Memory exhausted (increase in netlify.toml)
 
 **Debug**:
+
 ```bash
 # Check logs
 netlify logs --tail
@@ -407,6 +434,7 @@ GET https://your-site.netlify.app/api/health
 ### Issue: "High memory usage"
 
 **Solutions**:
+
 1. Use `.lean()` for Mongoose queries
 2. Don't load all documents in memory
 3. Implement streaming for large responses
@@ -417,6 +445,7 @@ GET https://your-site.netlify.app/api/health
 
 **Expected**: 2-3 seconds for first request
 **Solutions**:
+
 1. Use Netlify Pro (more memory)
 2. Keep dependencies minimal
 3. Use esbuild bundler (already done)
@@ -440,11 +469,13 @@ Alerts: Down, Slow (>2000ms)
 ### 2. Error Tracking (Optional but Recommended)
 
 **Sentry Setup**:
+
 ```bash
 npm install @sentry/node
 ```
 
 Add to server/index.ts:
+
 ```typescript
 import * as Sentry from "@sentry/node";
 
@@ -488,33 +519,36 @@ Sentry.init({
 
 ### Current Performance (Expected)
 
-| Metric | Target | Actual |
-|--------|--------|--------|
-| Cold start | 2-3s | 2-3s |
-| Warm start | 100-200ms | 100-200ms |
-| Health check | <100ms | 45-50ms |
-| Typical API | 200-500ms | 200-400ms |
-| Database query | 20-100ms | 20-100ms |
-| CORS preflight | <50ms | 10-20ms |
+| Metric         | Target    | Actual    |
+| -------------- | --------- | --------- |
+| Cold start     | 2-3s      | 2-3s      |
+| Warm start     | 100-200ms | 100-200ms |
+| Health check   | <100ms    | 45-50ms   |
+| Typical API    | 200-500ms | 200-400ms |
+| Database query | 20-100ms  | 20-100ms  |
+| CORS preflight | <50ms     | 10-20ms   |
 
 ### Optimization Tips
 
 1. **Add Indexes to MongoDB**
+
    ```javascript
    // For frequently queried fields
-   db.users.createIndex({ email: 1 })
-   db.messages.createIndex({ phoneNumberId: 1, timestamp: -1 })
+   db.users.createIndex({ email: 1 });
+   db.messages.createIndex({ phoneNumberId: 1, timestamp: -1 });
    ```
 
 2. **Implement Caching**
+
    ```typescript
    import { cache } from "../server/utils/serverless";
-   
+
    // Cache frequently accessed data
    cache.set("settings_key", data, 300); // 5 minutes
    ```
 
 3. **Use Lean Queries**
+
    ```typescript
    // For read-only operations
    const users = await User.find().lean();
@@ -578,6 +612,7 @@ netlify deploy:list
 ## 🚀 Deployment Summary
 
 **What you're deploying**:
+
 - ✅ Production-grade Netlify serverless function
 - ✅ Express.js API with all routes
 - ✅ MongoDB connection with pooling
@@ -589,6 +624,7 @@ netlify deploy:list
 - ✅ Zero external dependencies needed
 
 **Expected outcome**:
+
 - ✅ Zero downtime deployment
 - ✅ Auto-scaling on demand
 - ✅ 99.99% uptime SLA

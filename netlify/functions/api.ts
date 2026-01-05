@@ -6,7 +6,7 @@ import { createServer } from "../../server";
 /**
  * Production-Grade Netlify Serverless API Handler
  * ================================================
- * 
+ *
  * Features:
  * ✅ Global Express app caching
  * ✅ Timeout protection (hard limit 25s)
@@ -28,10 +28,10 @@ const CONFIG = {
   FUNCTION_TIMEOUT_MS: 25000, // 25 seconds (buffer for cleanup)
   APP_INIT_TIMEOUT_MS: 15000, // 15 seconds for app initialization
   REQUEST_TIMEOUT_MS: 20000, // 20 seconds per request
-  
+
   // Body limits
   MAX_BODY_SIZE_BYTES: 10 * 1024 * 1024, // 10 MB
-  
+
   // Paths that don't require authentication
   PUBLIC_PATHS: [
     "/api/auth/signup",
@@ -55,14 +55,14 @@ let initError: Error | null = null;
  */
 function validateEnvironment(): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
   const required = ["MONGODB_URI", "JWT_SECRET"];
   for (const key of required) {
     if (!process.env[key]) {
       errors.push(`Missing environment variable: ${key}`);
     }
   }
-  
+
   return {
     valid: errors.length === 0,
     errors,
@@ -99,8 +99,8 @@ async function initializeApp(force: boolean = false): Promise<any> {
       new Promise((_, reject) =>
         setTimeout(
           () => reject(new Error("App initialization timeout")),
-          CONFIG.APP_INIT_TIMEOUT_MS
-        )
+          CONFIG.APP_INIT_TIMEOUT_MS,
+        ),
       ),
     ]);
 
@@ -187,9 +187,7 @@ function getSecurityHeaders(): Record<string, string> {
 /**
  * Categorize errors for proper HTTP response codes
  */
-function categorizeError(
-  error: any
-): {
+function categorizeError(error: any): {
   statusCode: number;
   message: string;
 } {
@@ -248,7 +246,7 @@ function categorizeError(
  */
 export const handler: Handler = async (
   event: HandlerEvent,
-  context: HandlerContext
+  context: HandlerContext,
 ) => {
   const requestId = generateRequestId();
   const startTime = Date.now();
@@ -259,7 +257,7 @@ export const handler: Handler = async (
   try {
     // Log request
     console.log(
-      `[${requestId}] → ${event.httpMethod} ${event.path} (path: ${event.rawPath || event.path})`
+      `[${requestId}] → ${event.httpMethod} ${event.path} (path: ${event.rawPath || event.path})`,
     );
 
     // Handle OPTIONS requests (CORS preflight)
@@ -275,7 +273,9 @@ export const handler: Handler = async (
     // Validate request
     const validation = validateRequest(event);
     if (!validation.valid) {
-      console.warn(`[${requestId}] ✗ Request validation failed: ${validation.error}`);
+      console.warn(
+        `[${requestId}] ✗ Request validation failed: ${validation.error}`,
+      );
       return {
         statusCode: validation.statusCode || 400,
         headers: {
@@ -297,8 +297,8 @@ export const handler: Handler = async (
         new Promise((_, reject) =>
           setTimeout(
             () => reject(new Error("Express initialization timeout")),
-            CONFIG.APP_INIT_TIMEOUT_MS
-          )
+            CONFIG.APP_INIT_TIMEOUT_MS,
+          ),
         ),
       ]);
     } catch (initErr) {
@@ -333,8 +333,8 @@ export const handler: Handler = async (
         new Promise((_, reject) =>
           setTimeout(
             () => reject(new Error("Request processing timeout")),
-            CONFIG.REQUEST_TIMEOUT_MS
-          )
+            CONFIG.REQUEST_TIMEOUT_MS,
+          ),
         ),
       ]);
     } catch (handlerErr) {
@@ -405,7 +405,7 @@ export const handler: Handler = async (
           : "→";
 
     console.log(
-      `[${requestId}] ${statusEmoji} ${event.httpMethod} ${event.path} - ${response.statusCode} (${duration}ms)`
+      `[${requestId}] ${statusEmoji} ${event.httpMethod} ${event.path} - ${response.statusCode} (${duration}ms)`,
     );
 
     return response;
@@ -413,7 +413,7 @@ export const handler: Handler = async (
     const duration = Date.now() - startTime;
     console.error(
       `[${requestId}] ✗ Unhandled error after ${duration}ms:`,
-      error
+      error,
     );
 
     // Last-resort error response
@@ -461,7 +461,7 @@ export const handler: Handler = async (
  */
 export const options: Handler = async (
   _event: HandlerEvent,
-  context: HandlerContext
+  context: HandlerContext,
 ) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
@@ -477,7 +477,7 @@ export const options: Handler = async (
  */
 export const health: Handler = async (
   _event: HandlerEvent,
-  context: HandlerContext
+  context: HandlerContext,
 ) => {
   context.callbackWaitsForEmptyEventLoop = false;
 
@@ -487,7 +487,10 @@ export const health: Handler = async (
     // Validate environment
     const envValidation = validateEnvironment();
     if (!envValidation.valid) {
-      console.error("[HEALTH] Environment validation failed:", envValidation.errors);
+      console.error(
+        "[HEALTH] Environment validation failed:",
+        envValidation.errors,
+      );
       return {
         statusCode: 503,
         headers: {
@@ -510,8 +513,8 @@ export const health: Handler = async (
         new Promise((_, reject) =>
           setTimeout(
             () => reject(new Error("Health check app init timeout")),
-            CONFIG.APP_INIT_TIMEOUT_MS
-          )
+            CONFIG.APP_INIT_TIMEOUT_MS,
+          ),
         ),
       ]);
     } catch (err) {
