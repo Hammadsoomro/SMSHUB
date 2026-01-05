@@ -330,9 +330,9 @@ export default function Conversations() {
 
       // Connection status handlers with debug logging
       const handleConnect = () => {
-        console.log("✅ Socket.IO connected event fired");
+        console.log("✅ Socket.IO connected - real-time messaging is active!");
         setIsConnecting(false);
-        toast.success("Real-time messaging is now active");
+        toast.success("✨ Real-time messaging connected - SMS updates in real-time!");
       };
 
       const handleDisconnect = () => {
