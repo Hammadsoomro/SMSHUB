@@ -65,7 +65,8 @@ class AblyService {
       });
 
       this.client.connection.on("failed", (err: any) => {
-        console.error("[AblyService] Connection failed:", err);
+        const errorMsg = err?.message || JSON.stringify(err);
+        console.error("[AblyService] Connection failed:", errorMsg);
         this.isConnecting = false;
       });
 
