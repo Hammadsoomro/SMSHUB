@@ -101,58 +101,68 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
       );
     }
 
-    // Emit socket.io events to notify connected clients in real-time
-    const io = getSocketIOInstance();
-    if (io && phoneNumber.assignedTo) {
-      console.log(
-        `📡 Emitting socket.io event to user ${phoneNumber.assignedTo}`,
-      );
-      io.to(`user:${phoneNumber.assignedTo}`).emit("new_message", {
-        id: message.id,
-        phoneNumberId: phoneNumber.id,
-        from: From,
-        to: To,
-        body: Body,
-        direction: "inbound",
-        timestamp: message.timestamp,
-        sid: MessageSid,
-      });
+    // Emit Ably events to notify connected clients in real-time
+    try {
+      if (phoneNumber.assignedTo) {
+        console.log(
+          `📡 Emitting Ably event to user ${phoneNumber.assignedTo}`,
+        );
+        await emitNewMessage(phoneNumber.assignedTo, {
+          id: message.id,
+          phoneNumberId: phoneNumber.id,
+          from: From,
+          to: To,
+          body: Body,
+          direction: "inbound",
+          timestamp: message.timestamp,
+          sid: MessageSid,
+          contactId: savedContact.id,
+          senderName: savedContact.name,
+          content: Body,
+          isOutgoing: false,
+        });
 
-      // Also emit contact update event
-      io.to(`user:${phoneNumber.assignedTo}`).emit("contact_updated", {
-        id: savedContact.id,
-        phoneNumberId: savedContact.phoneNumberId,
-        phoneNumber: savedContact.phoneNumber,
-        name: savedContact.name,
-        lastMessage: savedContact.lastMessage,
-        lastMessageTime: savedContact.lastMessageTime,
-        unreadCount: savedContact.unreadCount,
-      });
-    } else if (io && phoneNumber.adminId) {
-      // If no assignee, emit to admin
-      console.log(`📡 No assignee, emitting to admin ${phoneNumber.adminId}`);
-      io.to(`admin:${phoneNumber.adminId}`).emit("new_message", {
-        id: message.id,
-        phoneNumberId: phoneNumber.id,
-        from: From,
-        to: To,
-        body: Body,
-        direction: "inbound",
-        timestamp: message.timestamp,
-        sid: MessageSid,
-      });
+        // Also emit contact update event
+        await emitContactUpdated(phoneNumber.id, {
+          id: savedContact.id,
+          phoneNumberId: savedContact.phoneNumberId,
+          phoneNumber: savedContact.phoneNumber,
+          name: savedContact.name,
+          lastMessage: savedContact.lastMessage,
+          lastMessageTime: savedContact.lastMessageTime,
+          unreadCount: savedContact.unreadCount,
+        });
+      } else if (phoneNumber.adminId) {
+        // If no assignee, emit to admin
+        console.log(`📡 No assignee, emitting to admin ${phoneNumber.adminId}`);
+        await emitNewMessage(phoneNumber.adminId, {
+          id: message.id,
+          phoneNumberId: phoneNumber.id,
+          from: From,
+          to: To,
+          body: Body,
+          direction: "inbound",
+          timestamp: message.timestamp,
+          sid: MessageSid,
+          contactId: savedContact.id,
+          senderName: savedContact.name,
+          content: Body,
+          isOutgoing: false,
+        });
 
-      io.to(`admin:${phoneNumber.adminId}`).emit("contact_updated", {
-        id: savedContact.id,
-        phoneNumberId: savedContact.phoneNumberId,
-        phoneNumber: savedContact.phoneNumber,
-        name: savedContact.name,
-        lastMessage: savedContact.lastMessage,
-        lastMessageTime: savedContact.lastMessageTime,
-        unreadCount: savedContact.unreadCount,
-      });
-    } else {
-      console.warn(`⚠️ No socket.io instance available or no assignee/admin`);
+        await emitContactUpdated(phoneNumber.id, {
+          id: savedContact.id,
+          phoneNumberId: savedContact.phoneNumberId,
+          phoneNumber: savedContact.phoneNumber,
+          name: savedContact.name,
+          lastMessage: savedContact.lastMessage,
+          lastMessageTime: savedContact.lastMessageTime,
+          unreadCount: savedContact.unreadCount,
+        });
+      }
+    } catch (ablyError) {
+      console.error("Error emitting Ably events:", ablyError);
+      // Continue - message is still saved to DB
     }
 
     // Return TwiML response to Twilio
