@@ -5,18 +5,8 @@
   node_version = "22"
 
 [functions]
-  # External modules to optimize bundling
-  external_node_modules = [
-    "express",
-    "cors",
-    "mongoose",
-    "socket.io",
-    "dotenv",
-    "twilio",
-    "jsonwebtoken",
-    "zod"
-  ]
   node_bundler = "esbuild"
+  timeout = 30
 
 
 # API route redirects to serverless function
