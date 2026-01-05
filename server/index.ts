@@ -78,6 +78,15 @@ export async function createServer() {
   // Connect to MongoDB BEFORE creating the app
   await connectDB();
 
+  // Initialize Ably for real-time messaging
+  try {
+    await ablyServer.initialize();
+    console.log("✅ Ably initialized for real-time messaging");
+  } catch (error) {
+    console.warn("⚠️  Ably initialization failed (optional for fallback):", error);
+    // Continue - Ably is optional, app will still work without it
+  }
+
   const app = express() as Express;
 
   // Middleware
