@@ -90,16 +90,28 @@ export async function createServer() {
     }),
   );
 
-  // ✅ Convert raw Buffer to parsed JSON
+  // ✅ Convert raw Buffer to parsed JSON (only for mutation requests)
   app.use((req, res, next) => {
-    if (Buffer.isBuffer((req as any).body)) {
+    // Only try to parse for methods that should have a body
+    const hasMutationMethod = ["POST", "PUT", "PATCH"].includes(req.method);
+
+    if (
+      hasMutationMethod &&
+      Buffer.isBuffer((req as any).body) &&
+      (req as any).body.length > 0
+    ) {
       try {
         const bodyStr = (req as any).body.toString("utf-8");
         (req as any).rawBody = bodyStr;
-        (req as any).body = JSON.parse(bodyStr);
-        console.log(
-          `[Body Converter] ✓ Converted Buffer to JSON: ${Object.keys((req as any).body).join(", ")}`,
-        );
+
+        if (bodyStr.trim()) {
+          (req as any).body = JSON.parse(bodyStr);
+          console.log(
+            `[Body Converter] ✓ Converted Buffer to JSON: ${Object.keys((req as any).body).join(", ")}`,
+          );
+        } else {
+          (req as any).body = {};
+        }
       } catch (e) {
         console.error("[Body Converter] Failed to parse Buffer:", e);
         (req as any).body = {};
