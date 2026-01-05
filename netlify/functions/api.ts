@@ -281,6 +281,37 @@ export const handler: Handler = async (
       };
     }
 
+    // CRITICAL: Decode base64 body BEFORE processing
+    if (event.isBase64Encoded && event.body) {
+      try {
+        event.body = Buffer.from(event.body, "base64").toString("utf-8");
+        event.isBase64Encoded = false;
+        console.log(`[${requestId}] ✓ Base64 body decoded`);
+      } catch (decodeErr) {
+        console.error(`[${requestId}] ✗ Failed to decode base64 body:`, decodeErr);
+        return {
+          statusCode: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...getSecurityHeaders(),
+          },
+          body: JSON.stringify({
+            error: "Invalid request encoding",
+            requestId,
+          }),
+        };
+      }
+    }
+
+    // Normalize headers to lowercase for consistency
+    const normalizedHeaders: Record<string, string> = {};
+    if (event.headers) {
+      Object.entries(event.headers).forEach(([key, value]) => {
+        normalizedHeaders[key.toLowerCase()] = value as string;
+      });
+    }
+    event.headers = normalizedHeaders as any;
+
     // Validate request
     const validation = validateRequest(event);
     if (!validation.valid) {
@@ -331,12 +362,6 @@ export const handler: Handler = async (
               : undefined,
         }),
       };
-    }
-
-    // Ensure event body is properly decoded if base64 encoded
-    if (event.isBase64Encoded && event.body) {
-      event.body = Buffer.from(event.body, "base64").toString("utf-8");
-      event.isBase64Encoded = false;
     }
 
     // Use serverless-http to convert Netlify event to Express
