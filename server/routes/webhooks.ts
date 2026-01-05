@@ -76,52 +76,80 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
       );
     }
 
-    // Emit socket.io events to notify connected clients in real-time
-    const io = getSocketIOInstance();
-    if (io && phoneNumber.assignedTo) {
-      io.to(`user:${phoneNumber.assignedTo}`).emit("new_message", {
-        id: message.id,
-        phoneNumberId: phoneNumber.id,
-        from: From,
-        to: To,
-        body: Body,
-        direction: "inbound",
-        timestamp: message.timestamp,
-        sid: MessageSid,
-      });
+    // Publish Ably events to notify connected clients in real-time
+    if (ablyServer.isInitialized && phoneNumber.assignedTo) {
+      try {
+        // Create a dummy contact ID for the message channel if not available
+        const contactId = savedContact.id;
 
-      // Also emit contact update event
-      io.to(`user:${phoneNumber.assignedTo}`).emit("contact_updated", {
-        id: savedContact.id,
-        phoneNumberId: savedContact.phoneNumberId,
-        phoneNumber: savedContact.phoneNumber,
-        name: savedContact.name,
-        lastMessage: savedContact.lastMessage,
-        lastMessageTime: savedContact.lastMessageTime,
-        unreadCount: savedContact.unreadCount,
-      });
-    } else if (io && phoneNumber.adminId) {
-      // If no assignee, emit to admin
-      io.to(`admin:${phoneNumber.adminId}`).emit("new_message", {
-        id: message.id,
-        phoneNumberId: phoneNumber.id,
-        from: From,
-        to: To,
-        body: Body,
-        direction: "inbound",
-        timestamp: message.timestamp,
-        sid: MessageSid,
-      });
+        await ablyServer.publishMessage(
+          phoneNumber.assignedTo,
+          contactId,
+          {
+            contactId: contactId,
+            userId: phoneNumber.assignedTo,
+            phoneNumberId: phoneNumber.id,
+            message: Body,
+            from: From,
+            to: To,
+            direction: "inbound" as const,
+            timestamp: message.timestamp,
+          }
+        );
 
-      io.to(`admin:${phoneNumber.adminId}`).emit("contact_updated", {
-        id: savedContact.id,
-        phoneNumberId: savedContact.phoneNumberId,
-        phoneNumber: savedContact.phoneNumber,
-        name: savedContact.name,
-        lastMessage: savedContact.lastMessage,
-        lastMessageTime: savedContact.lastMessageTime,
-        unreadCount: savedContact.unreadCount,
-      });
+        // Also publish contact update event
+        await ablyServer.broadcastContactUpdate(phoneNumber.assignedTo, {
+          action: "update",
+          contact: {
+            id: savedContact.id,
+            phoneNumberId: savedContact.phoneNumberId,
+            phoneNumber: savedContact.phoneNumber,
+            name: savedContact.name,
+            lastMessage: savedContact.lastMessage,
+            lastMessageTime: savedContact.lastMessageTime,
+            unreadCount: savedContact.unreadCount,
+          },
+        });
+      } catch (error) {
+        console.error("[Webhooks] Error publishing Ably message:", error);
+        // Continue even if Ably fails - message is already stored
+      }
+    } else if (ablyServer.isInitialized && phoneNumber.adminId) {
+      try {
+        // If no assignee, publish to admin
+        const contactId = savedContact.id;
+
+        await ablyServer.publishMessage(
+          phoneNumber.adminId,
+          contactId,
+          {
+            contactId: contactId,
+            userId: phoneNumber.adminId,
+            phoneNumberId: phoneNumber.id,
+            message: Body,
+            from: From,
+            to: To,
+            direction: "inbound" as const,
+            timestamp: message.timestamp,
+          }
+        );
+
+        await ablyServer.broadcastContactUpdate(phoneNumber.adminId, {
+          action: "update",
+          contact: {
+            id: savedContact.id,
+            phoneNumberId: savedContact.phoneNumberId,
+            phoneNumber: savedContact.phoneNumber,
+            name: savedContact.name,
+            lastMessage: savedContact.lastMessage,
+            lastMessageTime: savedContact.lastMessageTime,
+            unreadCount: savedContact.unreadCount,
+          },
+        });
+      } catch (error) {
+        console.error("[Webhooks] Error publishing Ably message to admin:", error);
+        // Continue even if Ably fails - message is already stored
+      }
     }
 
     // Return TwiML response to Twilio
