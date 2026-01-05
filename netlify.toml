@@ -6,7 +6,15 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Per-function configuration
+[[functions]]
+  name = "api"
   timeout = 30
+
+[[functions]]
+  name = "health"
+  timeout = 10
 
 
 # API route redirects to serverless function
