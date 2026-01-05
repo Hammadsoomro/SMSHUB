@@ -282,28 +282,35 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      console.log("Initializing Socket.IO...");
+      console.log("🔌 Initializing Socket.IO for real-time messaging...");
 
       // Connect to socket service
       const socket = socketService.connect(token);
 
       if (!socket) {
         // Socket creation initiated but not immediately available
-        // Wait a moment and retry once
-        console.warn("Socket instance not immediately available, retrying...");
-        setTimeout(() => {
-          const retrySocket = socketService.getSocket();
-          if (retrySocket) {
-            console.log("Socket available after retry");
-            setupSocketListeners(retrySocket);
-          } else {
-            console.warn(
-              "Socket connection not available - real-time features disabled (expected in serverless environments)",
-            );
-            setIsConnecting(false);
-            // Don't show error toast in production for socket unavailability
+        // This is normal on first connection - socket.io is asynchronous
+        console.log("Socket instance not immediately available, will connect shortly...");
+
+        // Wait for socket to be created and listen for connection
+        const checkSocketInterval = setInterval(() => {
+          const connectedSocket = socketService.getSocket();
+          if (connectedSocket) {
+            clearInterval(checkSocketInterval);
+            console.log("Socket available, setting up listeners");
+            setupSocketListeners(connectedSocket);
           }
-        }, 500);
+        }, 200);
+
+        // Stop checking after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkSocketInterval);
+          if (!socketService.connected) {
+            console.warn("Socket connection timed out after 10 seconds");
+            setIsConnecting(false);
+          }
+        }, 10000);
+
         return;
       }
 
@@ -311,7 +318,6 @@ export default function Conversations() {
     } catch (error) {
       console.error("Error initializing Socket.IO:", error);
       setIsConnecting(false);
-      // Don't show error toast - socket.io may not be available in all environments
     }
   };
 
