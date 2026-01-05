@@ -4,16 +4,15 @@
   publish = "dist/spa"
   node_version = "22"
 
-[functions]
-  node_bundler = "esbuild"
-
 # Per-function configuration
 [[functions]]
   name = "api"
+  node_bundler = "esbuild"
   timeout = 30
 
 [[functions]]
   name = "health"
+  node_bundler = "esbuild"
   timeout = 10
 
 
