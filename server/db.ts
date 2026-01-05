@@ -6,6 +6,12 @@ let isConnected = false;
 let isConnecting = false;
 let connectPromise: Promise<typeof mongoose> | null = null;
 
+// ✅ Circuit breaker pattern for DB failures
+let connectionFailureCount = 0;
+const MAX_FAILURES = 3;
+let circuitBreakerOpen = false;
+let circuitBreakerResetTime = 0;
+
 /**
  * Serverless-optimized MongoDB connection
  * Reuses connections across warm invocations and handles timeouts
