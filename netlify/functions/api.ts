@@ -499,6 +499,20 @@ export const handler: Handler = async (
     // Add request tracking header
     response.headers["X-Request-ID"] = requestId;
 
+    // ✅ Cache response for idempotent requests
+    if (
+      idempotencyKey &&
+      response.statusCode >= 200 &&
+      response.statusCode < 300
+    ) {
+      const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+      idempotentResponseCache.set(idempotencyKey, { response, expiresAt });
+      response.headers["X-Idempotency-Key"] = idempotencyKey;
+      console.log(
+        `[${requestId}] ✓ Response cached for idempotency key: ${idempotencyKey}`,
+      );
+    }
+
     // Log response with timing
     const duration = Date.now() - startTime;
     const statusEmoji =
