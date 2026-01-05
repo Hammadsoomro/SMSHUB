@@ -180,7 +180,7 @@ export default function Conversations() {
       );
       if (phoneNum) {
         loadContactsForPhoneNumber(phoneNum.id);
-        socketService.joinPhoneNumber(activePhoneNumber);
+        ablyService.joinPhoneNumber(activePhoneNumber);
       }
     }
   }, [activePhoneNumber, phoneNumbers]);
