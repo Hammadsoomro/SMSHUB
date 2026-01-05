@@ -99,29 +99,43 @@ export async function createServer() {
   // Middleware to handle edge case where body isn't parsed
   // This can happen in serverless environments where request handling is different
   app.use((req, res, next) => {
-    // If body parsing failed or body is still empty, try to parse from raw
+    // Check if body is a Buffer (common in serverless)
+    const isBodyBuffer = Buffer.isBuffer((req as any).body);
+    const isBodyEmpty =
+      !req.body || (typeof req.body === "object" && Object.keys(req.body).length === 0);
+
     if (
-      (!req.body || Object.keys(req.body).length === 0) &&
+      (isBodyBuffer || isBodyEmpty) &&
       (req.method === "POST" || req.method === "PUT" || req.method === "PATCH")
     ) {
       const contentType = req.get("content-type")?.toLowerCase() || "";
 
-      // Check if there's a raw body available (from serverless context)
-      const rawBody = (req as any).rawBody || (req as any).body;
+      // Try to get raw body from multiple sources
+      let rawBody = (req as any).rawBody;
+      if (!rawBody) {
+        rawBody = (req as any).body;
+      }
 
       if (contentType.includes("application/json") && rawBody) {
         try {
+          let parsed: any;
+
           if (typeof rawBody === "string") {
-            (req as any).body = JSON.parse(rawBody);
+            parsed = JSON.parse(rawBody);
           } else if (Buffer.isBuffer(rawBody)) {
-            (req as any).body = JSON.parse(rawBody.toString());
+            parsed = JSON.parse(rawBody.toString("utf-8"));
           }
-          console.log(
-            "[Body Parser] Successfully parsed request body from raw data",
-          );
+
+          if (parsed) {
+            (req as any).body = parsed;
+            console.log(
+              `[Body Parser] ✓ Parsed ${Buffer.isBuffer(rawBody) ? "Buffer" : "String"} body:`,
+              Object.keys(parsed),
+            );
+          }
         } catch (parseError) {
           console.error(
-            "[Body Parser] Failed to parse request body:",
+            "[Body Parser] Failed to parse body:",
             parseError,
           );
           (req as any).body = {};
