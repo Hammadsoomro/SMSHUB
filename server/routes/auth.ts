@@ -204,13 +204,13 @@ export const handleAblyToken: RequestHandler = async (req, res) => {
     }
 
     // Generate Ably token with user-specific capabilities
-    const ably = require("ably");
-    const client = new ably.Realtime.Promise({
+    const { Realtime } = require("ably");
+    const client = new Realtime({
       key: process.env.ABLY_API_KEY,
     });
 
     // Create token request with appropriate capabilities
-    const tokenRequest = client.auth.createTokenRequest({
+    const tokenRequest = await client.auth.createTokenRequest({
       clientId: userId,
       capability: {
         // User can subscribe to their own channel and all public channels
@@ -218,7 +218,7 @@ export const handleAblyToken: RequestHandler = async (req, res) => {
         "contacts": ["subscribe"],
         "message_status": ["subscribe"],
         "notifications": ["subscribe"],
-        [`user:${userId}`]: ["subscribe", "publish"],
+        [`user:${userId}`]: ["subscribe"],
         [`phone:*`]: ["subscribe"],
         [`admin:*`]: ["subscribe"],
       },
