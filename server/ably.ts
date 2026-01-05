@@ -1,4 +1,4 @@
-import * as Ably from 'ably/promises';
+import { Realtime } from 'ably';
 
 let ably: Ably.Realtime | null = null;
 
