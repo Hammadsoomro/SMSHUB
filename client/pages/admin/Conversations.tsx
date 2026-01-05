@@ -336,9 +336,12 @@ export default function Conversations() {
       };
 
       const handleError = (error: any) => {
-        console.error("Socket.IO connection error event:", error);
+        console.warn(
+          "Socket.IO connection error (this is expected in serverless environments):",
+          error,
+        );
         setIsConnecting(false);
-        toast.error("Failed to establish real-time connection");
+        // Don't show error toast - gracefully degrade if socket.io isn't available
       };
 
       // Attach connection status listeners
