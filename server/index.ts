@@ -82,57 +82,57 @@ export async function createServer() {
   // Middleware
   app.use(cors());
 
-  // Custom body parser middleware for serverless compatibility
-  // This ensures the body is properly available as a string/buffer
-  // before express.json() processes it
+  // Increase default body size limits for production
+  app.use(
+    express.json({
+      limit: "50mb",
+      strict: false,
+    }),
+  );
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: "50mb",
+    }),
+  );
+
+  // Middleware to handle edge case where body isn't parsed
+  // This can happen in serverless environments where request handling is different
   app.use((req, res, next) => {
+    // If body parsing failed or body is still empty, try to parse from raw
     if (
-      req.method === "POST" ||
-      req.method === "PUT" ||
-      req.method === "PATCH"
+      (!req.body || Object.keys(req.body).length === 0) &&
+      (req.method === "POST" ||
+        req.method === "PUT" ||
+        req.method === "PATCH")
     ) {
-      let data = "";
+      const contentType = req.get("content-type")?.toLowerCase() || "";
 
-      req.on("data", (chunk) => {
-        data += chunk;
-      });
+      // Check if there's a raw body available (from serverless context)
+      const rawBody = (req as any).rawBody || (req as any).body;
 
-      req.on("end", () => {
-        // Attach raw body for logging/debugging
-        (req as any).rawBody = data;
-
-        // Set the body back so express.json() can parse it
-        if (data) {
-          // Manually parse JSON if content-type is application/json
-          const contentType =
-            req.get("content-type")?.toLowerCase() || "";
-          if (contentType.includes("application/json")) {
-            try {
-              (req as any).body = JSON.parse(data);
-            } catch (_parseError) {
-              (req as any).body = {};
-            }
-          } else {
-            // For other content types, let express handle it
-            req.push(data);
+      if (contentType.includes("application/json") && rawBody) {
+        try {
+          if (typeof rawBody === "string") {
+            (req as any).body = JSON.parse(rawBody);
+          } else if (Buffer.isBuffer(rawBody)) {
+            (req as any).body = JSON.parse(rawBody.toString());
           }
+          console.log(
+            "[Body Parser] Successfully parsed request body from raw data",
+          );
+        } catch (parseError) {
+          console.error(
+            "[Body Parser] Failed to parse request body:",
+            parseError,
+          );
+          (req as any).body = {};
         }
-
-        next();
-      });
-
-      req.on("error", (error) => {
-        console.error("[Body Parser] Error reading request body:", error);
-        (req as any).body = {};
-        next();
-      });
-    } else {
-      next();
+      }
     }
-  });
 
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+    next();
+  });
 
   // Performance monitoring (for serverless optimization)
   app.use(createPerformanceMiddleware());
