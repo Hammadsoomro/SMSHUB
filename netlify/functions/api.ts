@@ -142,7 +142,7 @@ function validateRequest(event: HandlerEvent): {
   }
 
   // Validate HTTP method
-  const validMethods = ["GET\", \"POST\", \"PUT\", PATCH\", \"DELETE\", \"OPTIONS"];
+  const validMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
   if (!validMethods.includes(event.httpMethod)) {
     return {
       valid: false,
