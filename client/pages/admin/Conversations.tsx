@@ -176,7 +176,6 @@ export default function Conversations() {
       );
       if (phoneNum) {
         loadContactsForPhoneNumber(phoneNum.id);
-        socketService.joinPhoneNumber(activePhoneNumber);
       }
     }
   }, [activePhoneNumber, phoneNumbers]);
