@@ -2,7 +2,7 @@ import "dotenv/config";
 import express, { Express } from "express";
 import cors from "cors";
 import { connectDB } from "./db";
-import { Server as IOServer } from "socket.io";
+import { initializeAbly } from "./ably";
 
 // Auth routes
 import {
