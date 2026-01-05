@@ -21,7 +21,6 @@
 # Serverless function configuration
 [[functions]]
   name = "api"
-  node_bundler = "esbuild"
   timeout = 30
   # Memory allocation (optimization for MongoDB operations)
   memory = 1024
