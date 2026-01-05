@@ -84,7 +84,8 @@ class AblyService {
         });
       });
     } catch (error) {
-      console.error("[AblyService] Error connecting to Ably:", error);
+      const errorMsg = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error("[AblyService] Error connecting to Ably:", errorMsg);
       this.isConnecting = false;
       return false;
     }
