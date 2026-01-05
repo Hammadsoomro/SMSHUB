@@ -255,10 +255,21 @@ export const handler: Handler = async (
   context.callbackWaitsForEmptyEventLoop = false;
 
   try {
-    // Log request
+    // Log request with details
     console.log(
       `[${requestId}] → ${event.httpMethod} ${event.path} (path: ${event.rawPath || event.path})`,
     );
+
+    // Debug: Log request details
+    if (event.httpMethod === "POST" || event.httpMethod === "PUT" || event.httpMethod === "PATCH") {
+      console.log(`[${requestId}] Body present: ${!!event.body}`);
+      console.log(`[${requestId}] Base64 encoded: ${event.isBase64Encoded}`);
+      console.log(`[${requestId}] Content-Type: ${event.headers['content-type'] || 'not set'}`);
+      if (event.body) {
+        console.log(`[${requestId}] Body length: ${event.body.length}`);
+        console.log(`[${requestId}] Body preview: ${event.body.substring(0, 100)}`);
+      }
+    }
 
     // Handle OPTIONS requests (CORS preflight)
     if (event.httpMethod === "OPTIONS") {
