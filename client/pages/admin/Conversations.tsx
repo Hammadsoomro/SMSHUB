@@ -150,9 +150,9 @@ export default function Conversations() {
     };
   }, []);
 
-  // Initialize Socket.IO separately with better lifecycle management
+  // Initialize Ably realtime separately with better lifecycle management
   useEffect(() => {
-    initializeSocketIO();
+    initializeAbly();
   }, []);
 
   // Handle phone number URL parameter
