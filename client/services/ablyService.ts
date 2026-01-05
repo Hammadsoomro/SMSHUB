@@ -18,7 +18,7 @@ class AblyService {
   private connectionTimeout: NodeJS.Timeout | null = null;
 
   /**
-   * Initialize Ably connection with authentication token
+   * Initialize Ably connection with API key
    */
   async connect(token: string): Promise<boolean> {
     if (this.client && this.client.connection.state === "connected") {
@@ -35,13 +35,21 @@ class AblyService {
       this.isConnecting = true;
       console.log("[AblyService] Connecting to Ably...");
 
-      // Initialize Ably client with token authentication
+      const apiKey = import.meta.env.VITE_ABLY_API_KEY;
+      if (!apiKey) {
+        throw new Error("VITE_ABLY_API_KEY environment variable is not set");
+      }
+
+      // Initialize Ably client with API key (SAS authentication)
+      // Note: Using API key directly for client-side. In production, consider token auth for security.
       this.client = new Realtime({
-        key: import.meta.env.VITE_ABLY_API_KEY,
-        token: token, // Use JWT token from your auth system
+        key: apiKey,
         clientId: this.generateClientId(),
         disconnectedRetryTimeout: 15000, // 15 seconds
         realtimeRequestTimeout: 10000,
+        transportParams: {
+          heartbeatInterval: 30000,
+        },
       });
 
       // Set up connection event listeners
