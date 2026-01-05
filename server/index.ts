@@ -10,6 +10,7 @@ import {
   handleLogin,
   handleGetProfile,
   handleUpdateProfile,
+  handleAblyToken,
 } from "./routes/auth";
 
 // Admin routes
