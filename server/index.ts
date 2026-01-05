@@ -82,45 +82,34 @@ export async function createServer() {
   // Middleware
   app.use(cors());
 
-  // ✅ CRITICAL: Pre-parse middleware for serverless (before express.json)
-  // Handles cases where body is passed as Buffer or string
+  // ✅ CRITICAL: Capture raw body first (before any parsing)
+  app.use(
+    express.raw({
+      type: ["application/json"],
+      limit: "50mb",
+    }),
+  );
+
+  // ✅ Convert raw Buffer to parsed JSON
   app.use((req, res, next) => {
-    if (
-      (req.method === "POST" ||
-        req.method === "PUT" ||
-        req.method === "PATCH") &&
-      !req.body
-    ) {
-      let data = "";
-
-      req.on("data", (chunk) => {
-        data += chunk;
-      });
-
-      req.on("end", () => {
-        const contentType = req.get("content-type")?.toLowerCase() || "";
-
-        if (contentType.includes("application/json") && data) {
-          try {
-            (req as any).body = JSON.parse(data);
-            (req as any).rawBody = data;
-            console.log(
-              `[Pre-Parser] ✓ Pre-parsed JSON body (${data.length} chars)`,
-            );
-          } catch (e) {
-            console.error("[Pre-Parser] Failed to pre-parse:", e);
-            (req as any).body = {};
-          }
-        }
-
-        next();
-      });
-    } else {
-      next();
+    if (Buffer.isBuffer((req as any).body)) {
+      try {
+        const bodyStr = (req as any).body.toString("utf-8");
+        (req as any).rawBody = bodyStr;
+        (req as any).body = JSON.parse(bodyStr);
+        console.log(
+          `[Body Converter] ✓ Converted Buffer to JSON: ${Object.keys((req as any).body).join(", ")}`,
+        );
+      } catch (e) {
+        console.error("[Body Converter] Failed to parse Buffer:", e);
+        (req as any).body = {};
+      }
     }
+
+    next();
   });
 
-  // Increase default body size limits for production
+  // Regular JSON and URL-encoded parsers
   app.use(
     express.json({
       limit: "50mb",
