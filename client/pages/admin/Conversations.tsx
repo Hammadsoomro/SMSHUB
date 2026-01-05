@@ -269,53 +269,39 @@ export default function Conversations() {
     }
   };
 
-  const initializeSocketIO = () => {
+  const initializeAbly = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      console.error("No auth token found for Socket.IO connection");
+      console.error("No auth token found for Ably connection");
       return;
     }
 
     try {
       setIsConnecting(true);
-      console.log("🔌 Initializing Socket.IO for real-time messaging...");
+      console.log("🔌 Initializing Ably for real-time messaging...");
 
-      // Connect to socket service
-      const socket = socketService.connect(token);
+      // Connect to Ably service
+      const connected = await ablyService.connect(token);
 
-      if (!socket) {
-        // Socket creation initiated but not immediately available
-        // This is normal on first connection - socket.io is asynchronous
-        console.log(
-          "Socket instance not immediately available, will connect shortly...",
-        );
-
-        // Wait for socket to be created and listen for connection
-        const checkSocketInterval = setInterval(() => {
-          const connectedSocket = socketService.getSocket();
-          if (connectedSocket) {
-            clearInterval(checkSocketInterval);
-            console.log("Socket available, setting up listeners");
-            setupSocketListeners(connectedSocket);
-          }
-        }, 200);
-
-        // Stop checking after 10 seconds
-        setTimeout(() => {
-          clearInterval(checkSocketInterval);
-          if (!socketService.connected) {
-            console.warn("Socket connection timed out after 10 seconds");
-            setIsConnecting(false);
-          }
-        }, 10000);
-
+      if (!connected) {
+        console.warn("Ably connection failed");
+        setIsConnecting(false);
+        toast.warning("Real-time messaging connection failed, but app will still work");
         return;
       }
 
-      setupSocketListeners(socket);
-    } catch (error) {
-      console.error("Error initializing Socket.IO:", error);
+      // Show success message
       setIsConnecting(false);
+      toast.success(
+        "✨ Real-time messaging connected - SMS updates in real-time!",
+      );
+
+      // Subscribe to contact updates once connected
+      setupAblyListeners();
+    } catch (error) {
+      console.error("Error initializing Ably:", error);
+      setIsConnecting(false);
+      toast.error("Failed to initialize real-time connection");
     }
   };
 
