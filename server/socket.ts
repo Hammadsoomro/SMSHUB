@@ -13,11 +13,22 @@ interface AuthenticatedSocket extends Socket {
 }
 
 export function setupSocketIO(httpServer: HTTPServer): IOServer {
+  // Configure CORS based on environment
+  const allowedOrigins = getAllowedOrigins();
+
   const io = new IOServer(httpServer, {
     cors: {
-      origin: "*",
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
+      credentials: true,
     },
+    // Transport configuration for better compatibility
+    transports: ["websocket", "polling"],
+    // Increase max size for large messages
+    maxHttpBufferSize: 10 * 1024 * 1024, // 10 MB
+    // Keep-alive settings
+    pingInterval: 25000,
+    pingTimeout: 10000,
   });
 
   // Middleware for authentication
