@@ -283,88 +283,61 @@ export default function Conversations() {
     }
   };
 
-  const initializeSocketIO = () => {
+  const initializeAbly = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      console.error("No auth token found for Socket.IO connection");
+      console.error("No auth token found for Ably connection");
       return;
     }
 
     try {
       setIsConnecting(true);
-      console.log("Initializing Socket.IO...");
+      console.log("Initializing Ably realtime...");
 
-      // Connect to socket service
-      const socket = socketService.connect(token);
+      // Connect to Ably service
+      const realtime = await ablyService.connect(token);
 
-      if (!socket) {
-        // Socket creation initiated but not immediately available
+      if (!realtime) {
+        // Ably connection initiated but not immediately available
         // Wait a moment and retry once
-        console.warn("Socket instance not immediately available, retrying...");
+        console.warn("Ably instance not immediately available, retrying...");
         setTimeout(() => {
-          const retrySocket = socketService.getSocket();
-          if (retrySocket) {
-            console.log("Socket available after retry");
-            setupSocketListeners(retrySocket);
+          if (ablyService.connected) {
+            console.log("Ably available after retry");
+            setupAblyListeners();
           } else {
-            console.error("Failed to get socket instance after retry");
+            console.error("Failed to get Ably instance after retry");
             setIsConnecting(false);
-            toast.error("Unable to establish socket connection");
+            toast.error("Unable to establish realtime connection");
           }
         }, 500);
         return;
       }
 
-      setupSocketListeners(socket);
+      setupAblyListeners();
     } catch (error) {
-      console.error("Error initializing Socket.IO:", error);
+      console.error("Error initializing Ably:", error);
       setIsConnecting(false);
       toast.error("Failed to initialize real-time connection");
     }
   };
 
-  const setupSocketListeners = (socket: any) => {
+  const setupAblyListeners = () => {
     try {
-      // Remove old listeners to avoid duplicates
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("connect_error");
-
-      // Connection status handlers with debug logging
-      const handleConnect = () => {
-        console.log("✅ Socket.IO connected event fired");
+      // Connection status check with debug logging
+      if (ablyService.connected) {
+        console.log("✅ Ably connected and ready");
         setIsConnecting(false);
         toast.success("Real-time messaging is now active");
-      };
-
-      const handleDisconnect = () => {
-        console.log("❌ Socket.IO disconnected event fired");
-        setIsConnecting(false);
-        toast.error("Real-time messaging is offline");
-      };
-
-      const handleError = (error: any) => {
-        console.error("Socket.IO connection error event:", error);
-        setIsConnecting(false);
-        toast.error("Failed to establish real-time connection");
-      };
-
-      // Attach connection status listeners
-      socket.on("connect", handleConnect);
-      socket.on("disconnect", handleDisconnect);
-      socket.on("connect_error", handleError);
-
-      // Check if already connected and show toast if so
-      if (socket.connected) {
-        console.log("Socket is already connected, triggering connected state");
-        setIsConnecting(false);
-        setTimeout(() => {
-          toast.success("Real-time messaging is now active");
-        }, 100);
+      } else {
+        console.warn("⏳ Ably connection pending...");
       }
 
-      // Set up Socket.IO event listeners
-      socketService.on("new_message", (data: any) => {
+      // Get user ID from profile for user-specific channels
+      const userId = profile?.id;
+
+      // Subscribe to new messages on all user channels
+      ablyService.on("new_message", "new_message", (data: any) => {
         console.log("📱 New message received:", data);
 
         // Update contacts list using ref to get current state
@@ -397,7 +370,7 @@ export default function Conversations() {
         updatePageTitle();
       });
 
-      socketService.on("messageStatusUpdate", (data: any) => {
+      ablyService.on("message_status", "messageStatusUpdate", (data: any) => {
         console.log("✓ Message status updated:", data);
         const currentSelectedContactId = selectedContactIdRef.current;
         if (currentSelectedContactId) {
@@ -405,7 +378,7 @@ export default function Conversations() {
         }
       });
 
-      socketService.on("contact_updated", (data: any) => {
+      ablyService.on("contacts", "contact_updated", (data: any) => {
         console.log("👥 Contacts updated:", data);
         const currentActivePhone = activePhoneNumberRef.current;
         if (currentActivePhone) {
@@ -418,45 +391,48 @@ export default function Conversations() {
         }
       });
 
-      socketService.on("unreadUpdated", (data: any) => {
+      ablyService.on("notifications", "unreadUpdated", (data: any) => {
         console.log("🔔 Unread counts updated:", data);
         updatePageTitle();
       });
 
-      socketService.on("phone_number_assigned", (data: any) => {
-        console.log("📞 Phone number assignment updated:", data);
-        // Reload phone numbers to reflect the assignment/unassignment
-        if (data.action === "assigned") {
-          toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
-        } else {
-          toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
-        }
-        // Reload phone numbers and reload initial data to sync with server
-        ApiService.getAccessiblePhoneNumbers()
-          .then((phoneNumbersData) => {
-            const processedPhones = phoneNumbersData.map((phone: any) => ({
-              ...phone,
-            }));
-            setPhoneNumbers(processedPhones);
-            // If a new number was assigned, automatically select it
-            if (
-              data.action === "assigned" &&
-              !activePhoneNumberRef.current &&
-              processedPhones.length > 0
-            ) {
-              const assignedPhone =
-                processedPhones.find((p) => p.id === data.phoneNumberId) ||
-                processedPhones[0];
-              setActivePhoneNumber(assignedPhone.phoneNumber);
-              loadContactsForPhoneNumber(assignedPhone.id);
-            }
-          })
-          .catch((error) => {
-            console.error("Error reloading phone numbers:", error);
-          });
-      });
+      // User-specific channel for assignments
+      if (userId) {
+        ablyService.on(`user:${userId}`, "phone_number_assigned", (data: any) => {
+          console.log("📞 Phone number assignment updated:", data);
+          // Reload phone numbers to reflect the assignment/unassignment
+          if (data.action === "assigned") {
+            toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
+          } else {
+            toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
+          }
+          // Reload phone numbers and reload initial data to sync with server
+          ApiService.getAccessiblePhoneNumbers()
+            .then((phoneNumbersData) => {
+              const processedPhones = phoneNumbersData.map((phone: any) => ({
+                ...phone,
+              }));
+              setPhoneNumbers(processedPhones);
+              // If a new number was assigned, automatically select it
+              if (
+                data.action === "assigned" &&
+                !activePhoneNumberRef.current &&
+                processedPhones.length > 0
+              ) {
+                const assignedPhone =
+                  processedPhones.find((p) => p.id === data.phoneNumberId) ||
+                  processedPhones[0];
+                setActivePhoneNumber(assignedPhone.phoneNumber);
+                loadContactsForPhoneNumber(assignedPhone.id);
+              }
+            })
+            .catch((error) => {
+              console.error("Error reloading phone numbers:", error);
+            });
+        });
+      }
     } catch (error) {
-      console.error("Error initializing Socket.IO:", error);
+      console.error("Error setting up Ably listeners:", error);
       setIsConnecting(false);
       toast.error("Failed to initialize real-time connection");
     }
