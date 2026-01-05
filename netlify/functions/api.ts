@@ -321,6 +321,16 @@ export const handler: Handler = async (
         normalizedHeaders[key.toLowerCase()] = value as string;
       });
     }
+
+    // Ensure content-length header is set for body parsing
+    if (event.body && !normalizedHeaders["content-length"]) {
+      const bodyLength = Buffer.byteLength(event.body, "utf-8");
+      normalizedHeaders["content-length"] = String(bodyLength);
+      console.log(
+        `[${requestId}] ✓ Set content-length header: ${bodyLength}`,
+      );
+    }
+
     event.headers = normalizedHeaders as any;
 
     // Validate request
