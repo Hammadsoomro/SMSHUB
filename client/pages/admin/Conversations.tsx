@@ -297,9 +297,11 @@ export default function Conversations() {
             console.log("Socket available after retry");
             setupSocketListeners(retrySocket);
           } else {
-            console.error("Failed to get socket instance after retry");
+            console.warn(
+              "Socket connection not available - real-time features disabled (expected in serverless environments)",
+            );
             setIsConnecting(false);
-            toast.error("Unable to establish socket connection");
+            // Don't show error toast in production for socket unavailability
           }
         }, 500);
         return;
@@ -309,7 +311,7 @@ export default function Conversations() {
     } catch (error) {
       console.error("Error initializing Socket.IO:", error);
       setIsConnecting(false);
-      toast.error("Failed to initialize real-time connection");
+      // Don't show error toast - socket.io may not be available in all environments
     }
   };
 
