@@ -1,4 +1,4 @@
-import * as Ably from 'ably';
+import * as Ably from "ably";
 
 interface ChannelListener {
   [eventName: string]: (...args: any[]) => void;
@@ -13,74 +13,74 @@ class AblyService {
 
   async connect(token: string): Promise<Ably.Realtime | null> {
     // Return existing connection if already connected or connecting
-    if (this.realtime && this.realtime.connection.state === 'connected') {
-      console.log('[AblyService] Already connected to Ably');
+    if (this.realtime && this.realtime.connection.state === "connected") {
+      console.log("[AblyService] Already connected to Ably");
       return this.realtime;
     }
 
     if (this.isConnecting) {
-      console.log('[AblyService] Connection already in progress, waiting...');
+      console.log("[AblyService] Connection already in progress, waiting...");
       return null;
     }
 
     try {
       this.isConnecting = true;
-      console.log('[AblyService] Creating new Ably connection...');
+      console.log("[AblyService] Creating new Ably connection...");
 
       // Extract userId from token (JWT format: header.payload.signature)
-      const tokenParts = token.split('.');
+      const tokenParts = token.split(".");
       if (tokenParts.length === 3) {
         try {
           const payload = JSON.parse(atob(tokenParts[1]));
           this.userId = payload.userId;
         } catch (e) {
-          console.warn('Could not extract userId from token');
+          console.warn("Could not extract userId from token");
         }
       }
 
       // Initialize Ably Realtime with token auth
       this.realtime = new Ably.Realtime({
-        authUrl: '/api/auth/ably-token', // We'll create this endpoint
-        authMethod: 'GET',
+        authUrl: "/api/auth/ably-token", // We'll create this endpoint
+        authMethod: "GET",
         autoConnect: true,
       });
 
       // Wait for connection to be established
       await new Promise<void>((resolve, reject) => {
         const onConnect = () => {
-          this.realtime?.connection.off('connected', onConnect);
-          this.realtime?.connection.off('failed', onError);
-          console.log('[AblyService] Connected to Ably successfully');
+          this.realtime?.connection.off("connected", onConnect);
+          this.realtime?.connection.off("failed", onError);
+          console.log("[AblyService] Connected to Ably successfully");
           this.isConnecting = false;
           resolve();
         };
 
         const onError = (err: any) => {
-          this.realtime?.connection.off('connected', onConnect);
-          this.realtime?.connection.off('failed', onError);
-          console.error('[AblyService] Ably connection error:', err);
+          this.realtime?.connection.off("connected", onConnect);
+          this.realtime?.connection.off("failed", onError);
+          console.error("[AblyService] Ably connection error:", err);
           this.isConnecting = false;
           reject(err);
         };
 
-        if (this.realtime?.connection.state === 'connected') {
-          console.log('[AblyService] Already connected');
+        if (this.realtime?.connection.state === "connected") {
+          console.log("[AblyService] Already connected");
           this.isConnecting = false;
           resolve();
         } else {
-          this.realtime?.connection.on('connected', onConnect);
-          this.realtime?.connection.on('failed', onError);
+          this.realtime?.connection.on("connected", onConnect);
+          this.realtime?.connection.on("failed", onError);
         }
       });
 
       // Set up connection state listeners
-      this.realtime.connection.on('state', (stateChange: any) => {
+      this.realtime.connection.on("state", (stateChange: any) => {
         console.log(`[AblyService] Connection state: ${stateChange.current}`);
       });
 
       return this.realtime;
     } catch (error) {
-      console.error('[AblyService] Error creating Ably connection:', error);
+      console.error("[AblyService] Error creating Ably connection:", error);
       this.isConnecting = false;
       return null;
     }
@@ -101,9 +101,9 @@ class AblyService {
         this.realtime = null;
       }
 
-      console.log('[AblyService] Disconnected from Ably');
+      console.log("[AblyService] Disconnected from Ably");
     } catch (error) {
-      console.error('[AblyService] Error during disconnect:', error);
+      console.error("[AblyService] Error during disconnect:", error);
     }
   }
 
@@ -117,7 +117,7 @@ class AblyService {
   ): void {
     try {
       if (!this.realtime) {
-        console.warn('[AblyService] Not connected to Ably');
+        console.warn("[AblyService] Not connected to Ably");
         return;
       }
 
@@ -140,11 +140,9 @@ class AblyService {
         callback(message.data);
       });
 
-      console.log(
-        `[AblyService] Subscribed to ${channelName}:${eventName}`,
-      );
+      console.log(`[AblyService] Subscribed to ${channelName}:${eventName}`);
     } catch (error) {
-      console.error('[AblyService] Error subscribing to event:', error);
+      console.error("[AblyService] Error subscribing to event:", error);
     }
   }
 
@@ -165,30 +163,30 @@ class AblyService {
           delete channelListeners[eventName];
         }
         channel.unsubscribe(eventName);
-        console.log(`[AblyService] Unsubscribed from ${channelName}:${eventName}`);
+        console.log(
+          `[AblyService] Unsubscribed from ${channelName}:${eventName}`,
+        );
       } else {
         // Unsubscribe from all events on channel
         channel.unsubscribe();
         this.channels.delete(channelName);
         this.listeners.delete(channelName);
-        console.log(`[AblyService] Unsubscribed from all events on ${channelName}`);
+        console.log(
+          `[AblyService] Unsubscribed from all events on ${channelName}`,
+        );
       }
     } catch (error) {
-      console.error('[AblyService] Error unsubscribing:', error);
+      console.error("[AblyService] Error unsubscribing:", error);
     }
   }
 
   /**
    * Publish a message to a channel
    */
-  emit(
-    channelName: string,
-    eventName: string,
-    data?: any,
-  ): void {
+  emit(channelName: string, eventName: string, data?: any): void {
     try {
       if (!this.realtime) {
-        console.warn('[AblyService] Not connected to Ably');
+        console.warn("[AblyService] Not connected to Ably");
         return;
       }
 
@@ -200,13 +198,11 @@ class AblyService {
             err,
           );
         } else {
-          console.log(
-            `[AblyService] Published to ${channelName}:${eventName}`,
-          );
+          console.log(`[AblyService] Published to ${channelName}:${eventName}`);
         }
       });
     } catch (error) {
-      console.error('[AblyService] Error emitting event:', error);
+      console.error("[AblyService] Error emitting event:", error);
     }
   }
 
@@ -217,7 +213,7 @@ class AblyService {
     const channelName = `phone:${phoneNumber}`;
     try {
       if (!this.realtime) {
-        console.warn('[AblyService] Not connected to Ably');
+        console.warn("[AblyService] Not connected to Ably");
         return;
       }
 
@@ -226,7 +222,7 @@ class AblyService {
       // Channel presence is implicit when subscribing
       this.channels.set(channelName, channel);
     } catch (error) {
-      console.error('[AblyService] Error joining phone number:', error);
+      console.error("[AblyService] Error joining phone number:", error);
     }
   }
 
@@ -242,7 +238,7 @@ class AblyService {
    * Get connection status
    */
   get connected(): boolean {
-    return this.realtime?.connection.state === 'connected';
+    return this.realtime?.connection.state === "connected";
   }
 
   /**

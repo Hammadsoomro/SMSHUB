@@ -82,7 +82,10 @@ export async function createServer() {
     await initializeAbly();
     console.log("✅ Ably realtime initialized");
   } catch (error) {
-    console.error("⚠️ Failed to initialize Ably, continuing without realtime:", error);
+    console.error(
+      "⚠️ Failed to initialize Ably, continuing without realtime:",
+      error,
+    );
     // Continue - app can work without realtime, but notifications won't be sent
   }
 

@@ -104,9 +104,7 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     // Emit Ably events to notify connected clients in real-time
     try {
       if (phoneNumber.assignedTo) {
-        console.log(
-          `📡 Emitting Ably event to user ${phoneNumber.assignedTo}`,
-        );
+        console.log(`📡 Emitting Ably event to user ${phoneNumber.assignedTo}`);
         await emitNewMessage(phoneNumber.assignedTo, {
           id: message.id,
           phoneNumberId: phoneNumber.id,

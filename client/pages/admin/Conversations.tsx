@@ -398,38 +398,46 @@ export default function Conversations() {
 
       // User-specific channel for assignments
       if (userId) {
-        ablyService.on(`user:${userId}`, "phone_number_assigned", (data: any) => {
-          console.log("📞 Phone number assignment updated:", data);
-          // Reload phone numbers to reflect the assignment/unassignment
-          if (data.action === "assigned") {
-            toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
-          } else {
-            toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
-          }
-          // Reload phone numbers and reload initial data to sync with server
-          ApiService.getAccessiblePhoneNumbers()
-            .then((phoneNumbersData) => {
-              const processedPhones = phoneNumbersData.map((phone: any) => ({
-                ...phone,
-              }));
-              setPhoneNumbers(processedPhones);
-              // If a new number was assigned, automatically select it
-              if (
-                data.action === "assigned" &&
-                !activePhoneNumberRef.current &&
-                processedPhones.length > 0
-              ) {
-                const assignedPhone =
-                  processedPhones.find((p) => p.id === data.phoneNumberId) ||
-                  processedPhones[0];
-                setActivePhoneNumber(assignedPhone.phoneNumber);
-                loadContactsForPhoneNumber(assignedPhone.id);
-              }
-            })
-            .catch((error) => {
-              console.error("Error reloading phone numbers:", error);
-            });
-        });
+        ablyService.on(
+          `user:${userId}`,
+          "phone_number_assigned",
+          (data: any) => {
+            console.log("📞 Phone number assignment updated:", data);
+            // Reload phone numbers to reflect the assignment/unassignment
+            if (data.action === "assigned") {
+              toast.success(
+                `📞 Phone number ${data.phoneNumber} assigned to you`,
+              );
+            } else {
+              toast.info(
+                `📞 Phone number ${data.phoneNumber} unassigned from you`,
+              );
+            }
+            // Reload phone numbers and reload initial data to sync with server
+            ApiService.getAccessiblePhoneNumbers()
+              .then((phoneNumbersData) => {
+                const processedPhones = phoneNumbersData.map((phone: any) => ({
+                  ...phone,
+                }));
+                setPhoneNumbers(processedPhones);
+                // If a new number was assigned, automatically select it
+                if (
+                  data.action === "assigned" &&
+                  !activePhoneNumberRef.current &&
+                  processedPhones.length > 0
+                ) {
+                  const assignedPhone =
+                    processedPhones.find((p) => p.id === data.phoneNumberId) ||
+                    processedPhones[0];
+                  setActivePhoneNumber(assignedPhone.phoneNumber);
+                  loadContactsForPhoneNumber(assignedPhone.id);
+                }
+              })
+              .catch((error) => {
+                console.error("Error reloading phone numbers:", error);
+              });
+          },
+        );
       }
     } catch (error) {
       console.error("Error setting up Ably listeners:", error);

@@ -214,10 +214,10 @@ export const handleAblyToken: RequestHandler = async (req, res) => {
       clientId: userId,
       capability: {
         // User can subscribe to their own channel and all public channels
-        "new_message": ["subscribe"],
-        "contacts": ["subscribe"],
-        "message_status": ["subscribe"],
-        "notifications": ["subscribe"],
+        new_message: ["subscribe"],
+        contacts: ["subscribe"],
+        message_status: ["subscribe"],
+        notifications: ["subscribe"],
         [`user:${userId}`]: ["subscribe"],
         [`phone:*`]: ["subscribe"],
         [`admin:*`]: ["subscribe"],
