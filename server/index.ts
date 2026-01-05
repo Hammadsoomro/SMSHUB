@@ -81,6 +81,56 @@ export async function createServer() {
 
   // Middleware
   app.use(cors());
+
+  // Custom body parser middleware for serverless compatibility
+  // This ensures the body is properly available as a string/buffer
+  // before express.json() processes it
+  app.use((req, res, next) => {
+    if (
+      req.method === "POST" ||
+      req.method === "PUT" ||
+      req.method === "PATCH"
+    ) {
+      let data = "";
+
+      req.on("data", (chunk) => {
+        data += chunk;
+      });
+
+      req.on("end", () => {
+        // Attach raw body for logging/debugging
+        (req as any).rawBody = data;
+
+        // Set the body back so express.json() can parse it
+        if (data) {
+          // Manually parse JSON if content-type is application/json
+          const contentType =
+            req.get("content-type")?.toLowerCase() || "";
+          if (contentType.includes("application/json")) {
+            try {
+              (req as any).body = JSON.parse(data);
+            } catch (_parseError) {
+              (req as any).body = {};
+            }
+          } else {
+            // For other content types, let express handle it
+            req.push(data);
+          }
+        }
+
+        next();
+      });
+
+      req.on("error", (error) => {
+        console.error("[Body Parser] Error reading request body:", error);
+        (req as any).body = {};
+        next();
+      });
+    } else {
+      next();
+    }
+  });
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
