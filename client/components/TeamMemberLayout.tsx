@@ -34,20 +34,59 @@ export default function TeamMemberLayout({ children }: TeamMemberLayoutProps) {
   }, []);
 
   useEffect(() => {
-    // Listen for phone number assignment updates
-    socketService.on("phone_number_assigned", (data: any) => {
-      console.log("📞 Phone number assignment updated:", data);
-      if (data.action === "assigned") {
-        toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
-      } else {
-        toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
+    // Connect to Ably and listen for phone number assignment updates
+    const initializeAbly = async () => {
+      const token = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+      const userProfile = storedUser ? JSON.parse(storedUser) : null;
+      const userId = userProfile?.id;
+
+      if (!token || !userId) {
+        console.error("No token or user ID found for Ably connection");
+        return;
       }
-      // Refresh assigned numbers
-      fetchAssignedNumbers();
+
+      try {
+        // Connect to Ably
+        const connected = await ablyService.connect(token);
+        if (!connected) {
+          console.warn("Ably connection failed for phone number assignments");
+          return;
+        }
+
+        // Subscribe to phone number assignments
+        const unsubscribe = ablyService.subscribeToPhoneNumberAssignments(
+          userId,
+          (data: any) => {
+            console.log("📞 Phone number assignment updated:", data);
+            if (data.action === "assigned") {
+              toast.success(
+                `📞 Phone number ${data.phoneNumber} assigned to you`,
+              );
+            } else {
+              toast.info(
+                `📞 Phone number ${data.phoneNumber} unassigned from you`,
+              );
+            }
+            // Refresh assigned numbers
+            fetchAssignedNumbers();
+          },
+        );
+
+        return unsubscribe;
+      } catch (error) {
+        console.error("Error initializing Ably for team member:", error);
+      }
+    };
+
+    let unsubscribe: (() => void) | undefined;
+    initializeAbly().then((fn) => {
+      unsubscribe = fn;
     });
 
     return () => {
-      socketService.off("phone_number_assigned");
+      unsubscribe?.();
+      ablyService.disconnect();
     };
   }, []);
 
