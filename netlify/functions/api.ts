@@ -263,12 +263,9 @@ export const handler: Handler = async (
 
   try {
     // ✅ Request deduplication for idempotent operations
-    const isMutationRequest = [
-      "POST",
-      "PUT",
-      "DELETE",
-      "PATCH",
-    ].includes(event.httpMethod);
+    const isMutationRequest = ["POST", "PUT", "DELETE", "PATCH"].includes(
+      event.httpMethod,
+    );
     const idempotencyKey = isMutationRequest
       ? event.headers["idempotency-key"]
       : null;
@@ -358,9 +355,7 @@ export const handler: Handler = async (
     if (event.body && !normalizedHeaders["content-length"]) {
       const bodyLength = Buffer.byteLength(event.body, "utf-8");
       normalizedHeaders["content-length"] = String(bodyLength);
-      console.log(
-        `[${requestId}] ✓ Set content-length header: ${bodyLength}`,
-      );
+      console.log(`[${requestId}] ✓ Set content-length header: ${bodyLength}`);
     }
 
     event.headers = normalizedHeaders as any;

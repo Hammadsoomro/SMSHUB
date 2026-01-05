@@ -102,9 +102,7 @@ export async function createServer() {
     // If body parsing failed or body is still empty, try to parse from raw
     if (
       (!req.body || Object.keys(req.body).length === 0) &&
-      (req.method === "POST" ||
-        req.method === "PUT" ||
-        req.method === "PATCH")
+      (req.method === "POST" || req.method === "PUT" || req.method === "PATCH")
     ) {
       const contentType = req.get("content-type")?.toLowerCase() || "";
 
