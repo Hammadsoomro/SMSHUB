@@ -77,6 +77,15 @@ export async function createServer() {
   // Connect to MongoDB BEFORE creating the app
   await connectDB();
 
+  // Initialize Ably realtime for server-side event publishing
+  try {
+    await initializeAbly();
+    console.log("✅ Ably realtime initialized");
+  } catch (error) {
+    console.error("⚠️ Failed to initialize Ably, continuing without realtime:", error);
+    // Continue - app can work without realtime, but notifications won't be sent
+  }
+
   const app = express() as Express;
 
   // Middleware
