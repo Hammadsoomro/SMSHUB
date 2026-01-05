@@ -322,6 +322,12 @@ export const handler: Handler = async (
       };
     }
 
+    // Ensure event body is properly decoded if base64 encoded
+    if (event.isBase64Encoded && event.body) {
+      event.body = Buffer.from(event.body, "base64").toString("utf-8");
+      event.isBase64Encoded = false;
+    }
+
     // Use serverless-http to convert Netlify event to Express
     const serverlessHandler = serverless(app);
 
