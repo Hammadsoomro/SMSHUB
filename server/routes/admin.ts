@@ -414,16 +414,15 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
 
     await storage.updatePhoneNumberWithAssignment(phoneNumberId, teamMemberId);
 
-    // Emit socket event to notify team member of assignment
+    // Publish Ably event to notify team member of assignment
     try {
-      const io = getSocketIOInstance();
-      if (io) {
+      if (ablyServer.isInitialized) {
         if (teamMemberId) {
           // Notify team member that a phone number has been assigned to them
           console.log(
-            `📡 Emitting phone number assignment event to team member ${teamMemberId}`,
+            `📡 Publishing phone number assignment event to team member ${teamMemberId}`,
           );
-          io.to(`user:${teamMemberId}`).emit("phone_number_assigned", {
+          await ablyServer.publishPhoneNumberAssignment(teamMemberId, {
             phoneNumberId,
             phoneNumber: updatedNumber.phoneNumber,
             action: "assigned",
@@ -431,25 +430,22 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
         } else if (phoneNumber.assignedTo) {
           // Notify team member that their phone number has been unassigned
           console.log(
-            `📡 Emitting phone number unassignment event to team member ${phoneNumber.assignedTo}`,
+            `📡 Publishing phone number unassignment event to team member ${phoneNumber.assignedTo}`,
           );
-          io.to(`user:${phoneNumber.assignedTo}`).emit(
-            "phone_number_assigned",
-            {
-              phoneNumberId,
-              phoneNumber: updatedNumber.phoneNumber,
-              action: "unassigned",
-            },
-          );
+          await ablyServer.publishPhoneNumberAssignment(phoneNumber.assignedTo, {
+            phoneNumberId,
+            phoneNumber: updatedNumber.phoneNumber,
+            action: "unassigned",
+          });
         }
       } else {
         console.warn(
-          "⚠️ Socket.IO instance not available for real-time notification",
+          "⚠️ Ably not initialized for real-time notification",
         );
       }
-    } catch (socketError) {
-      console.error("Error emitting socket event:", socketError);
-      // Continue without socket event - assignment still succeeds
+    } catch (ablyError) {
+      console.error("Error publishing Ably event:", ablyError);
+      // Continue without Ably event - assignment still succeeds
     }
 
     res.json({ phoneNumber: updatedNumber });
