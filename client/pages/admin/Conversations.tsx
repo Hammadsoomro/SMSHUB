@@ -336,21 +336,13 @@ export default function Conversations() {
       };
 
       const handleDisconnect = () => {
-        console.log("❌ Socket.IO disconnected event fired");
+        console.warn("❌ Socket.IO disconnected - will attempt to reconnect");
         setIsConnecting(false);
-        // Only show toast if it was previously connected
-        if (socket.connected) {
-          toast.error("Real-time messaging is offline");
-        }
       };
 
       const handleError = (error: any) => {
-        console.warn(
-          "Socket.IO connection error (this is expected in serverless environments):",
-          error,
-        );
+        console.error("Socket.IO connection error:", error?.message || error);
         setIsConnecting(false);
-        // Don't show error toast - gracefully degrade if socket.io isn't available
       };
 
       // Attach connection status listeners
