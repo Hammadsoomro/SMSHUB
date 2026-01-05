@@ -386,7 +386,16 @@ export const handler: Handler = async (
     }
 
     // Use serverless-http to convert Netlify event to Express
-    const serverlessHandler = serverless(app);
+    const serverlessHandler = serverless(app, {
+      // Preserve raw body for debugging and fallback parsing
+      request: (request: any, event: HandlerEvent) => {
+        // Attach raw body to request for middleware to access
+        if (event.body) {
+          request.rawBody = event.body;
+          console.log(`[${requestId}] ✓ Raw body attached to request`);
+        }
+      },
+    });
 
     // Execute handler with timeout protection
     let response: any;
