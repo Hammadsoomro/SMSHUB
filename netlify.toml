@@ -24,6 +24,25 @@
   timeout = 10
 
 
+# Ably API routes
+[[redirects]]
+  from = "/api/ably/token"
+  to = "/.netlify/functions/ably-token"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/ably/publish"
+  to = "/.netlify/functions/ably-publish"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/ably/stats"
+  to = "/.netlify/functions/ably-stats"
+  status = 200
+  force = true
+
 # API route redirects to serverless function
 [[redirects]]
   from = "/api/*"
