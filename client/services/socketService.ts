@@ -85,19 +85,22 @@ class SocketService {
 
       this.socket = io(socketOptions);
 
-      // Set a connection timeout for faster failure detection
+      // Set a longer connection timeout for slow networks
       this.connectionTimeout = setTimeout(() => {
         if (this.isConnecting && this.socket && !this.socket.connected) {
           console.warn(
-            "[SocketService] Connection timeout - Socket.IO may not be available in this environment",
+            "[SocketService] Connection taking longer than expected, continuing to retry...",
           );
+          // Don't disconnect, let it keep trying
           this.isConnecting = false;
         }
-      }, 5000);
+      }, 10000);
 
       // Attach base listeners that will always be there
       this.socket.on("connect", () => {
-        console.log("[SocketService] ✅ Socket connected successfully");
+        console.log(
+          "[SocketService] ✅ Socket connected successfully - real-time messaging enabled",
+        );
         this.isConnecting = false;
         if (this.connectionTimeout) {
           clearTimeout(this.connectionTimeout);
@@ -105,27 +108,16 @@ class SocketService {
       });
 
       this.socket.on("disconnect", () => {
-        console.log("[SocketService] ❌ Socket disconnected");
+        console.log("[SocketService] ❌ Socket disconnected - attempting to reconnect...");
+        this.isConnecting = false;
       });
 
       this.socket.on("connect_error", (error: any) => {
-        console.warn(
-          "[SocketService] Connection error (this is expected in serverless environments):",
+        console.error(
+          "[SocketService] Connection error:",
           error?.message || error,
         );
         this.isConnecting = false;
-
-        // In production, don't keep retrying aggressively
-        if (this.isProduction && this.socket) {
-          const attempts =
-            (this.socket as any)._reconnectionAttempts || 0;
-          if (attempts >= 2) {
-            console.warn(
-              "[SocketService] Stopping socket reconnection attempts in production environment",
-            );
-            this.socket.disconnect();
-          }
-        }
       });
 
       return this.socket;
