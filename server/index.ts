@@ -82,44 +82,7 @@ export async function createServer() {
   // Middleware
   app.use(cors());
 
-  // ✅ CRITICAL: Only capture raw body for mutation requests (POST, PUT, PATCH)
-  app.use((req, res, next) => {
-    // Skip body capture for GET, DELETE, HEAD, OPTIONS
-    const isMutationRequest = ["POST", "PUT", "PATCH"].includes(req.method);
-
-    if (!isMutationRequest) {
-      // For non-mutation requests, skip raw body parsing
-      return next();
-    }
-
-    // For mutation requests, capture raw body
-    let data = "";
-
-    req.on("data", (chunk) => {
-      data += chunk;
-    });
-
-    req.on("end", () => {
-      if (data) {
-        try {
-          (req as any).rawBody = data;
-          (req as any).body = JSON.parse(data);
-          console.log(
-            `[Body Parser] ✓ Parsed JSON body: ${Object.keys((req as any).body).join(", ")}`,
-          );
-        } catch (e) {
-          console.error("[Body Parser] Failed to parse JSON:", e);
-          (req as any).rawBody = data;
-          (req as any).body = {};
-        }
-      } else {
-        (req as any).body = {};
-      }
-      next();
-    });
-  });
-
-  // Regular JSON and URL-encoded parsers (fallback for edge cases)
+  // ✅ Parse JSON and URL-encoded bodies (express handles this safely)
   app.use(
     express.json({
       limit: "50mb",
@@ -132,6 +95,22 @@ export async function createServer() {
       limit: "50mb",
     }),
   );
+
+  // ✅ Middleware to capture raw body for Twilio signature validation
+  app.use((req, res, next) => {
+    let data = "";
+
+    req.on("data", (chunk) => {
+      data += chunk;
+    });
+
+    req.on("end", () => {
+      if (data) {
+        (req as any).rawBody = data;
+      }
+      next();
+    });
+  });
 
   // Performance monitoring (for serverless optimization)
   app.use(createPerformanceMiddleware());
