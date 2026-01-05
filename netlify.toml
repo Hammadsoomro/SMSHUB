@@ -7,6 +7,22 @@
 [functions]
   node_bundler = "esbuild"
 
+# Ably Integration Functions
+[functions."ably-token"]
+  description = "Generate Ably authentication tokens"
+  memory = 256
+  timeout = 10
+
+[functions."ably-publish"]
+  description = "Publish messages to Ably channels"
+  memory = 256
+  timeout = 10
+
+[functions."ably-stats"]
+  description = "Get Ably channel statistics and health"
+  memory = 256
+  timeout = 10
+
 
 # API route redirects to serverless function
 [[redirects]]
