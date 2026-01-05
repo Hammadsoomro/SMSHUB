@@ -82,7 +82,10 @@ export async function createServer() {
   // Middleware
   app.use(cors());
 
-  // ✅ Parse JSON and URL-encoded bodies (express handles this safely)
+  // ✅ For Twilio webhooks, capture raw body BEFORE parsing
+  app.use("/api/webhooks", express.raw({ type: "application/x-www-form-urlencoded", limit: "50mb" }));
+
+  // ✅ Parse JSON and URL-encoded bodies for regular requests
   app.use(
     express.json({
       limit: "50mb",
@@ -96,20 +99,20 @@ export async function createServer() {
     }),
   );
 
-  // ✅ Middleware to capture raw body for Twilio signature validation
-  app.use((req, res, next) => {
-    let data = "";
-
-    req.on("data", (chunk) => {
-      data += chunk;
-    });
-
-    req.on("end", () => {
-      if (data) {
-        (req as any).rawBody = data;
+  // ✅ Middleware to convert raw body to string if needed (for webhook validation)
+  app.use("/api/webhooks", (req, res, next) => {
+    if (Buffer.isBuffer((req as any).body)) {
+      (req as any).rawBody = (req as any).body.toString("utf-8");
+      try {
+        // Try to parse as form data
+        const params = new URLSearchParams((req as any).rawBody);
+        (req as any).body = Object.fromEntries(params);
+      } catch (e) {
+        console.error("[Webhook Parser] Failed to parse webhook body:", e);
+        (req as any).body = {};
       }
-      next();
-    });
+    }
+    next();
   });
 
   // Performance monitoring (for serverless optimization)
