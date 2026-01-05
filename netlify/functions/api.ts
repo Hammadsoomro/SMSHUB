@@ -50,6 +50,13 @@ let initPromise: Promise<any> | null = null;
 let lastInitTime = 0;
 let initError: Error | null = null;
 
+// ✅ Request deduplication: Prevent duplicate processing of same request
+// Maps idempotency key to response, expires after 24 hours
+const idempotentResponseCache = new Map<
+  string,
+  { response: any; expiresAt: number }
+>();
+
 /**
  * Validate environment variables on startup
  */
