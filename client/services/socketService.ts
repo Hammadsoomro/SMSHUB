@@ -5,14 +5,39 @@ class SocketService {
   private isConnecting = false;
   private connectionTimeout: NodeJS.Timeout | null = null;
   private isProduction = false;
+  private socketUrl: string | undefined;
 
   constructor() {
-    // Detect if we're in production (Netlify or other serverless environment)
+    // Detect if we're in production
     this.isProduction =
       typeof window !== "undefined" &&
       (window.location.hostname !== "localhost" &&
         window.location.hostname !== "127.0.0.1" &&
-        !window.location.hostname.startsWith("192.168"));
+        !window.location.hostname.startsWith("192.168") &&
+        !window.location.hostname.startsWith("[::1]"));
+
+    // Determine socket URL based on environment
+    this.socketUrl = this.getSocketUrl();
+  }
+
+  /**
+   * Get the correct socket.io server URL based on environment
+   */
+  private getSocketUrl(): string | undefined {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const { protocol, hostname, port } = window.location;
+
+    // In development, connect to local dev server
+    if (!this.isProduction) {
+      return `${protocol}//${hostname}:${port}`;
+    }
+
+    // In production, connect to same origin (works for Fly.io, etc)
+    // Socket.io will use the same protocol and domain as the app
+    return undefined; // Let socket.io use current domain
   }
 
   connect(token: string): Socket | null {
@@ -32,18 +57,33 @@ class SocketService {
     try {
       this.isConnecting = true;
       console.log(
-        `[SocketService] Creating new socket connection... (Production: ${this.isProduction})`,
+        `[SocketService] Creating new socket connection...`,
+        {
+          production: this.isProduction,
+          url: this.socketUrl || "same-origin",
+          domain: window.location.hostname,
+        },
       );
 
-      this.socket = io({
+      const socketOptions: any = {
         auth: {
           authorization: `Bearer ${token}`,
         },
         reconnection: true,
         reconnectionDelay: 1000,
-        reconnectionAttempts: this.isProduction ? 2 : 5, // Fewer attempts in production
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 10,
         transports: ["websocket", "polling"],
-      });
+        // Don't force polling in production - let websocket try first
+        path: "/socket.io",
+      };
+
+      // Only set URL if explicitly needed (dev environments)
+      if (this.socketUrl) {
+        socketOptions.url = this.socketUrl;
+      }
+
+      this.socket = io(socketOptions);
 
       // Set a connection timeout for faster failure detection
       this.connectionTimeout = setTimeout(() => {
