@@ -262,6 +262,31 @@ export const handler: Handler = async (
   context.callbackWaitsForEmptyEventLoop = false;
 
   try {
+    // ✅ Request deduplication for idempotent operations
+    const isMutationRequest = [
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+    ].includes(event.httpMethod);
+    const idempotencyKey = isMutationRequest
+      ? event.headers["idempotency-key"]
+      : null;
+
+    if (idempotencyKey) {
+      const cached = idempotentResponseCache.get(idempotencyKey);
+
+      if (cached && Date.now() < cached.expiresAt) {
+        console.log(
+          `[${requestId}] ✓ Cached response returned for idempotency key: ${idempotencyKey}`,
+        );
+        return cached.response;
+      } else if (cached) {
+        // Remove expired entry
+        idempotentResponseCache.delete(idempotencyKey);
+      }
+    }
+
     // Log request with details
     console.log(
       `[${requestId}] → ${event.httpMethod} ${event.path} (path: ${event.rawPath || event.path})`,
