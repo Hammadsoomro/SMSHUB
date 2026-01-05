@@ -11,10 +11,10 @@ class SocketService {
     // Detect if we're in production
     this.isProduction =
       typeof window !== "undefined" &&
-      (window.location.hostname !== "localhost" &&
-        window.location.hostname !== "127.0.0.1" &&
-        !window.location.hostname.startsWith("192.168") &&
-        !window.location.hostname.startsWith("[::1]"));
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1" &&
+      !window.location.hostname.startsWith("192.168") &&
+      !window.location.hostname.startsWith("[::1]");
 
     // Determine socket URL based on environment
     this.socketUrl = this.getSocketUrl();
@@ -56,14 +56,11 @@ class SocketService {
 
     try {
       this.isConnecting = true;
-      console.log(
-        `[SocketService] Creating new socket connection...`,
-        {
-          production: this.isProduction,
-          url: this.socketUrl || "same-origin",
-          domain: window.location.hostname,
-        },
-      );
+      console.log(`[SocketService] Creating new socket connection...`, {
+        production: this.isProduction,
+        url: this.socketUrl || "same-origin",
+        domain: window.location.hostname,
+      });
 
       const socketOptions: any = {
         auth: {
@@ -108,7 +105,9 @@ class SocketService {
       });
 
       this.socket.on("disconnect", () => {
-        console.log("[SocketService] ❌ Socket disconnected - attempting to reconnect...");
+        console.log(
+          "[SocketService] ❌ Socket disconnected - attempting to reconnect...",
+        );
         this.isConnecting = false;
       });
 

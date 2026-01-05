@@ -162,9 +162,7 @@ class AblyServer {
     try {
       const channel = this.client.channels.get(channelName);
       await channel.publish("message_status", data);
-      console.log(
-        `[AblyServer] Published message status to ${channelName}`,
-      );
+      console.log(`[AblyServer] Published message status to ${channelName}`);
     } catch (error) {
       console.error("[AblyServer] Error publishing message status:", error);
       throw error;

@@ -83,7 +83,10 @@ export async function createServer() {
     await ablyServer.initialize();
     console.log("✅ Ably initialized for real-time messaging");
   } catch (error) {
-    console.warn("⚠️  Ably initialization failed (optional for fallback):", error);
+    console.warn(
+      "⚠️  Ably initialization failed (optional for fallback):",
+      error,
+    );
     // Continue - Ably is optional, app will still work without it
   }
 
@@ -93,7 +96,10 @@ export async function createServer() {
   app.use(cors());
 
   // ✅ For Twilio webhooks, capture raw body BEFORE parsing
-  app.use("/api/webhooks", express.raw({ type: "application/x-www-form-urlencoded", limit: "50mb" }));
+  app.use(
+    "/api/webhooks",
+    express.raw({ type: "application/x-www-form-urlencoded", limit: "50mb" }),
+  );
 
   // ✅ Parse JSON and URL-encoded bodies for regular requests
   app.use(

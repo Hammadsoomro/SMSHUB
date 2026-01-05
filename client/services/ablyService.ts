@@ -149,7 +149,9 @@ class AblyService {
       if (!channel) {
         channel = this.client.channels.get(channelName);
         this.channels.set(channelName, channel);
-        console.log(`[AblyService] Subscribing to contacts channel: ${channelName}`);
+        console.log(
+          `[AblyService] Subscribing to contacts channel: ${channelName}`,
+        );
       }
 
       const handleUpdate = (message: Types.Message) => {
@@ -251,9 +253,7 @@ class AblyService {
    */
   private generateClientId(): string {
     const token = localStorage.getItem("token");
-    const deviceId =
-      localStorage.getItem("deviceId") ||
-      this.createDeviceId();
+    const deviceId = localStorage.getItem("deviceId") || this.createDeviceId();
 
     return `user-${token?.substring(0, 8) || "anon"}-${deviceId}`;
   }

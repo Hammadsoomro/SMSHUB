@@ -49,7 +49,9 @@ function getAllowedOrigins(): string | string[] {
 
   // Fallback to all origins if none specified (not recommended for production)
   if (origins.length === 0) {
-    console.warn("[Socket.io] No production domain configured, allowing all origins");
+    console.warn(
+      "[Socket.io] No production domain configured, allowing all origins",
+    );
     return "*";
   }
 

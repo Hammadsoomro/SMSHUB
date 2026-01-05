@@ -49,12 +49,14 @@ fly secrets set NODE_ENV="production"
 ```
 
 View your app's domain after first deploy:
+
 ```bash
 fly info
 # Look for the "Hostname" field
 ```
 
 Then set PRODUCTION_DOMAIN:
+
 ```bash
 fly secrets set PRODUCTION_DOMAIN="your-actual-fly-domain.fly.dev"
 ```
@@ -111,6 +113,7 @@ fly machines list
 ## Testing Real-Time Messaging
 
 ### Test 1: Send Message from Same Browser
+
 ```
 1. Open Conversations page
 2. Select a contact
@@ -119,6 +122,7 @@ fly machines list
 ```
 
 ### Test 2: Send Message from Another Device
+
 ```
 1. Open the same conversation on another phone/browser
 2. Send a message from first device
@@ -126,6 +130,7 @@ fly machines list
 ```
 
 ### Test 3: Receive Incoming SMS
+
 ```
 1. Send SMS to your Twilio number from a phone
 2. App should show it instantly without refresh
@@ -134,6 +139,7 @@ fly machines list
 ## Common Issues & Solutions
 
 ### Issue: App crashes on startup
+
 ```bash
 # Check logs
 fly logs
@@ -144,7 +150,8 @@ fly logs
 # - Port already in use
 ```
 
-**Solution**: 
+**Solution**:
+
 ```bash
 # Verify all secrets are set
 fly secrets list
@@ -154,6 +161,7 @@ fly deploy
 ```
 
 ### Issue: Socket.io says "Connection Error"
+
 ```bash
 # Check if PRODUCTION_DOMAIN is set correctly
 fly secrets list | grep PRODUCTION_DOMAIN
@@ -162,6 +170,7 @@ fly secrets list | grep PRODUCTION_DOMAIN
 ```
 
 **Solution**:
+
 ```bash
 # Get your actual domain
 fly info | grep Hostname
@@ -174,6 +183,7 @@ fly deploy
 ```
 
 ### Issue: WebSocket connection fails
+
 ```bash
 # Check if app is running
 fly status
@@ -185,6 +195,7 @@ fly logs -n 100
 **Solution**: This usually means the app crashed. Check logs and fix the issue.
 
 ### Issue: Database connection timeout
+
 ```bash
 # Verify MongoDB connection string
 fly secrets list | grep MONGODB_URI
@@ -197,6 +208,7 @@ npm run dev
 ## Scaling Up
 
 ### Add More Machines
+
 ```bash
 # By default, fly.io gives you 1 shared-cpu machine
 # To add more:
@@ -205,6 +217,7 @@ fly scale count 2
 ```
 
 **Important for Socket.io**: With multiple machines, add socket.io-redis:
+
 ```bash
 npm install socket.io-redis
 ```
@@ -212,6 +225,7 @@ npm install socket.io-redis
 Then see REALTIME_SMS_SETUP.md for Redis configuration.
 
 ### Increase Machine Size
+
 ```bash
 fly scale vm shared-cpu-1x  # Default
 fly scale vm shared-cpu-2x  # Double resources
@@ -221,6 +235,7 @@ fly scale vm performance-1x # High performance
 ## Monitoring & Maintenance
 
 ### View Real-Time Logs
+
 ```bash
 fly logs -f          # Follow logs (like tail -f)
 fly logs -n 50       # Last 50 log lines
@@ -228,11 +243,13 @@ fly logs --region us # Specific region
 ```
 
 ### View Metrics
+
 ```bash
 fly metrics
 ```
 
 ### Restart App
+
 ```bash
 fly apps restart
 # or specific machine:
@@ -240,6 +257,7 @@ fly machines restart <MACHINE_ID>
 ```
 
 ### SSH into Machine
+
 ```bash
 fly ssh console
 ```
@@ -247,11 +265,13 @@ fly ssh console
 ## Cost Optimization
 
 Fly.io free tier includes:
+
 - ✅ 3 shared-cpu-1x VMs
 - ✅ 3 GB persistent storage
 - ✅ 160 GB outbound data per month
 
 **Monitor usage**:
+
 ```bash
 fly account show
 ```
@@ -282,6 +302,7 @@ Before considering your app production-ready:
 ## Troubleshooting Deployment Issues
 
 ### App won't start
+
 ```bash
 # 1. Check build logs
 fly logs --instance=<instance-id>
@@ -296,6 +317,7 @@ cat package.json | grep -A 5 '"scripts"'
 ```
 
 ### Connection refused errors
+
 ```bash
 # App might be crashing on startup
 fly logs
@@ -306,6 +328,7 @@ fly secrets list | grep PORT
 ```
 
 ### Out of memory
+
 ```bash
 # Upgrade machine size
 fly scale vm shared-cpu-2x

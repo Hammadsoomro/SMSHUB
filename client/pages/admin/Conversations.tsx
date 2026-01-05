@@ -290,7 +290,9 @@ export default function Conversations() {
       if (!socket) {
         // Socket creation initiated but not immediately available
         // This is normal on first connection - socket.io is asynchronous
-        console.log("Socket instance not immediately available, will connect shortly...");
+        console.log(
+          "Socket instance not immediately available, will connect shortly...",
+        );
 
         // Wait for socket to be created and listen for connection
         const checkSocketInterval = setInterval(() => {
@@ -332,7 +334,9 @@ export default function Conversations() {
       const handleConnect = () => {
         console.log("✅ Socket.IO connected - real-time messaging is active!");
         setIsConnecting(false);
-        toast.success("✨ Real-time messaging connected - SMS updates in real-time!");
+        toast.success(
+          "✨ Real-time messaging connected - SMS updates in real-time!",
+        );
       };
 
       const handleDisconnect = () => {
