@@ -332,7 +332,10 @@ export default function Conversations() {
       const handleDisconnect = () => {
         console.log("❌ Socket.IO disconnected event fired");
         setIsConnecting(false);
-        toast.error("Real-time messaging is offline");
+        // Only show toast if it was previously connected
+        if (socket.connected) {
+          toast.error("Real-time messaging is offline");
+        }
       };
 
       const handleError = (error: any) => {
