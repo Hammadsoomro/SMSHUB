@@ -129,7 +129,8 @@ export async function createServer() {
     // Check if body is a Buffer (common in serverless)
     const isBodyBuffer = Buffer.isBuffer((req as any).body);
     const isBodyEmpty =
-      !req.body || (typeof req.body === "object" && Object.keys(req.body).length === 0);
+      !req.body ||
+      (typeof req.body === "object" && Object.keys(req.body).length === 0);
 
     if (
       (isBodyBuffer || isBodyEmpty) &&
@@ -161,10 +162,7 @@ export async function createServer() {
             );
           }
         } catch (parseError) {
-          console.error(
-            "[Body Parser] Failed to parse body:",
-            parseError,
-          );
+          console.error("[Body Parser] Failed to parse body:", parseError);
           (req as any).body = {};
         }
       }
