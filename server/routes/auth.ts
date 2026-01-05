@@ -72,8 +72,14 @@ export const handleLogin: RequestHandler = async (req, res) => {
   try {
     const { email, password } = req.body as LoginRequest;
 
+    // Debug logging
+    console.log("[handleLogin] Request body:", req.body);
+    console.log("[handleLogin] Email:", email);
+    console.log("[handleLogin] Password:", password ? "***" : "undefined");
+
     // Validation
     if (!email || !password) {
+      console.error("[handleLogin] Missing fields - Email:", !!email, "Password:", !!password);
       return res.status(400).json({ error: "Missing required fields" });
     }
 
