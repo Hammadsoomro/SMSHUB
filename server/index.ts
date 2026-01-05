@@ -348,3 +348,6 @@ export async function createServer() {
 
   return app;
 }
+
+// Export Ably server instance for use in routes and webhooks
+export { default as ablyServer } from "./ably";
