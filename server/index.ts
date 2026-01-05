@@ -82,46 +82,44 @@ export async function createServer() {
   // Middleware
   app.use(cors());
 
-  // ✅ CRITICAL: Capture raw body first (before any parsing)
-  app.use(
-    express.raw({
-      type: ["application/json"],
-      limit: "50mb",
-    }),
-  );
-
-  // ✅ Convert raw Buffer to parsed JSON (only for mutation requests)
+  // ✅ CRITICAL: Only capture raw body for mutation requests (POST, PUT, PATCH)
   app.use((req, res, next) => {
-    // Only try to parse for methods that should have a body
-    const hasMutationMethod = ["POST", "PUT", "PATCH"].includes(req.method);
+    // Skip body capture for GET, DELETE, HEAD, OPTIONS
+    const isMutationRequest = ["POST", "PUT", "PATCH"].includes(req.method);
 
-    if (
-      hasMutationMethod &&
-      Buffer.isBuffer((req as any).body) &&
-      (req as any).body.length > 0
-    ) {
-      try {
-        const bodyStr = (req as any).body.toString("utf-8");
-        (req as any).rawBody = bodyStr;
-
-        if (bodyStr.trim()) {
-          (req as any).body = JSON.parse(bodyStr);
-          console.log(
-            `[Body Converter] ✓ Converted Buffer to JSON: ${Object.keys((req as any).body).join(", ")}`,
-          );
-        } else {
-          (req as any).body = {};
-        }
-      } catch (e) {
-        console.error("[Body Converter] Failed to parse Buffer:", e);
-        (req as any).body = {};
-      }
+    if (!isMutationRequest) {
+      // For non-mutation requests, skip raw body parsing
+      return next();
     }
 
-    next();
+    // For mutation requests, capture raw body
+    let data = "";
+
+    req.on("data", (chunk) => {
+      data += chunk;
+    });
+
+    req.on("end", () => {
+      if (data) {
+        try {
+          (req as any).rawBody = data;
+          (req as any).body = JSON.parse(data);
+          console.log(
+            `[Body Parser] ✓ Parsed JSON body: ${Object.keys((req as any).body).join(", ")}`,
+          );
+        } catch (e) {
+          console.error("[Body Parser] Failed to parse JSON:", e);
+          (req as any).rawBody = data;
+          (req as any).body = {};
+        }
+      } else {
+        (req as any).body = {};
+      }
+      next();
+    });
   });
 
-  // Regular JSON and URL-encoded parsers
+  // Regular JSON and URL-encoded parsers (fallback for edge cases)
   app.use(
     express.json({
       limit: "50mb",
@@ -134,54 +132,6 @@ export async function createServer() {
       limit: "50mb",
     }),
   );
-
-  // Middleware to handle edge case where body isn't parsed
-  // This can happen in serverless environments where request handling is different
-  app.use((req, res, next) => {
-    // Check if body is a Buffer (common in serverless)
-    const isBodyBuffer = Buffer.isBuffer((req as any).body);
-    const isBodyEmpty =
-      !req.body ||
-      (typeof req.body === "object" && Object.keys(req.body).length === 0);
-
-    if (
-      (isBodyBuffer || isBodyEmpty) &&
-      (req.method === "POST" || req.method === "PUT" || req.method === "PATCH")
-    ) {
-      const contentType = req.get("content-type")?.toLowerCase() || "";
-
-      // Try to get raw body from multiple sources
-      let rawBody = (req as any).rawBody;
-      if (!rawBody) {
-        rawBody = (req as any).body;
-      }
-
-      if (contentType.includes("application/json") && rawBody) {
-        try {
-          let parsed: any;
-
-          if (typeof rawBody === "string") {
-            parsed = JSON.parse(rawBody);
-          } else if (Buffer.isBuffer(rawBody)) {
-            parsed = JSON.parse(rawBody.toString("utf-8"));
-          }
-
-          if (parsed) {
-            (req as any).body = parsed;
-            console.log(
-              `[Body Parser] ✓ Parsed ${Buffer.isBuffer(rawBody) ? "Buffer" : "String"} body:`,
-              Object.keys(parsed),
-            );
-          }
-        } catch (parseError) {
-          console.error("[Body Parser] Failed to parse body:", parseError);
-          (req as any).body = {};
-        }
-      }
-    }
-
-    next();
-  });
 
   // Performance monitoring (for serverless optimization)
   app.use(createPerformanceMiddleware());
