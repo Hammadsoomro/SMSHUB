@@ -53,7 +53,7 @@ export async function initializeAbly(): Promise<Realtime> {
   }
 }
 
-export async function getAbly(): Promise<Ably.Realtime> {
+export async function getAbly(): Promise<Realtime> {
   if (!ably) {
     return initializeAbly();
   }
