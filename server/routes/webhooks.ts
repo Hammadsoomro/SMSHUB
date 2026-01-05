@@ -82,20 +82,16 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
         // Create a dummy contact ID for the message channel if not available
         const contactId = savedContact.id;
 
-        await ablyServer.publishMessage(
-          phoneNumber.assignedTo,
-          contactId,
-          {
-            contactId: contactId,
-            userId: phoneNumber.assignedTo,
-            phoneNumberId: phoneNumber.id,
-            message: Body,
-            from: From,
-            to: To,
-            direction: "inbound" as const,
-            timestamp: message.timestamp,
-          }
-        );
+        await ablyServer.publishMessage(phoneNumber.assignedTo, contactId, {
+          contactId: contactId,
+          userId: phoneNumber.assignedTo,
+          phoneNumberId: phoneNumber.id,
+          message: Body,
+          from: From,
+          to: To,
+          direction: "inbound" as const,
+          timestamp: message.timestamp,
+        });
 
         // Also publish contact update event
         await ablyServer.broadcastContactUpdate(phoneNumber.assignedTo, {
@@ -119,20 +115,16 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
         // If no assignee, publish to admin
         const contactId = savedContact.id;
 
-        await ablyServer.publishMessage(
-          phoneNumber.adminId,
-          contactId,
-          {
-            contactId: contactId,
-            userId: phoneNumber.adminId,
-            phoneNumberId: phoneNumber.id,
-            message: Body,
-            from: From,
-            to: To,
-            direction: "inbound" as const,
-            timestamp: message.timestamp,
-          }
-        );
+        await ablyServer.publishMessage(phoneNumber.adminId, contactId, {
+          contactId: contactId,
+          userId: phoneNumber.adminId,
+          phoneNumberId: phoneNumber.id,
+          message: Body,
+          from: From,
+          to: To,
+          direction: "inbound" as const,
+          timestamp: message.timestamp,
+        });
 
         await ablyServer.broadcastContactUpdate(phoneNumber.adminId, {
           action: "update",
@@ -147,7 +139,10 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
           },
         });
       } catch (error) {
-        console.error("[Webhooks] Error publishing Ably message to admin:", error);
+        console.error(
+          "[Webhooks] Error publishing Ably message to admin:",
+          error,
+        );
         // Continue even if Ably fails - message is already stored
       }
     }

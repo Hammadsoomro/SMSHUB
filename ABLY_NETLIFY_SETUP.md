@@ -17,6 +17,7 @@ Professional Ably real-time messaging integration for Netlify serverless functio
 ## 🚀 Overview
 
 This integration provides professional-grade serverless functions for:
+
 - **Real-time messaging** via Ably channels
 - **Token generation** for secure client authentication
 - **Channel management** with authorization checks
@@ -25,22 +26,26 @@ This integration provides professional-grade serverless functions for:
 ### Key Features
 
 ✅ **Production-Ready**
+
 - Comprehensive error handling
 - Request tracking and logging
 - Security headers and CORS support
 - Timeout protection (10s per function)
 
 ✅ **Scalable Architecture**
+
 - Stateless functions
 - Connection pooling
 - Graceful degradation
 
 ✅ **Secure**
+
 - JWT authentication on all endpoints
 - Channel access validation
 - Per-user isolation
 
 ✅ **Observable**
+
 - Request IDs for tracing
 - Detailed logging
 - Health monitoring
@@ -125,12 +130,14 @@ git push origin main
 **Purpose:** Generate Ably API key for authenticated clients
 
 **Request Headers:**
+
 ```http
 Authorization: Bearer <JWT_TOKEN>
 Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "token": "eVcgxA.vhqQCg:Z-Qkr-...",
@@ -141,6 +148,7 @@ Content-Type: application/json
 ```
 
 **Error Response (401 Unauthorized):**
+
 ```json
 {
   "error": "Token verification failed",
@@ -157,12 +165,14 @@ Content-Type: application/json
 **Purpose:** Publish messages to Ably channels with authorization
 
 **Request Headers:**
+
 ```http
 Authorization: Bearer <JWT_TOKEN>
 Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "channelName": "sms:userId:contactId",
@@ -181,6 +191,7 @@ Content-Type: application/json
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -191,6 +202,7 @@ Content-Type: application/json
 ```
 
 **Error Response (403 Forbidden):**
+
 ```json
 {
   "error": "Unauthorized: Cannot publish to other users' channels",
@@ -199,11 +211,13 @@ Content-Type: application/json
 ```
 
 **Supported Channel Patterns:**
+
 - `sms:userId:contactId` - Conversation messages
 - `contacts:userId` - Contact list updates
 - `notifications:userId` - User notifications
 
 **Supported Event Names:**
+
 - `message` - SMS message
 - `update` - Contact/data update
 - `sms_received` - Incoming SMS notification
@@ -219,11 +233,13 @@ Content-Type: application/json
 **Purpose:** Monitor Ably connection health and channel statistics
 
 **Request Headers:**
+
 ```http
 Authorization: Bearer <JWT_TOKEN>
 ```
 
 **Response (200 OK - Healthy):**
+
 ```json
 {
   "status": "healthy",
@@ -244,6 +260,7 @@ Authorization: Bearer <JWT_TOKEN>
 ```
 
 **Status Values:**
+
 - `healthy` - Ably connected and ready
 - `degraded` - Ably connecting or temporarily disconnected
 - `unhealthy` - Ably not available
@@ -259,6 +276,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 The JWT payload must contain:
+
 ```json
 {
   "userId": "user_123",
@@ -271,6 +289,7 @@ The JWT payload must contain:
 ### Generate JWT Token
 
 Use the existing login endpoint:
+
 ```bash
 curl -X POST https://api.example.com/api/auth/login \
   -H "Content-Type: application/json" \
@@ -286,10 +305,10 @@ Response includes `token` in the response body.
 ### JavaScript/TypeScript Client
 
 ```typescript
-import ablyService from '@/services/ablyService';
+import ablyService from "@/services/ablyService";
 
 // 1. Connect to Ably with token from auth
-const token = localStorage.getItem('token');
+const token = localStorage.getItem("token");
 const connected = await ablyService.connect(token);
 
 // 2. Subscribe to messages
@@ -297,16 +316,16 @@ const unsubscribe = ablyService.subscribeToConversation(
   contactId,
   userId,
   (message) => {
-    console.log('New message:', message);
-  }
+    console.log("New message:", message);
+  },
 );
 
 // 3. Subscribe to contact updates
 const unsubscribeContacts = ablyService.subscribeToContactUpdates(
   userId,
   (data) => {
-    console.log('Contacts updated:', data);
-  }
+    console.log("Contacts updated:", data);
+  },
 );
 
 // 4. Cleanup
@@ -454,6 +473,7 @@ netlify logs functions
 ### Reliability
 
 1. **Implement Retry Logic**
+
    ```typescript
    async function publishWithRetry(channelName, eventName, data, maxRetries = 3) {
      for (let i = 0; i < maxRetries; i++) {
@@ -482,6 +502,7 @@ netlify logs functions
 ### Issue: "ABLY_API_KEY environment variable not configured"
 
 **Solution:** Set `ABLY_API_KEY` in Netlify environment variables
+
 ```bash
 netlify env:set ABLY_API_KEY your_api_key
 ```
@@ -489,6 +510,7 @@ netlify env:set ABLY_API_KEY your_api_key
 ### Issue: "Token verification failed"
 
 **Solution:** Ensure JWT token is valid and not expired
+
 ```bash
 # Check token expiration
 jwt decode <token>
@@ -497,6 +519,7 @@ jwt decode <token>
 ### Issue: "Unauthorized: Cannot publish to other users' channels"
 
 **Solution:** Channel name must match authenticated user ID
+
 ```
 ✓ sms:user_123:contact_456  (user_123 publishing to their channel)
 ✗ sms:user_999:contact_456  (user_123 publishing to other user's channel)
@@ -505,10 +528,11 @@ jwt decode <token>
 ### Issue: Connection state is "connecting" or "disconnected"
 
 **Solution:** Ably may be temporarily disconnected. The client will auto-reconnect.
+
 ```typescript
 // Check connection status
-const stats = await fetch('/api/ably/stats', {
-  headers: { 'Authorization': `Bearer ${token}` }
+const stats = await fetch("/api/ably/stats", {
+  headers: { Authorization: `Bearer ${token}` },
 });
 
 const { status, server } = await stats.json();
@@ -519,6 +543,7 @@ console.log(`Connection: ${server.connectionState}`);
 ### Issue: High latency or timeouts
 
 **Solution:** Functions have 10s timeout. Check logs for details:
+
 ```bash
 netlify logs functions | grep "ably-" | tail -50
 ```
@@ -545,17 +570,18 @@ If migrating from Socket.IO:
 
 ### Socket.IO → Ably Mapping
 
-| Socket.IO | Ably Channel | Ably Event |
-|-----------|--------------|------------|
-| `io.to('user:123').emit('new_message')` | `sms:123:contactId` | `message` |
-| `io.to('user:123').emit('contact_updated')` | `contacts:123` | `update` |
-| `socket.emit('join_phone_number')` | N/A (automatic) | N/A |
+| Socket.IO                                   | Ably Channel        | Ably Event |
+| ------------------------------------------- | ------------------- | ---------- |
+| `io.to('user:123').emit('new_message')`     | `sms:123:contactId` | `message`  |
+| `io.to('user:123').emit('contact_updated')` | `contacts:123`      | `update`   |
+| `socket.emit('join_phone_number')`          | N/A (automatic)     | N/A        |
 
 ---
 
 ## 📝 License & Support
 
 For issues or questions:
+
 1. Check this guide's troubleshooting section
 2. Review function logs via `netlify logs`
 3. Contact Ably support: support@ably.com

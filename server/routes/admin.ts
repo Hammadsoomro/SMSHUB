@@ -432,16 +432,17 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
           console.log(
             `📡 Publishing phone number unassignment event to team member ${phoneNumber.assignedTo}`,
           );
-          await ablyServer.publishPhoneNumberAssignment(phoneNumber.assignedTo, {
-            phoneNumberId,
-            phoneNumber: updatedNumber.phoneNumber,
-            action: "unassigned",
-          });
+          await ablyServer.publishPhoneNumberAssignment(
+            phoneNumber.assignedTo,
+            {
+              phoneNumberId,
+              phoneNumber: updatedNumber.phoneNumber,
+              action: "unassigned",
+            },
+          );
         }
       } else {
-        console.warn(
-          "⚠️ Ably not initialized for real-time notification",
-        );
+        console.warn("⚠️ Ably not initialized for real-time notification");
       }
     } catch (ablyError) {
       console.error("Error publishing Ably event:", ablyError);

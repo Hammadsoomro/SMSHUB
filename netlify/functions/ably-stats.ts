@@ -52,9 +52,11 @@ interface ErrorResponse {
 /**
  * Extract and validate JWT from Authorization header
  */
-function extractAndValidateToken(
-  authHeader?: string,
-): { valid: boolean; userId?: string; error?: string } {
+function extractAndValidateToken(authHeader?: string): {
+  valid: boolean;
+  userId?: string;
+  error?: string;
+} {
   if (!authHeader) {
     return { valid: false, error: "Missing Authorization header" };
   }
@@ -152,10 +154,7 @@ function determineHealthStatus(
     return "healthy";
   }
 
-  if (
-    connectionState === "connecting" ||
-    connectionState === "disconnected"
-  ) {
+  if (connectionState === "connecting" || connectionState === "disconnected") {
     return "degraded";
   }
 
@@ -168,7 +167,11 @@ function determineHealthStatus(
 export const handler: Handler = async (
   event: HandlerEvent,
   context: HandlerContext,
-): Promise<{ statusCode: number; headers: Record<string, string>; body: string }> => {
+): Promise<{
+  statusCode: number;
+  headers: Record<string, string>;
+  body: string;
+}> => {
   const requestId = generateRequestId();
   context.callbackWaitsForEmptyEventLoop = false;
 
@@ -200,11 +203,14 @@ export const handler: Handler = async (
     console.log(`[${requestId}] GET /.netlify/functions/ably-stats`);
 
     // Validate and extract JWT
-    const authHeader = event.headers.authorization || event.headers.Authorization;
+    const authHeader =
+      event.headers.authorization || event.headers.Authorization;
     const authValidation = extractAndValidateToken(authHeader);
 
     if (!authValidation.valid) {
-      console.warn(`[${requestId}] Auth validation failed: ${authValidation.error}`);
+      console.warn(
+        `[${requestId}] Auth validation failed: ${authValidation.error}`,
+      );
       return {
         statusCode: 401,
         headers: getSecurityHeaders(),

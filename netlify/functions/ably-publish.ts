@@ -112,9 +112,11 @@ function validateEventName(eventName: string): boolean {
 /**
  * Extract and validate JWT from Authorization header
  */
-function extractAndValidateToken(
-  authHeader?: string,
-): { valid: boolean; userId?: string; error?: string } {
+function extractAndValidateToken(authHeader?: string): {
+  valid: boolean;
+  userId?: string;
+  error?: string;
+} {
   if (!authHeader) {
     return { valid: false, error: "Missing Authorization header" };
   }
@@ -173,7 +175,11 @@ function getSecurityHeaders(): Record<string, string> {
 export const handler: Handler = async (
   event: HandlerEvent,
   context: HandlerContext,
-): Promise<{ statusCode: number; headers: Record<string, string>; body: string }> => {
+): Promise<{
+  statusCode: number;
+  headers: Record<string, string>;
+  body: string;
+}> => {
   const requestId = generateRequestId();
   context.callbackWaitsForEmptyEventLoop = false;
 
@@ -205,11 +211,14 @@ export const handler: Handler = async (
     console.log(`[${requestId}] POST /.netlify/functions/ably-publish`);
 
     // Validate and extract JWT
-    const authHeader = event.headers.authorization || event.headers.Authorization;
+    const authHeader =
+      event.headers.authorization || event.headers.Authorization;
     const authValidation = extractAndValidateToken(authHeader);
 
     if (!authValidation.valid) {
-      console.warn(`[${requestId}] Auth validation failed: ${authValidation.error}`);
+      console.warn(
+        `[${requestId}] Auth validation failed: ${authValidation.error}`,
+      );
       return {
         statusCode: 401,
         headers: getSecurityHeaders(),
@@ -237,7 +246,8 @@ export const handler: Handler = async (
       request = JSON.parse(body);
       console.log(`[${requestId}] ✓ Request body parsed`);
     } catch (parseError) {
-      const errorMsg = parseError instanceof Error ? parseError.message : "Invalid JSON";
+      const errorMsg =
+        parseError instanceof Error ? parseError.message : "Invalid JSON";
       console.warn(`[${requestId}] Parse error: ${errorMsg}`);
 
       return {
@@ -246,7 +256,8 @@ export const handler: Handler = async (
         body: JSON.stringify({
           error: "Invalid request body",
           requestId,
-          details: process.env.NODE_ENV === "development" ? errorMsg : undefined,
+          details:
+            process.env.NODE_ENV === "development" ? errorMsg : undefined,
         } as ErrorResponse),
       };
     }
@@ -337,9 +348,7 @@ export const handler: Handler = async (
           ? publishError.message
           : String(publishError);
 
-      console.error(
-        `[${requestId}] Failed to publish message: ${errorMsg}`,
-      );
+      console.error(`[${requestId}] Failed to publish message: ${errorMsg}`);
 
       return {
         statusCode: 500,
@@ -347,7 +356,8 @@ export const handler: Handler = async (
         body: JSON.stringify({
           error: "Failed to publish message",
           requestId,
-          details: process.env.NODE_ENV === "development" ? errorMsg : undefined,
+          details:
+            process.env.NODE_ENV === "development" ? errorMsg : undefined,
         } as ErrorResponse),
       };
     }

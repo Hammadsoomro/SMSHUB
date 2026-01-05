@@ -286,7 +286,9 @@ export default function Conversations() {
       if (!connected) {
         console.warn("Ably connection failed");
         setIsConnecting(false);
-        toast.warning("Real-time messaging connection failed, but app will still work");
+        toast.warning(
+          "Real-time messaging connection failed, but app will still work",
+        );
         return;
       }
 
