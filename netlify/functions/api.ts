@@ -414,16 +414,15 @@ export const handler: Handler = async (
 
     // Use serverless-http to convert Netlify event to Express
     const serverlessHandler = serverless(app, {
-      // Preserve raw body for debugging and fallback parsing
+      // Preserve raw body for webhook signature validation
       request: (request: any, event: HandlerEvent) => {
-        // Attach raw body string to request for middleware to access
-        if (event.body) {
-          // Store the raw body string
+        // Only attach body for requests that should have one
+        const isMutationRequest = ["POST", "PUT", "PATCH"].includes(event.httpMethod);
+        const isWebhook = event.path?.includes("/webhooks");
+
+        if ((isMutationRequest || isWebhook) && event.body) {
+          // Store the raw body string for webhook signature validation
           request.rawBody = event.body;
-          // Also explicitly set it as the body if it hasn't been parsed yet
-          if (!request.body && event.body) {
-            request.body = event.body;
-          }
           console.log(
             `[${requestId}] ✓ Raw body attached (${Buffer.byteLength(event.body, "utf-8")} bytes)`,
           );
