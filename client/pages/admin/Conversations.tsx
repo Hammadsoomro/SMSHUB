@@ -596,16 +596,10 @@ export default function Conversations() {
       if (phoneNumberObj) {
         await ApiService.setActiveNumber(phoneNumberObj.id);
 
-        // Leave old room and join new room
-        if (activePhoneNumber) {
-          socketService.leavePhoneNumber(activePhoneNumber);
-        }
-
         setActivePhoneNumber(phoneNumber);
         setSelectedContactId(null);
         setMessages([]);
 
-        socketService.joinPhoneNumber(phoneNumber);
         await loadContactsForPhoneNumber(phoneNumberObj.id);
 
         toast.success(`Now using ${phoneNumber}`);
