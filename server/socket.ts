@@ -7,6 +7,55 @@ import { Server as IOServer, Socket } from "socket.io";
 import { verifyToken, extractTokenFromHeader } from "./jwt";
 import { storage } from "./storage";
 
+/**
+ * Get allowed origins based on environment
+ */
+function getAllowedOrigins(): string | string[] {
+  const env = process.env.NODE_ENV || "development";
+  const productionDomain = process.env.PRODUCTION_DOMAIN;
+  const deployPreviewUrl = process.env.DEPLOY_PREVIEW_URL;
+
+  // In development, allow localhost variations
+  if (env === "development") {
+    return [
+      "http://localhost:3000",
+      "http://localhost:8080",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:8080",
+      "http://[::1]:3000",
+      "http://[::1]:8080",
+    ];
+  }
+
+  // In production, allow the deployment domain
+  const origins = [];
+
+  // Add production domain if configured
+  if (productionDomain) {
+    origins.push(`https://${productionDomain}`);
+    origins.push(`http://${productionDomain}`); // For internal requests
+  }
+
+  // Add Fly.io domain patterns
+  origins.push(/\.fly\.dev$/);
+
+  // Add Netlify domain patterns
+  origins.push(/\.netlify\.app$/);
+
+  // Add deploy preview URL if available (for Netlify previews)
+  if (deployPreviewUrl) {
+    origins.push(deployPreviewUrl);
+  }
+
+  // Fallback to all origins if none specified (not recommended for production)
+  if (origins.length === 0) {
+    console.warn("[Socket.io] No production domain configured, allowing all origins");
+    return "*";
+  }
+
+  return origins;
+}
+
 interface AuthenticatedSocket extends Socket {
   userId?: string;
   userRole?: "admin" | "team_member";
