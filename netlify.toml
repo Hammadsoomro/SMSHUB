@@ -4,16 +4,8 @@
   publish = "dist/spa"
   node_version = "22"
 
-# Per-function configuration
-[[functions]]
-  name = "api"
+[functions]
   node_bundler = "esbuild"
-  timeout = 30
-
-[[functions]]
-  name = "health"
-  node_bundler = "esbuild"
-  timeout = 10
 
 
 # API route redirects to serverless function
