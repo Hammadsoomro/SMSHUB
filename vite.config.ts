@@ -2,10 +2,6 @@ import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { createServer } from "./server";
-import { Server as IOServer } from "socket.io";
-import { verifyToken, extractTokenFromHeader } from "./server/jwt";
-import { storage } from "./server/storage";
-import { setSocketIOInstance } from "./server/index";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
