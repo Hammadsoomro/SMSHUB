@@ -1,8 +1,8 @@
 import { Realtime } from 'ably';
 
-let ably: Ably.Realtime | null = null;
+let ably: Realtime | null = null;
 
-export async function initializeAbly(): Promise<Ably.Realtime> {
+export async function initializeAbly(): Promise<Realtime> {
   if (ably) {
     return ably;
   }
@@ -16,7 +16,7 @@ export async function initializeAbly(): Promise<Ably.Realtime> {
     console.log('[Ably] Initializing Ably realtime with API key...');
 
     // Initialize Ably with API key for server-side authentication
-    ably = new Ably.Realtime({
+    ably = new Realtime({
       key: apiKey,
       autoConnect: true,
     });
