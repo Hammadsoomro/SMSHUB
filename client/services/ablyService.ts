@@ -170,6 +170,50 @@ class AblyService {
   }
 
   /**
+   * Subscribe to phone number assignment notifications
+   */
+  subscribeToPhoneNumberAssignments(
+    userId: string,
+    callback: (data: any) => void,
+  ): () => void {
+    if (!this.client) {
+      console.error("[AblyService] Not connected to Ably");
+      return () => {};
+    }
+
+    const channelName = `notifications:${userId}`;
+
+    try {
+      let channel = this.channels.get(channelName);
+      if (!channel) {
+        channel = this.client.channels.get(channelName);
+        this.channels.set(channelName, channel);
+        console.log(
+          `[AblyService] Subscribing to notifications channel: ${channelName}`,
+        );
+      }
+
+      const handleAssignment = (message: Types.Message) => {
+        if (message.name === "phone_number_assignment") {
+          callback(message.data);
+        }
+      };
+
+      channel.subscribe(handleAssignment);
+
+      return () => {
+        channel!.unsubscribe(handleAssignment);
+      };
+    } catch (error) {
+      console.error(
+        "[AblyService] Error subscribing to phone number assignments:",
+        error,
+      );
+      return () => {};
+    }
+  }
+
+  /**
    * Publish a message to a specific conversation
    */
   async publishMessage(
