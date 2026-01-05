@@ -34,21 +34,26 @@ export default function TeamMemberLayout({ children }: TeamMemberLayoutProps) {
   }, []);
 
   useEffect(() => {
-    // Listen for phone number assignment updates
-    socketService.on("phone_number_assigned", (data: any) => {
-      console.log("📞 Phone number assignment updated:", data);
-      if (data.action === "assigned") {
-        toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
-      } else {
-        toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
-      }
-      // Refresh assigned numbers
-      fetchAssignedNumbers();
-    });
+    // Listen for phone number assignment updates via Ably
+    const user = localStorage.getItem("user");
+    const userId = user ? JSON.parse(user).id : null;
 
-    return () => {
-      socketService.off("phone_number_assigned");
-    };
+    if (userId) {
+      ablyService.on(`user:${userId}`, "phone_number_assigned", (data: any) => {
+        console.log("📞 Phone number assignment updated:", data);
+        if (data.action === "assigned") {
+          toast.success(`📞 Phone number ${data.phoneNumber} assigned to you`);
+        } else {
+          toast.info(`📞 Phone number ${data.phoneNumber} unassigned from you`);
+        }
+        // Refresh assigned numbers
+        fetchAssignedNumbers();
+      });
+
+      return () => {
+        ablyService.off(`user:${userId}`, "phone_number_assigned");
+      };
+    }
   }, []);
 
   const fetchAssignedNumbers = async () => {
