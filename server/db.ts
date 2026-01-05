@@ -17,6 +17,24 @@ let circuitBreakerResetTime = 0;
  * Reuses connections across warm invocations and handles timeouts
  */
 export async function connectDB() {
+  // ✅ Circuit breaker: Reject requests if DB has repeated failures
+  if (circuitBreakerOpen) {
+    if (Date.now() < circuitBreakerResetTime) {
+      const remainingWait = Math.ceil(
+        (circuitBreakerResetTime - Date.now()) / 1000,
+      );
+      throw new Error(
+        `Database circuit breaker is OPEN due to repeated failures. ` +
+          `Please retry in ${remainingWait} seconds. Database appears to be down.`,
+      );
+    } else {
+      // Try to reset the circuit breaker
+      console.log("[DB] Attempting to reset circuit breaker");
+      circuitBreakerOpen = false;
+      connectionFailureCount = 0;
+    }
+  }
+
   // If already connected, return immediately
   if (isConnected) {
     return mongoose;
