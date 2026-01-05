@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Phone, LogOut, Sun, Moon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import socketService from "@/services/socketService";
+import ablyService from "@/services/ablyService";
 
 interface TeamMemberLayoutProps {
   children: ReactNode;
