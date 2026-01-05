@@ -170,6 +170,39 @@ class AblyServer {
   }
 
   /**
+   * Publish phone number assignment notification
+   */
+  async publishPhoneNumberAssignment(
+    userId: string,
+    data: {
+      phoneNumberId: string;
+      phoneNumber: string;
+      action: "assigned" | "unassigned";
+    },
+  ): Promise<void> {
+    if (!this.client) {
+      console.error("[AblyServer] Ably not initialized");
+      return;
+    }
+
+    const channelName = `notifications:${userId}`;
+
+    try {
+      const channel = this.client.channels.get(channelName);
+      await channel.publish("phone_number_assignment", data);
+      console.log(
+        `[AblyServer] Published phone number assignment to ${channelName}`,
+      );
+    } catch (error) {
+      console.error(
+        "[AblyServer] Error publishing phone number assignment:",
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Get client instance for advanced usage
    */
   getClient(): Realtime | null {
