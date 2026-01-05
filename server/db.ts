@@ -69,6 +69,7 @@ export async function connectDB() {
     await connectPromise;
     isConnected = true;
     isConnecting = false;
+    connectionFailureCount = 0; // ✅ Reset counter on successful connection
 
     // Set up connection event handlers
     mongoose.connection.on("disconnected", () => {
@@ -79,6 +80,7 @@ export async function connectDB() {
     mongoose.connection.on("error", (error) => {
       console.error("[DB] Connection error:", error);
       isConnected = false;
+      connectionFailureCount++; // ✅ Increment failure count
     });
 
     console.log("[DB] Connected to MongoDB successfully");
@@ -88,9 +90,24 @@ export async function connectDB() {
     connectPromise = null;
     isConnected = false;
 
-    console.error("[DB] Failed to connect to MongoDB:", error);
+    // ✅ Increment failure counter
+    connectionFailureCount++;
 
     const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(
+      `[DB] Failed to connect to MongoDB (attempt ${connectionFailureCount}/${MAX_FAILURES}):`,
+      error,
+    );
+
+    // ✅ Open circuit breaker if too many failures
+    if (connectionFailureCount >= MAX_FAILURES) {
+      circuitBreakerOpen = true;
+      circuitBreakerResetTime = Date.now() + 30000; // 30 second timeout
+      console.error(
+        "[DB] CIRCUIT BREAKER OPENED - Database unavailable. Failing fast on new requests.",
+      );
+    }
+
     throw new Error(`MongoDB connection failed: ${errorMessage}`);
   }
 }
