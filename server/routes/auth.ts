@@ -24,7 +24,14 @@ export const handleSignup: RequestHandler = async (req, res) => {
 
     // Validation
     if (!email || !password || !name) {
-      console.error("[handleSignup] Missing fields - Email:", !!email, "Password:", !!password, "Name:", !!name);
+      console.error(
+        "[handleSignup] Missing fields - Email:",
+        !!email,
+        "Password:",
+        !!password,
+        "Name:",
+        !!name,
+      );
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -86,7 +93,12 @@ export const handleLogin: RequestHandler = async (req, res) => {
 
     // Validation
     if (!email || !password) {
-      console.error("[handleLogin] Missing fields - Email:", !!email, "Password:", !!password);
+      console.error(
+        "[handleLogin] Missing fields - Email:",
+        !!email,
+        "Password:",
+        !!password,
+      );
       return res.status(400).json({ error: "Missing required fields" });
     }
 
