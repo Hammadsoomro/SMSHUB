@@ -416,10 +416,17 @@ export const handler: Handler = async (
     const serverlessHandler = serverless(app, {
       // Preserve raw body for debugging and fallback parsing
       request: (request: any, event: HandlerEvent) => {
-        // Attach raw body to request for middleware to access
+        // Attach raw body string to request for middleware to access
         if (event.body) {
+          // Store the raw body string
           request.rawBody = event.body;
-          console.log(`[${requestId}] ✓ Raw body attached to request`);
+          // Also explicitly set it as the body if it hasn't been parsed yet
+          if (!request.body && event.body) {
+            request.body = event.body;
+          }
+          console.log(
+            `[${requestId}] ✓ Raw body attached (${Buffer.byteLength(event.body, "utf-8")} bytes)`,
+          );
         }
       },
     });
