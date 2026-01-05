@@ -139,10 +139,7 @@ export default function Conversations() {
 
     return () => {
       try {
-        if (activePhoneNumberRef.current) {
-          socketService.leavePhoneNumber(activePhoneNumberRef.current);
-        }
-        socketService.disconnect();
+        ablyService.disconnect();
       } catch (error) {
         console.error("Error during Conversations cleanup:", error);
       }
