@@ -1,8 +1,15 @@
 import crypto from "crypto";
 
-// ✅ SECURITY: Use JWT_SECRET from environment, fallback for development only
-const JWT_SECRET =
-  process.env.JWT_SECRET || "dev-key-change-in-production-never-use-this";
+// ✅ SECURITY: Enforce JWT_SECRET in production - fail hard if not set
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error(
+    "[FATAL] JWT_SECRET environment variable is REQUIRED and must be set. " +
+      "Authentication cannot function without it. " +
+      "Set it in your .env file or Netlify environment variables.",
+  );
+}
 
 interface JWTPayload {
   userId: string;
