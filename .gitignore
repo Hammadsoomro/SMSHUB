@@ -24,4 +24,12 @@ dist-ssr
 *.sw?
 
 .config/
-!.env
+
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.*.local
+.env.production
+
+# This file is safe to commit (template only)
+# .env.example is allowed

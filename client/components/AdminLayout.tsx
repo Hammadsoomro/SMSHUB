@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,8 @@ import {
   X,
   FileText,
   Wallet,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -31,8 +33,17 @@ const ADMIN_MENU = [
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    return stored === "dark";
+  });
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Apply theme to document root on mount and when isDarkMode changes
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -40,12 +51,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     navigate("/");
   };
 
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    document.documentElement.classList.toggle("dark", newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+  };
+
   const isActive = (href: string) => {
     return location.pathname === href;
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className={`flex h-screen bg-background ${isDarkMode ? "dark" : ""}`}>
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border/50 overflow-hidden transition-all duration-300 lg:relative lg:translate-x-0 ${
@@ -161,6 +179,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            title="Toggle theme"
+          >
+            {isDarkMode ? (
+              <Sun className="w-4 h-4" />
+            ) : (
+              <Moon className="w-4 h-4" />
+            )}
+          </Button>
         </div>
 
         {/* Content */}

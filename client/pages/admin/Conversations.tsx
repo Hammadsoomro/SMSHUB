@@ -1,487 +1,1050 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import AdminLayout from "@/components/AdminLayout";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
-  MessageSquare,
-  Send,
-  Search,
-  Loader2,
-  Phone,
-  AlertCircle,
-  X,
-  Bell,
-} from "lucide-react";
-import { Message, Contact, PhoneNumber } from "@shared/api";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import {
+  Send,
+  Plus,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Phone,
+  Search,
+  MessageSquare,
+  Users,
+  Loader2,
+} from "lucide-react";
+import { format, isToday, isYesterday } from "date-fns";
+import ApiService from "@/services/api";
+import socketService from "@/services/socketService";
+import AdBanner from "@/components/AdBanner";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import AddContactDialog from "@/components/AddContactDialog";
+import ConversationsTopBar from "@/components/ConversationsTopBar";
+import { Message, Contact, PhoneNumber, User as UserType } from "@shared/api";
 
-interface ConversationState {
-  contact: Contact | null;
-  messages: Message[];
+interface ConversationContact extends Contact {
+  lastMessage?: string;
+  lastMessageTime?: string;
 }
 
 export default function Conversations() {
   const navigate = useNavigate();
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [searchParams] = useSearchParams();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Core State
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(
+    null,
+  );
+  const [activePhoneNumber, setActivePhoneNumber] = useState<string | null>(
+    null,
+  );
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
-  const [conversation, setConversation] = useState<ConversationState>({
-    contact: null,
-    messages: [],
-  });
-  const [messageText, setMessageText] = useState("");
+  const [contacts, setContacts] = useState<ConversationContact[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Loading States
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string>("");
-  const [error, setError] = useState("");
-  const [newConversationNumber, setNewConversationNumber] = useState("");
-  const [totalUnread, setTotalUnread] = useState(0);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  // UI State
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    return stored === "dark";
+  });
+  const [notifications, setNotifications] = useState(() => {
+    return Notification.permission === "granted";
+  });
+
+  // Profile and Modals
+  const [profile, setProfile] = useState<UserType>({
+    id: "",
+    name: "",
+    email: "",
+    role: "admin",
+    createdAt: "",
+  });
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [showEditContact, setShowEditContact] = useState(false);
+  const [showDeleteContact, setShowDeleteContact] = useState(false);
+  const [editingContact, setEditingContact] =
+    useState<ConversationContact | null>(null);
+  const [deletingContact, setDeletingContact] =
+    useState<ConversationContact | null>(null);
+  const [newContactName, setNewContactName] = useState("");
+
+  // Refs for socket handlers to always have current state
+  const activePhoneNumberRef = useRef<string | null>(null);
+  const phoneNumbersRef = useRef<PhoneNumber[]>([]);
+  const selectedContactIdRef = useRef<string | null>(null);
+  const notificationsRef = useRef(false);
+  const contactsRef = useRef<ConversationContact[]>([]);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    activePhoneNumberRef.current = activePhoneNumber;
+  }, [activePhoneNumber]);
+
+  useEffect(() => {
+    phoneNumbersRef.current = phoneNumbers;
+  }, [phoneNumbers]);
+
+  useEffect(() => {
+    selectedContactIdRef.current = selectedContactId;
+  }, [selectedContactId]);
+
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
+
+  useEffect(() => {
+    contactsRef.current = contacts;
+  }, [contacts]);
+
+  // Initialize everything
+  useEffect(() => {
+    loadInitialData();
+    requestNotificationPermission();
+
+    // Set theme
+    document.documentElement.classList.toggle("dark", isDarkMode);
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+
+    return () => {
+      try {
+        if (activePhoneNumberRef.current) {
+          socketService.leavePhoneNumber(activePhoneNumberRef.current);
+        }
+        socketService.disconnect();
+      } catch (error) {
+        console.error("Error during Conversations cleanup:", error);
+      }
+    };
+  }, []);
+
+  // Initialize Socket.IO separately with better lifecycle management
+  useEffect(() => {
+    initializeSocketIO();
+  }, []);
+
+  // Handle phone number URL parameter
+  useEffect(() => {
+    const phoneNumberFromUrl = searchParams.get("phoneNumber");
+    if (phoneNumberFromUrl && phoneNumbers.length > 0) {
+      const foundPhone = phoneNumbers.find(
+        (p) => p.phoneNumber === phoneNumberFromUrl,
+      );
+      if (foundPhone && foundPhone.phoneNumber !== activePhoneNumber) {
+        switchPhoneNumber(foundPhone.phoneNumber);
+      }
+    } else if (phoneNumbers.length > 0 && !activePhoneNumber) {
+      const activePhone = phoneNumbers.find((p) => p.active) || phoneNumbers[0];
+      setActivePhoneNumber(activePhone.phoneNumber);
+      loadContactsForPhoneNumber(activePhone.id);
+    }
+  }, [phoneNumbers, searchParams]);
+
+  // Load contacts when active phone number changes
+  useEffect(() => {
+    if (activePhoneNumber) {
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        loadContactsForPhoneNumber(phoneNum.id);
+        socketService.joinPhoneNumber(activePhoneNumber);
+      }
+    }
+  }, [activePhoneNumber, phoneNumbers]);
+
+  // Load messages when contact is selected
+  useEffect(() => {
+    if (selectedContactId) {
+      loadMessages(selectedContactId);
+      markMessagesAsRead(selectedContactId);
+    }
+  }, [selectedContactId]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [conversation.messages]);
-
-  // Memoized fetch functions to prevent infinite loops
-  const memoizedFetchData = useCallback(async () => {
+  const loadInitialData = async () => {
     try {
+      setIsLoading(true);
+
+      // Load profile from localStorage or API
+      const storedUser = localStorage.getItem("user");
       const token = localStorage.getItem("token");
-      if (!token) return;
 
-      // Fetch contacts
-      const contactsRes = await fetch("/api/messages/contacts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (contactsRes.ok) {
-        const data = await contactsRes.json();
-        const newContacts = data.contacts || [];
-
-        // Check for new unread messages and show notification
-        setContacts((prevContacts) => {
-          prevContacts.forEach((oldContact) => {
-            const newContact = newContacts.find((c) => c.id === oldContact.id);
-            if (newContact && newContact.unreadCount > oldContact.unreadCount) {
-              toast.message(`📱 New message from ${newContact.phoneNumber}`, {
-                description: newContact.lastMessage || "New message",
-              });
-            }
-          });
-          return newContacts;
-        });
+      if (!token) {
+        // No token found, redirect to login
+        console.warn("No authentication token found. Redirecting to login...");
+        navigate("/login");
+        return;
       }
 
-      // Fetch phone numbers
-      const numbersRes = await fetch("/api/admin/numbers", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (numbersRes.ok) {
-        const data = await numbersRes.json();
-        setPhoneNumbers(data.numbers || []);
-        if (data.numbers && data.numbers.length > 0 && !selectedPhoneNumber) {
-          setSelectedPhoneNumber(data.numbers[0].id);
+      if (storedUser) {
+        setProfile(JSON.parse(storedUser));
+      } else {
+        try {
+          const userProfile = await ApiService.getProfile();
+          setProfile(userProfile);
+          localStorage.setItem("user", JSON.stringify(userProfile));
+        } catch (profileError) {
+          console.error("Error loading profile:", profileError);
+          // If profile load fails due to auth, redirect to login
+          if (
+            profileError instanceof Error &&
+            profileError.message.includes("session has expired")
+          ) {
+            navigate("/login");
+            return;
+          }
+          throw new Error(
+            `Failed to load profile: ${profileError instanceof Error ? profileError.message : "Unknown error"}`,
+          );
         }
       }
-    } catch (err) {
-      console.error("Error fetching data:", err);
+
+      // Load phone numbers accessible to user
+      // Admin: all numbers, Team member: only assigned number
+      try {
+        const phoneNumbersData = await ApiService.getAccessiblePhoneNumbers();
+        const processedPhones = phoneNumbersData.map((phone: any) => ({
+          ...phone,
+        }));
+
+        setPhoneNumbers(processedPhones);
+
+        // Set active phone number if we have phones but no active one
+        if (processedPhones.length > 0 && !activePhoneNumber) {
+          const activePhone =
+            processedPhones.find((p) => p.active) || processedPhones[0];
+          setActivePhoneNumber(activePhone.phoneNumber);
+        }
+      } catch (numbersError) {
+        console.error("Error loading phone numbers:", numbersError);
+        throw new Error(
+          `Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : "Unknown error"}`,
+        );
+      }
+
+      // Load wallet balance
+      try {
+        const walletData = await ApiService.getWallet();
+        setWalletBalance(walletData.balance || 0);
+      } catch (error) {
+        console.error("Error loading wallet balance:", error);
+        setWalletBalance(0);
+      }
+    } catch (error) {
+      console.error("Error loading initial data:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to load initial data. Please refresh the page.",
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [selectedPhoneNumber]);
+  };
 
-  const memoizedFetchMessages = useCallback(async (contactId: string) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      const response = await fetch(`/api/messages/conversation/${contactId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error(
-          `Failed to fetch messages: ${response.status}`,
-          errorData,
-        );
-        if (response.status === 404) {
-          setError("Contact not found. Please select another contact.");
-        } else {
-          setError("Failed to load conversation. Please try again.");
-        }
-        return;
-      }
-      const data = await response.json();
-      const newMessages = data.messages || [];
-
-      setConversation((prev) => ({
-        ...prev,
-        messages: newMessages,
-      }));
-      setError("");
-    } catch (err) {
-      console.error("Error fetching messages:", err);
-      setError("Error loading conversation. Please try again.");
-    }
-  }, []);
-
-  useEffect(() => {
+  const initializeSocketIO = () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      navigate("/login");
+      console.error("No auth token found for Socket.IO connection");
       return;
     }
 
-    // Initial fetch
-    memoizedFetchData();
-
-    // Start polling for new messages
-    const interval = setInterval(() => {
-      memoizedFetchData();
-      // Refresh current conversation if one is selected
-      if (
-        conversation.contact?.id &&
-        !conversation.contact.id.startsWith("temp-")
-      ) {
-        memoizedFetchMessages(conversation.contact.id);
-      }
-    }, 3000); // Poll every 3 seconds
-
-    pollIntervalRef.current = interval;
-
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
-  }, [
-    navigate,
-    memoizedFetchData,
-    memoizedFetchMessages,
-    conversation.contact?.id,
-  ]);
-
-  useEffect(() => {
-    // Calculate total unread
-    const unread = contacts.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
-    setTotalUnread(unread);
-  }, [contacts]);
-
-  const handleSelectContact = (contact: Contact) => {
-    setNewConversationNumber("");
-    setSearchTerm("");
-    setConversation({ ...conversation, contact });
-    memoizedFetchMessages(contact.id);
-  };
-
-  const handleStartNewConversation = (phoneNumber: string) => {
-    if (!phoneNumber.trim()) {
-      setError("Please enter a phone number");
-      return;
-    }
-
-    // Check if contact already exists
-    const existingContact = contacts.find((c) => c.phoneNumber === phoneNumber);
-
-    if (existingContact) {
-      handleSelectContact(existingContact);
-    } else {
-      // Create temporary contact object for new conversation
-      const tempContact: Contact = {
-        id: `temp-${Date.now()}`,
-        phoneNumberId: selectedPhoneNumber,
-        phoneNumber,
-        unreadCount: 0,
-      };
-      setConversation({
-        contact: tempContact,
-        messages: [],
-      });
-      setNewConversationNumber("");
-      setSearchTerm("");
-    }
-    setError("");
-  };
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!messageText.trim() || !conversation.contact) return;
-
-    setIsSending(true);
-    setError("");
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/messages/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          to: conversation.contact.phoneNumber,
-          body: messageText,
-          phoneNumberId: selectedPhoneNumber,
-        }),
-      });
+      setIsConnecting(true);
+      console.log("Initializing Socket.IO...");
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to send message");
+      // Connect to socket service
+      const socket = socketService.connect(token);
+
+      if (!socket) {
+        console.error("Failed to get socket instance");
+        setIsConnecting(false);
+        toast.error("Unable to establish socket connection");
+        return;
       }
 
-      setMessageText("");
-      toast.success("Message sent!", {
-        description: `Message sent to ${conversation.contact.phoneNumber}`,
+      // Remove old listeners to avoid duplicates
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
+
+      // Connection status handlers with debug logging
+      const handleConnect = () => {
+        console.log("✅ Socket.IO connected event fired");
+        setIsConnecting(false);
+        toast.success("Real-time messaging is now active");
+      };
+
+      const handleDisconnect = () => {
+        console.log("❌ Socket.IO disconnected event fired");
+        setIsConnecting(false);
+        toast.error("Real-time messaging is offline");
+      };
+
+      const handleError = (error: any) => {
+        console.error("Socket.IO connection error event:", error);
+        setIsConnecting(false);
+        toast.error("Failed to establish real-time connection");
+      };
+
+      // Attach connection status listeners
+      socket.on("connect", handleConnect);
+      socket.on("disconnect", handleDisconnect);
+      socket.on("connect_error", handleError);
+
+      // Check if already connected and show toast if so
+      if (socket.connected) {
+        console.log("Socket is already connected, triggering connected state");
+        setIsConnecting(false);
+        setTimeout(() => {
+          toast.success("Real-time messaging is now active");
+        }, 100);
+      }
+
+      // Set up Socket.IO event listeners
+      socketService.on("new_message", (data: any) => {
+        console.log("📱 New message received:", data);
+
+        // Update contacts list using ref to get current state
+        const currentActivePhone = activePhoneNumberRef.current;
+        if (currentActivePhone) {
+          const phoneNum = phoneNumbersRef.current.find(
+            (p) => p.phoneNumber === currentActivePhone,
+          );
+          if (phoneNum) {
+            loadContactsForPhoneNumber(phoneNum.id);
+          }
+        }
+
+        // If message is for currently selected contact, reload messages
+        const currentSelectedContactId = selectedContactIdRef.current;
+        if (currentSelectedContactId === data.contactId) {
+          loadMessages(currentSelectedContactId);
+        }
+
+        // Show notification for incoming messages using ref to get current notifications setting
+        const currentNotifications = notificationsRef.current;
+        if (currentNotifications && !data.isOutgoing) {
+          showNotification(
+            "New Message",
+            `${data.senderName}: ${data.content}`,
+          );
+        }
+
+        // Update page title with unread count
+        updatePageTitle();
       });
 
-      // If this was a new conversation, add it to contacts
-      if (conversation.contact.id.startsWith("temp-")) {
-        await memoizedFetchData();
-      } else {
-        await memoizedFetchMessages(conversation.contact.id);
-      }
-    } catch (err) {
-      const errMsg =
-        err instanceof Error ? err.message : "Failed to send message";
-      setError(errMsg);
-      toast.error("Failed to send message", {
-        description: errMsg,
+      socketService.on("messageStatusUpdate", (data: any) => {
+        console.log("✓ Message status updated:", data);
+        const currentSelectedContactId = selectedContactIdRef.current;
+        if (currentSelectedContactId) {
+          loadMessages(currentSelectedContactId);
+        }
       });
+
+      socketService.on("contact_updated", (data: any) => {
+        console.log("👥 Contacts updated:", data);
+        const currentActivePhone = activePhoneNumberRef.current;
+        if (currentActivePhone) {
+          const phoneNum = phoneNumbersRef.current.find(
+            (p) => p.phoneNumber === currentActivePhone,
+          );
+          if (phoneNum) {
+            loadContactsForPhoneNumber(phoneNum.id);
+          }
+        }
+      });
+
+      socketService.on("unreadUpdated", (data: any) => {
+        console.log("🔔 Unread counts updated:", data);
+        updatePageTitle();
+      });
+    } catch (error) {
+      console.error("Error initializing Socket.IO:", error);
+      setIsConnecting(false);
+      toast.error("Failed to initialize real-time connection");
+    }
+  };
+
+  const loadContactsForPhoneNumber = async (phoneNumberId: string) => {
+    try {
+      const contactsData = await ApiService.getContacts(phoneNumberId);
+      setContacts(contactsData || []);
+    } catch (error) {
+      console.error("Error loading contacts:", error);
+      toast.error("Failed to load contacts");
+    }
+  };
+
+  const loadMessages = async (contactId: string) => {
+    try {
+      setIsLoadingMessages(true);
+      const messagesData = await ApiService.getMessages(
+        contactId,
+        activePhoneNumber || undefined,
+      );
+      setMessages(messagesData || []);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+      toast.error("Failed to load messages");
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  const markMessagesAsRead = async (contactId: string) => {
+    try {
+      await ApiService.markAsRead(contactId);
+
+      // Update contact unread count in UI
+      setContacts((prev) =>
+        prev.map((contact) =>
+          contact.id === contactId ? { ...contact, unreadCount: 0 } : contact,
+        ),
+      );
+
+      updatePageTitle();
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (
+      !newMessage.trim() ||
+      !selectedContactId ||
+      !activePhoneNumber ||
+      isSending
+    ) {
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      const selectedContact = contacts.find((c) => c.id === selectedContactId);
+
+      if (!selectedContact) {
+        throw new Error("Selected contact not found");
+      }
+
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (!phoneNum) {
+        throw new Error("Phone number not found");
+      }
+
+      await ApiService.sendSMS(
+        selectedContact.phoneNumber,
+        newMessage.trim(),
+        phoneNum.id,
+      );
+
+      setNewMessage("");
+
+      // Reload messages and contacts to show the sent message
+      await Promise.all([
+        loadMessages(selectedContactId),
+        loadContactsForPhoneNumber(phoneNum.id),
+      ]);
+
+      toast.success("Your message has been sent successfully");
+    } catch (error: any) {
+      console.error("Error sending message:", error);
+      toast.error(error.message || "Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
   };
 
-  const handleSearchNumberSelection = () => {
-    if (searchTerm.trim()) {
-      handleStartNewConversation(searchTerm);
+  const addContactFromDialog = async (name: string, phoneNumber: string) => {
+    // Get the active phone number ID
+    let currentActivePhoneId = phoneNumbers.find(
+      (p) => p.phoneNumber === activePhoneNumber,
+    )?.id;
+
+    // If no active number, try to select the first available one
+    if (!currentActivePhoneId && phoneNumbers.length > 0) {
+      currentActivePhoneId = phoneNumbers[0].id;
+      setActivePhoneNumber(phoneNumbers[0].phoneNumber);
+    }
+
+    // If still no phone number available, show helpful error
+    if (!currentActivePhoneId) {
+      throw new Error(
+        "No phone numbers available. Please purchase a phone number first.",
+      );
+    }
+
+    await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
+    await loadContactsForPhoneNumber(currentActivePhoneId);
+  };
+
+  const editContact = async () => {
+    if (!editingContact || !newContactName.trim()) return;
+
+    const contactName = newContactName.trim();
+
+    try {
+      await ApiService.updateContact(editingContact.id, {
+        name: contactName,
+      } as any);
+
+      setNewContactName("");
+      setShowEditContact(false);
+      setEditingContact(null);
+
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
+
+      toast.success("Contact has been updated successfully");
+    } catch (error: any) {
+      console.error("Error editing contact:", error);
+      toast.error(
+        error.message || "Failed to update contact. Please try again.",
+      );
     }
   };
 
+  const deleteContact = async () => {
+    if (!deletingContact) return;
+
+    const contactName = deletingContact.name;
+    const contactId = deletingContact.id;
+
+    try {
+      // Clear UI state immediately
+      setShowDeleteContact(false);
+      setDeletingContact(null);
+
+      // Clear selection if deleted contact was selected
+      if (selectedContactId === contactId) {
+        setSelectedContactId(null);
+        setMessages([]);
+      }
+
+      // Show optimistic success message
+      toast.success("Contact and all messages have been deleted");
+
+      // Delete from server
+      await ApiService.deleteContact(contactId);
+
+      // Reload contacts to sync with server
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
+
+      // Immediately update local contacts list
+      setContacts((prev) => prev.filter((contact) => contact.id !== contactId));
+    } catch (error: any) {
+      console.error("Error deleting contact:", error);
+      toast.error(
+        error.message || "Failed to delete contact. Please try again.",
+      );
+    }
+  };
+
+  const switchPhoneNumber = async (phoneNumber: string) => {
+    try {
+      const phoneNumberObj = phoneNumbers.find(
+        (p) => p.phoneNumber === phoneNumber,
+      );
+      if (phoneNumberObj) {
+        await ApiService.setActiveNumber(phoneNumberObj.id);
+
+        // Leave old room and join new room
+        if (activePhoneNumber) {
+          socketService.leavePhoneNumber(activePhoneNumber);
+        }
+
+        setActivePhoneNumber(phoneNumber);
+        setSelectedContactId(null);
+        setMessages([]);
+
+        socketService.joinPhoneNumber(phoneNumber);
+        await loadContactsForPhoneNumber(phoneNumberObj.id);
+
+        toast.success(`Now using ${phoneNumber}`);
+      }
+    } catch (error: any) {
+      console.error("Error switching phone number:", error);
+      toast.error(error.message || "Failed to switch phone number");
+    }
+  };
+
+  const requestNotificationPermission = async () => {
+    if (Notification.permission === "default") {
+      const permission = await Notification.requestPermission();
+      setNotifications(permission === "granted");
+    }
+  };
+
+  const showNotification = (title: string, body: string) => {
+    if (notifications && Notification.permission === "granted") {
+      const notification = new Notification(title, {
+        body,
+        icon: "/favicon.ico",
+        tag: "sms-notification",
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+
+      setTimeout(() => notification.close(), 5000);
+    }
+  };
+
+  const updatePageTitle = () => {
+    const totalUnread = contacts.reduce(
+      (sum, contact) => sum + contact.unreadCount,
+      0,
+    );
+    if (totalUnread > 0) {
+      document.title = `(${totalUnread}) Connectlify - Messages`;
+    } else {
+      document.title = "Connectlify - Messages";
+    }
+  };
+
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    document.documentElement.classList.toggle("dark", newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+  };
+
+  const toggleNotifications = async () => {
+    if (!notifications && Notification.permission !== "granted") {
+      const permission = await Notification.requestPermission();
+      setNotifications(permission === "granted");
+    } else {
+      setNotifications(!notifications);
+    }
+  };
+
+  const formatMessageTime = (dateString: string) => {
+    const date = new Date(dateString);
+    if (isToday(date)) {
+      return format(date, "HH:mm");
+    } else if (isYesterday(date)) {
+      return "Yesterday";
+    } else {
+      return format(date, "dd/MM/yyyy");
+    }
+  };
+
+  const formatMessageTimeFull = (dateString: string) => {
+    const date = new Date(dateString);
+    return format(date, "dd/MM/yyyy HH:mm");
+  };
+
+  // Filter contacts based on search term
   const filteredContacts = contacts.filter(
     (contact) =>
-      contact.phoneNumber.includes(searchTerm) ||
-      contact.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      (contact.name &&
+        contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      contact.phoneNumber.includes(searchTerm),
   );
 
-  return (
-    <AdminLayout>
-      <div className="flex flex-col h-[calc(100vh-80px)] bg-card">
-        {/* Header - Sticky */}
-        <div className="sticky top-0 z-40 border-b border-border bg-background px-4 md:px-6 py-4 shadow-sm flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold">Conversations</h1>
-            {/* Notification Bell */}
-            <div className="relative">
-              <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-                <Bell className="w-6 h-6" />
-                {totalUnread > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-destructive rounded-full">
-                    {totalUnread > 99 ? "99+" : totalUnread}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
+  const selectedContact = contacts.find((c) => c.id === selectedContactId);
+  const totalUnreadCount = contacts.reduce(
+    (sum, contact) => sum + contact.unreadCount,
+    0,
+  );
 
-          {/* Phone Number Selection and Search */}
-          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <div>
+            <h3 className="text-lg font-semibold">Loading Connectlify</h3>
+            <p className="text-sm text-muted-foreground">
+              Setting up your conversations...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
+    >
+      {/* Animated Background */}
+      <AnimatedBackground />
+
+      {/* Top Navigation Bar */}
+      <ConversationsTopBar
+        phoneNumbers={phoneNumbers}
+        activePhoneNumber={activePhoneNumber}
+        onPhoneNumberSelect={switchPhoneNumber}
+        profile={profile}
+        walletBalance={walletBalance}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        notifications={notifications}
+        onToggleNotifications={toggleNotifications}
+        totalUnreadCount={totalUnreadCount}
+        userRole={profile.role as "admin" | "team_member"}
+      />
+
+      {/* Main Content */}
+      <div className="relative z-10 flex w-full flex-1">
+        {/* Left Sidebar - Contact List & Controls */}
+        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col">
+          {/* Header Section */}
+          <div className="p-4 border-b border-border bg-muted/20">
+            {/* Search Contacts */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search contacts or paste phone number..."
+                placeholder="Search contacts..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === "Enter" && searchTerm.trim()) {
-                    handleSearchNumberSelection();
-                  }
-                }}
-                className="pl-10 h-10"
+                className="pl-10"
               />
             </div>
-            <select
-              value={selectedPhoneNumber}
-              onChange={(e) => setSelectedPhoneNumber(e.target.value)}
-              className="h-10 px-3 rounded-md border border-input bg-background text-foreground"
-            >
-              {phoneNumbers.map((num, index) => (
-                <option key={num.id || `phone-${index}`} value={num.id}>
-                  {num.phoneNumber}
-                </option>
-              ))}
-            </select>
-            {searchTerm &&
-              !filteredContacts.some((c) => c.phoneNumber === searchTerm) && (
-                <Button
-                  onClick={handleSearchNumberSelection}
-                  className="bg-gradient-to-r from-primary to-secondary"
-                >
-                  Start Chat
-                </Button>
-              )}
           </div>
 
-          {error && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-        </div>
+          {/* Add Contact Button */}
+          <div className="p-3 border-b border-border">
+            <Button
+              className="w-full"
+              size="sm"
+              onClick={() => setShowAddContact(true)}
+              disabled={phoneNumbers.length === 0}
+              title={
+                phoneNumbers.length === 0
+                  ? "No phone numbers available. Please purchase a phone number first."
+                  : "Add new contact"
+              }
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Contact
+            </Button>
+            {phoneNumbers.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                No phone numbers available
+              </p>
+            )}
+          </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Contacts Sidebar */}
-          <div className="hidden md:flex w-72 border-r border-border bg-card flex-col overflow-hidden flex-shrink-0">
-            {/* Contacts List */}
-            <div className="flex-1 overflow-y-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : filteredContacts.length > 0 ? (
-                <div className="space-y-1 p-2">
-                  {filteredContacts.map((contact) => (
-                    <button
-                      key={contact.id}
-                      onClick={() => handleSelectContact(contact)}
-                      className={`w-full text-left p-3 rounded-lg smooth-transition relative ${
-                        conversation.contact?.id === contact.id
-                          ? "bg-primary text-white"
-                          : "hover:bg-muted"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-1">
-                        <p className="font-semibold text-sm flex-1">
-                          {contact.name || contact.phoneNumber}
-                        </p>
-                        {contact.unreadCount > 0 && (
-                          <span className="ml-2 inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-destructive text-white text-xs font-bold flex-shrink-0">
-                            {contact.unreadCount}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs opacity-75 truncate">
-                        {contact.lastMessage || "No messages yet"}
-                      </p>
-                      {contact.lastMessageTime && (
-                        <p className="text-xs opacity-50 mt-1">
-                          {new Date(
-                            contact.lastMessageTime,
-                          ).toLocaleDateString()}
-                        </p>
-                      )}
-                    </button>
-                  ))}
+          {/* Contacts List */}
+          <ScrollArea className="flex-1">
+            <div className="p-2">
+              {filteredContacts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p className="font-medium">No contacts found</p>
+                  <p className="text-sm">
+                    {searchTerm
+                      ? "Try a different search term"
+                      : "Add a contact to start messaging"}
+                  </p>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center px-4">
-                    <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
-                    <p className="text-muted-foreground text-sm">
-                      {searchTerm
-                        ? "No contacts match your search"
-                        : "No contacts yet"}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+                filteredContacts.map((contact) => (
+                  <Card
+                    key={contact.id}
+                    className={`mb-2 cursor-pointer transition-all duration-200 hover:shadow-sm ${
+                      selectedContactId === contact.id
+                        ? "bg-primary/10 border-primary shadow-sm"
+                        : "hover:bg-muted/50"
+                    }`}
+                    onClick={() => setSelectedContactId(contact.id)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <Avatar className="w-10 h-10 flex-shrink-0">
+                            <AvatarImage src={contact.avatar} />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {(contact.name || contact.phoneNumber)
+                                .substring(0, 2)
+                                .toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
 
-          {/* Chat Area */}
-          {conversation.contact ? (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Chat Header - Sticky Top */}
-              <div className="sticky top-0 z-30 border-b border-border bg-background h-16 flex items-center justify-between px-4 md:px-6 shadow-sm flex-shrink-0">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">
-                    {conversation.contact.name ||
-                      conversation.contact.phoneNumber}
-                  </p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                    <Phone className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">
-                      {conversation.contact.phoneNumber}
-                    </span>
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setConversation({ contact: null, messages: [] });
-                    setSearchTerm("");
-                  }}
-                  className="md:hidden p-2 hover:bg-muted rounded-lg flex-shrink-0 ml-2"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-medium truncate text-sm">
+                                {contact.name || contact.phoneNumber}
+                              </h4>
+                              {contact.lastMessageTime && (
+                                <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                                  {formatMessageTime(contact.lastMessageTime)}
+                                </span>
+                              )}
+                            </div>
 
-              {/* Messages - Scrollable Middle Section */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-background/50">
-                {conversation.messages.length > 0 ? (
-                  <>
-                    {conversation.messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`flex ${
-                          msg.direction === "outbound"
-                            ? "justify-end"
-                            : "justify-start"
-                        }`}
-                      >
-                        <div
-                          className={`max-w-xs px-4 py-2 rounded-lg ${
-                            msg.direction === "outbound"
-                              ? "bg-primary text-white"
-                              : "bg-muted text-foreground"
-                          }`}
-                        >
-                          <p className="text-sm break-words">{msg.body}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {new Date(msg.timestamp).toLocaleTimeString()}
-                          </p>
+                            <p className="text-xs text-muted-foreground font-mono truncate">
+                              {contact.phoneNumber}
+                            </p>
+
+                            {contact.lastMessage && (
+                              <p className="text-xs text-muted-foreground truncate mt-1">
+                                {contact.lastMessage}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2 flex-shrink-0">
+                          {contact.unreadCount > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className="text-xs h-5 min-w-[20px]"
+                            >
+                              {contact.unreadCount > 99
+                                ? "99+"
+                                : contact.unreadCount}
+                            </Badge>
+                          )}
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-auto opacity-60 hover:opacity-100"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingContact(contact);
+                                  setNewContactName(contact.name || "");
+                                  setShowEditContact(true);
+                                }}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Contact
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeletingContact(contact);
+                                  setShowDeleteContact(true);
+                                }}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Contact
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
-                      <p className="text-muted-foreground text-sm">
-                        No messages yet. Start a conversation!
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Ad Banner at Bottom */}
+          <div className="p-3 border-t border-border bg-muted/20">
+            <div className="text-center mb-2">
+              <span className="text-xs text-muted-foreground">
+                Advertisement
+              </span>
+            </div>
+            <AdBanner width={300} height={80} />
+          </div>
+        </div>
+
+        {/* Right Side - Chat Area */}
+        <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl">
+          {selectedContact ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 border-b border-border bg-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={selectedContact.avatar} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {(selectedContact.name || selectedContact.phoneNumber)
+                          .substring(0, 2)
+                          .toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {selectedContact.name || selectedContact.phoneNumber}
+                      </h3>
+                      <p className="text-sm text-muted-foreground font-mono">
+                        {selectedContact.phoneNumber}
                       </p>
                     </div>
                   </div>
-                )}
+
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="outline" className="text-xs">
+                      Via {activePhoneNumber}
+                    </Badge>
+                    {isConnecting && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                        Connecting...
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Message Input - Sticky Bottom */}
-              <form
-                onSubmit={handleSendMessage}
-                className="sticky bottom-0 z-30 border-t border-border bg-background px-4 md:px-6 py-4 shadow-sm flex-shrink-0"
-              >
-                <div className="flex gap-2">
+              {/* Messages Area */}
+              <ScrollArea className="flex-1 p-4">
+                {isLoadingMessages ? (
+                  <div className="flex items-center justify-center h-32">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <span className="ml-2 text-muted-foreground">
+                      Loading messages...
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {messages.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium">No messages yet</p>
+                        <p className="text-sm">
+                          Send a message to start the conversation
+                        </p>
+                      </div>
+                    ) : (
+                      messages.map((message, index) => {
+                        const showDateSeparator =
+                          index === 0 ||
+                          (!isToday(new Date(message.timestamp)) &&
+                            !isToday(new Date(messages[index - 1]?.timestamp)));
+
+                        return (
+                          <div key={message.id}>
+                            {showDateSeparator && (
+                              <div className="flex items-center my-4">
+                                <Separator className="flex-1" />
+                                <span className="px-3 text-xs text-muted-foreground bg-background">
+                                  {formatMessageTimeFull(message.timestamp)}
+                                </span>
+                                <Separator className="flex-1" />
+                              </div>
+                            )}
+
+                            <div
+                              className={`flex ${
+                                message.direction === "outbound"
+                                  ? "justify-end"
+                                  : "justify-start"
+                              }`}
+                            >
+                              <div
+                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                                  message.direction === "outbound"
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted"
+                                }`}
+                              >
+                                <p className="text-sm whitespace-pre-wrap break-words">
+                                  {message.body}
+                                </p>
+                                <div className="flex items-center justify-between mt-2 gap-2">
+                                  <span className="text-xs opacity-70">
+                                    {format(
+                                      new Date(message.timestamp),
+                                      "HH:mm",
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </ScrollArea>
+
+              {/* Message Input */}
+              <div className="p-4 border-t border-border bg-card">
+                <div className="flex space-x-2">
                   <Input
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 h-10"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
                     disabled={isSending}
+                    className="flex-1"
                   />
                   <Button
-                    type="submit"
-                    disabled={isSending || !messageText.trim()}
-                    className="bg-gradient-to-r from-primary to-secondary"
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim() || isSending}
                     size="sm"
+                    className="px-4"
                   >
                     {isSending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -490,29 +1053,162 @@ export default function Conversations() {
                     )}
                   </Button>
                 </div>
-              </form>
-            </div>
-          ) : (
-            <div className="flex-1 flex items-center justify-center bg-background">
-              <div className="text-center">
-                <div className="p-4 bg-muted rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="w-8 h-8 text-muted-foreground" />
+                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                  <span>Press Enter to send, Shift+Enter for new line</span>
+                  <span>Balance: ${walletBalance.toFixed(2)}</span>
                 </div>
-                <p className="text-lg font-semibold mb-2">
-                  {filteredContacts.length > 0 && !searchTerm
-                    ? "Select a contact"
-                    : "Start a conversation"}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {filteredContacts.length > 0
-                    ? "Choose a contact from the list or search for a phone number"
-                    : "Enter or paste a phone number to begin"}
-                </p>
+              </div>
+            </>
+          ) : (
+            /* Welcome Screen */
+            <div className="flex-1 flex items-center justify-center bg-muted/5">
+              <div className="text-center space-y-6 max-w-md">
+                <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                  <MessageSquare className="w-12 h-12 text-primary" />
+                </div>
+
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">
+                    Welcome to Connectlify
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Select a contact from the sidebar to start messaging, or add
+                    a new contact to begin your conversation.
+                  </p>
+                </div>
+
+                <div className="bg-card rounded-lg p-4 space-y-2 border">
+                  <h3 className="font-semibold text-sm">Current Status</h3>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>Active Number:</span>
+                      <span className="font-mono text-primary">
+                        {activePhoneNumber || "None"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Contacts:</span>
+                      <span>{contacts.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Unread Messages:</span>
+                      <span
+                        className={
+                          totalUnreadCount > 0
+                            ? "text-destructive font-semibold"
+                            : ""
+                        }
+                      >
+                        {totalUnreadCount}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Wallet Balance:</span>
+                      <span className="font-semibold text-green-600">
+                        ${walletBalance.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Large Ad Banner */}
+                <div className="mt-8">
+                  <div className="text-center mb-4">
+                    <span className="text-xs text-muted-foreground">
+                      Advertisement
+                    </span>
+                  </div>
+                  <AdBanner width={728} height={90} />
+                </div>
               </div>
             </div>
           )}
         </div>
+
+        {/* Edit Contact Dialog */}
+        <Dialog open={showEditContact} onOpenChange={setShowEditContact}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Contact</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editContactName">Contact Name</Label>
+                <Input
+                  id="editContactName"
+                  value={newContactName}
+                  onChange={(e) => setNewContactName(e.target.value)}
+                  placeholder="Enter contact name"
+                />
+              </div>
+              <div>
+                <Label>Phone Number</Label>
+                <Input
+                  value={editingContact?.phoneNumber || ""}
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Phone number cannot be changed
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowEditContact(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={editContact} disabled={!newContactName.trim()}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Contact Dialog */}
+        <Dialog open={showDeleteContact} onOpenChange={setShowDeleteContact}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Contact</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Are you sure you want to delete{" "}
+                <strong>
+                  {deletingContact?.name || deletingContact?.phoneNumber}
+                </strong>
+                ? This will permanently delete the contact and all message
+                history.
+              </p>
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                <p className="text-sm text-destructive font-medium">
+                  ⚠️ This action cannot be undone
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteContact(false)}
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={deleteContact}>
+                Delete Contact
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Contact Dialog */}
+        <AddContactDialog
+          open={showAddContact}
+          onOpenChange={setShowAddContact}
+          onAddContact={addContactFromDialog}
+        />
       </div>
-    </AdminLayout>
+    </div>
   );
 }
