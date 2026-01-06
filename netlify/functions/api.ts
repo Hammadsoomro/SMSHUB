@@ -412,9 +412,26 @@ export const handler: Handler = async (
       };
     }
 
+    // CRITICAL FIX: Pre-parse the body before passing to Express
+    // This ensures express.json() middleware receives properly formatted data
+    let parsedBody: any = event.body;
+    const contentType = event.headers["content-type"] || "";
+
+    if (event.body && contentType.includes("application/json")) {
+      try {
+        parsedBody = JSON.parse(event.body);
+        console.log(
+          `[${requestId}] ✓ JSON body pre-parsed: ${JSON.stringify(parsedBody).substring(0, 100)}`,
+        );
+      } catch (parseErr) {
+        console.error(`[${requestId}] ✗ Failed to pre-parse JSON:`, parseErr);
+        // Continue with original body, let Express handle it
+      }
+    }
+
     // Use serverless-http to convert Netlify event to Express
     const serverlessHandler = serverless(app, {
-      // Preserve raw body for webhook signature validation and ensure proper parsing
+      // Preserve raw body and inject parsed body for Express middleware
       request: (request: any, event: HandlerEvent) => {
         // Only attach body for requests that should have one
         const isMutationRequest = ["POST", "PUT", "PATCH"].includes(event.httpMethod);
@@ -423,26 +440,17 @@ export const handler: Handler = async (
         if ((isMutationRequest || isWebhook) && event.body) {
           // Store the raw body string for webhook signature validation
           request.rawBody = event.body;
-
-          // CRITICAL FIX: Ensure body is available for Express middleware
-          // Set body as a Buffer so express.json() can parse it
-          if (typeof event.body === 'string') {
-            request._body = event.body;
-            (request as any).on = function(event: string, listener: Function) {
-              if (event === 'data') {
-                // Emit the body data for stream-based parsers
-                listener(Buffer.from(event.body));
-              } else if (event === 'end') {
-                // Emit end event to signal end of stream
-                listener();
-              }
-              return this;
-            };
-          }
-
           console.log(
             `[${requestId}] ✓ Raw body attached (${Buffer.byteLength(event.body, "utf-8")} bytes)`,
           );
+        }
+
+        // CRITICAL: Set parsed body on the request so Express middleware receives it
+        // This bypasses the need for stream-based parsing
+        if (parsedBody && (typeof parsedBody === "object" || typeof parsedBody === "string")) {
+          (request as any)._body = true;
+          (request as any).body = parsedBody;
+          console.log(`[${requestId}] ✓ Parsed body injected into request object`);
         }
       },
     });
