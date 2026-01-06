@@ -79,7 +79,7 @@ Your application has been thoroughly audited and is **production-ready**. Comple
 ✅ **Security**: CORS, headers, and authorization working  
 ✅ **Error Handling**: Comprehensive error handling throughout  
 ✅ **Database**: Circuit breaker pattern implemented  
-✅ **Real-time**: Ably integration is secure and well-designed  
+✅ **Real-time**: Ably integration is secure and well-designed
 
 ---
 
@@ -99,23 +99,28 @@ After setting the environment variables, follow this checklist:
 - [ ] Once deployed, test these endpoints:
 
 **1. Health Check**:
+
 ```bash
 curl https://conneclify.netlify.app/api/health
 ```
+
 Should return: `{"status":"healthy",...}`
 
 **2. Authentication Test**:
+
 - Go to https://conneclify.netlify.app/signup
 - Create a test account
 - Verify you can log in
 - Verify you can access /admin/bought-numbers
 
 **3. SMS Test**:
+
 - Buy a test phone number (or use existing)
 - Send yourself a test SMS
 - Verify it appears in app within 2 seconds
 
 **4. Real-time Test**:
+
 - Open app in 2 browser tabs
 - In one tab, go to Messages
 - In other tab, send a test SMS (using Twilio)
@@ -141,7 +146,7 @@ Total Time: ~10-15 minutes
 ❌ Don't change `netlify.toml` unless you know what you're doing  
 ❌ Don't delete any files in `netlify/functions/`  
 ❌ Don't modify `server/db.ts` circuit breaker logic  
-❌ Don't commit secrets to git (use Netlify env vars only)  
+❌ Don't commit secrets to git (use Netlify env vars only)
 
 ---
 
@@ -150,6 +155,7 @@ Total Time: ~10-15 minutes
 ### If deployment fails with "JWT_SECRET not set"
 
 **Solution**:
+
 1. Go back to Netlify environment variables
 2. Confirm JWT_SECRET is actually set
 3. Click "Redeploy" on the failed build
@@ -158,6 +164,7 @@ Total Time: ~10-15 minutes
 ### If login returns "Unauthorized"
 
 **Solution**:
+
 1. Check Netlify logs: https://app.netlify.com/sites/conneclify/functions
 2. Look for "[JWT] JWT_SECRET" error messages
 3. If you see this, the env var didn't reload properly
@@ -166,6 +173,7 @@ Total Time: ~10-15 minutes
 ### If database connection fails
 
 **Solution**:
+
 1. Verify MONGODB_URI in Netlify env vars
 2. Check MongoDB is running and accessible
 3. Monitor endpoint: `/api/health` should show connection status
@@ -173,6 +181,7 @@ Total Time: ~10-15 minutes
 ### If real-time messages don't work
 
 **Solution**:
+
 1. Check Ably status: `/api/ably/stats` (with auth token)
 2. Verify ABLY_API_KEY is set
 3. Check browser console for errors
