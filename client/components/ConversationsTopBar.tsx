@@ -37,6 +37,7 @@ interface ConversationsTopBarProps {
   notifications: boolean;
   onToggleNotifications: () => void;
   totalUnreadCount: number;
+  userRole?: "admin" | "team_member";
 }
 
 export default function ConversationsTopBar({
@@ -50,6 +51,7 @@ export default function ConversationsTopBar({
   notifications,
   onToggleNotifications,
   totalUnreadCount,
+  userRole,
 }: ConversationsTopBarProps) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -63,32 +65,21 @@ export default function ConversationsTopBar({
       <div className="px-4 py-3 flex items-center justify-between">
         {/* Left side: Navigation and Phone Selector */}
         <div className="flex items-center gap-4">
-          {/* Navigation Buttons */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
-              title="Go back"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="text-sm font-medium hidden sm:inline">Back</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/admin")}
-              className="flex items-center gap-2 text-primary hover:text-primary/80 cursor-pointer"
-              title="Go to dashboard"
-            >
-              <Home className="w-4 h-4" />
-              <span className="text-sm font-medium hidden sm:inline">
-                Dashboard
-              </span>
-            </Button>
-          </div>
+          {/* Navigation Buttons - Show only for admins, hide back and dashboard for team members */}
+          {userRole === "admin" && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
+                title="Go back"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:inline">Back</span>
+              </Button>
+            </div>
+          )}
 
           {/* Phone Number Selector Dropdown */}
           <div className="flex items-center gap-2">

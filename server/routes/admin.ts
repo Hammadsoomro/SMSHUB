@@ -171,7 +171,9 @@ export const handleRemoveCredentials: RequestHandler = async (req, res) => {
 export const handleGetNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
+    console.log(`Fetching numbers for admin: ${adminId}`);
     const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    console.log(`Found ${numbers.length} numbers for admin ${adminId}`);
     res.json({ numbers });
   } catch (error) {
     console.error("Get numbers error:", error);
@@ -216,7 +218,9 @@ export const handleSetActiveNumber: RequestHandler = async (req, res) => {
 export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
+    console.log(`Fetching team members for admin: ${adminId}`);
     const members = await storage.getTeamMembersByAdminId(adminId);
+    console.log(`Found ${members.length} team members for admin ${adminId}`);
     res.json({ members });
   } catch (error) {
     console.error("Get team members error:", error);
