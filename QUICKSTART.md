@@ -29,6 +29,7 @@ The app will be available at `http://localhost:3000`
 5. Click **"Connect Twilio Account"**
 
 ### How to Find Twilio Credentials
+
 ```
 1. Visit https://console.twilio.com/
 2. Click your account name (top-left)
@@ -81,32 +82,39 @@ To add test data, you can modify `server/storage.ts` to pre-populate contacts an
 ### Understanding the App
 
 **Landing Page** (`client/pages/Landing.tsx`)
+
 - Marketing page explaining features
 - Sign in / Sign up buttons
 
 **Authentication** (`client/pages/Login.tsx`, `client/pages/Signup.tsx`)
+
 - User login and registration
 - JWT token management
 
 **Admin Dashboard** (`client/pages/admin/Dashboard.tsx`)
+
 - Quick overview of stats
 - Navigation to other admin features
 
 **Credentials** (`client/pages/admin/Credentials.tsx`)
+
 - Add/view Twilio credentials
 - Most important step for setup
 
 **Numbers** (`client/pages/admin/Numbers.tsx`)
+
 - View phone numbers
 - Assign to team members
 - Manage number settings
 
 **Team Management** (`client/pages/admin/TeamManagement.tsx`)
+
 - Invite new team members
 - View team member status
 - Remove team members
 
 **Messaging** (`client/pages/Messages.tsx`)
+
 - Team member SMS conversations
 - Contact list (left sidebar)
 - Chat view (right panel)
@@ -114,6 +122,7 @@ To add test data, you can modify `server/storage.ts` to pre-populate contacts an
 ## API Testing with cURL
 
 ### Create Admin Account
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/signup \
   -H "Content-Type: application/json" \
@@ -125,6 +134,7 @@ curl -X POST http://localhost:3000/api/auth/signup \
 ```
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -135,6 +145,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 ### Save Twilio Credentials
+
 ```bash
 curl -X POST http://localhost:3000/api/admin/credentials \
   -H "Content-Type: application/json" \
@@ -146,6 +157,7 @@ curl -X POST http://localhost:3000/api/admin/credentials \
 ```
 
 ### Get Team Members
+
 ```bash
 curl -X GET http://localhost:3000/api/admin/team \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
@@ -154,25 +166,33 @@ curl -X GET http://localhost:3000/api/admin/team \
 ## Common Issues & Solutions
 
 ### Issue: "Invalid credentials" Error
-**Solution**: 
+
+**Solution**:
+
 - Double-check email and password
 - Ensure you created the account first
 - Check for typos
 
 ### Issue: Can't connect Twilio credentials
+
 **Solution**:
+
 - Verify Account SID format (starts with AC)
 - Ensure Auth Token is correct (not just visible in console)
 - Check internet connectivity
 - Token should be 32 characters
 
 ### Issue: Sidebar not showing on mobile
+
 **Solution**:
+
 - Click the hamburger menu (☰) to toggle sidebar
 - App is fully responsive
 
 ### Issue: Messages page shows no contacts
+
 **Solution**:
+
 - You need Twilio credentials first
 - Phone numbers need to be assigned to the user
 - Check that the assignment was successful
@@ -180,12 +200,14 @@ curl -X GET http://localhost:3000/api/admin/team \
 ## Next Steps
 
 ### For Development
+
 1. Explore the code structure
 2. Modify styles in `client/global.css`
 3. Add new admin pages in `client/pages/admin/`
 4. Extend API routes in `server/routes/`
 
 ### For Deployment
+
 1. Set up environment variables
 2. Replace in-memory storage with database
 3. Deploy frontend (Netlify/Vercel)
@@ -193,6 +215,7 @@ curl -X GET http://localhost:3000/api/admin/team \
 5. Update WebSocket URL for production
 
 ### Adding Features
+
 1. Real SMS sending via Twilio API
 2. Message scheduling
 3. Advanced analytics

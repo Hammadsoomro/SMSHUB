@@ -1,120 +1,388 @@
 /**
- * Simple in-memory database for MVP
- * Can be swapped out with a real database like PostgreSQL or MongoDB
+ * MongoDB-backed storage layer
+ * Provides persistent data storage using MongoDB
  */
-import { User, TwilioCredentials, PhoneNumber, TeamMember, Message, Contact } from "@shared/api";
-
-interface StorageData {
-  users: Map<string, User & { password: string }>;
-  twilioCredentials: Map<string, TwilioCredentials>;
-  phoneNumbers: Map<string, PhoneNumber>;
-  teamMembers: Map<string, TeamMember>;
-  messages: Map<string, Message>;
-  contacts: Map<string, Contact>;
-}
+import {
+  UserModel,
+  TwilioCredentialsModel,
+  PhoneNumberModel,
+  TeamMemberModel,
+  MessageModel,
+  ContactModel,
+  WalletModel,
+  WalletTransactionModel,
+} from "./models";
+import {
+  User,
+  TwilioCredentials,
+  PhoneNumber,
+  TeamMember,
+  Message,
+  Contact,
+  Wallet,
+  WalletTransaction,
+} from "@shared/api";
 
 class Storage {
-  private data: StorageData = {
-    users: new Map(),
-    twilioCredentials: new Map(),
-    phoneNumbers: new Map(),
-    teamMembers: new Map(),
-    messages: new Map(),
-    contacts: new Map(),
-  };
-
   // User operations
-  createUser(user: User & { password: string }): void {
-    this.data.users.set(user.id, user);
+  async createUser(user: User & { password: string }): Promise<void> {
+    const newUser = new UserModel(user);
+    await newUser.save();
   }
 
-  getUserByEmail(email: string): (User & { password: string }) | undefined {
-    return Array.from(this.data.users.values()).find((u) => u.email === email);
-  }
-
-  getUserById(id: string): User | undefined {
-    const user = this.data.users.get(id);
+  async getUserByEmail(
+    email: string,
+  ): Promise<(User & { password: string }) | undefined> {
+    const user = (await UserModel.findOne({
+      email: email.toLowerCase(),
+    })) as any;
     if (!user) return undefined;
-    const { password, ...userWithoutPassword } = user;
+
+    // Ensure user has an id field (for backward compatibility with existing users)
+    if (!user.id && user._id) {
+      user.id = user._id.toString();
+      await user.save();
+    }
+
+    // Convert Mongoose document to plain JavaScript object
+    const userObj = user.toObject();
+
+    // Debug logging
+    console.log(
+      `[DEBUG getUserByEmail] Email: ${email}, Role: ${userObj.role}, ID: ${userObj.id}`,
+    );
+
+    return userObj as User & { password: string };
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    let user = (await UserModel.findOne({ id })) as any;
+
+    // Fallback to MongoDB's _id for backward compatibility with existing users
+    if (!user) {
+      try {
+        user = (await UserModel.findById(id)) as any;
+      } catch (error) {
+        // findById may fail if id is not a valid ObjectId
+        return undefined;
+      }
+
+      // If found by _id but doesn't have custom id field, ensure it's set to _id
+      if (user && !user.id) {
+        user.id = user._id.toString();
+        await user.save();
+      }
+    }
+
+    if (!user) return undefined;
+    const { password, ...userWithoutPassword } = user.toObject();
     return userWithoutPassword as User;
   }
 
-  // Twilio Credentials
-  setTwilioCredentials(credentials: TwilioCredentials): void {
-    this.data.twilioCredentials.set(credentials.id, credentials);
+  async updateUser(user: User): Promise<void> {
+    const { password, ...userWithoutPassword } = user as any;
+
+    // Try to update by custom id field first
+    let result = await UserModel.findOneAndUpdate(
+      { id: user.id },
+      userWithoutPassword,
+      { new: true },
+    );
+
+    // Fallback to MongoDB's _id for backward compatibility
+    if (!result) {
+      try {
+        result = await UserModel.findByIdAndUpdate(
+          user.id,
+          userWithoutPassword,
+          {
+            new: true,
+          },
+        );
+
+        // If found by _id but doesn't have custom id field, ensure it's set to _id
+        if (result && !result.id) {
+          result.id = result._id.toString();
+          await result.save();
+        }
+      } catch (error) {
+        // findByIdAndUpdate may fail if id is not a valid ObjectId
+        throw error;
+      }
+    }
   }
 
-  getTwilioCredentialsByAdminId(adminId: string): TwilioCredentials | undefined {
-    return Array.from(this.data.twilioCredentials.values()).find(
-      (c) => c.adminId === adminId
+  // Twilio Credentials
+  async setTwilioCredentials(credentials: TwilioCredentials): Promise<void> {
+    await TwilioCredentialsModel.updateOne(
+      { adminId: credentials.adminId },
+      credentials,
+      { upsert: true },
     );
+  }
+
+  async getTwilioCredentialsByAdminId(
+    adminId: string,
+  ): Promise<TwilioCredentials | undefined> {
+    return (await TwilioCredentialsModel.findOne({
+      adminId,
+    })) as TwilioCredentials | null;
+  }
+
+  async removeTwilioCredentials(adminId: string): Promise<void> {
+    await TwilioCredentialsModel.deleteOne({ adminId });
   }
 
   // Phone Numbers
-  addPhoneNumber(number: PhoneNumber): void {
-    this.data.phoneNumbers.set(number.id, number);
+  async addPhoneNumber(number: PhoneNumber): Promise<void> {
+    const newNumber = new PhoneNumberModel(number);
+    await newNumber.save();
   }
 
-  getPhoneNumbersByAdminId(adminId: string): PhoneNumber[] {
-    return Array.from(this.data.phoneNumbers.values()).filter(
-      (n) => n.adminId === adminId
-    );
+  async getPhoneNumbersByAdminId(adminId: string): Promise<PhoneNumber[]> {
+    const numbers = await PhoneNumberModel.find({ adminId });
+    return numbers.map((doc: any) => {
+      const data = doc.toObject();
+      // If id is missing, use MongoDB's _id as fallback
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as PhoneNumber;
+    });
   }
 
-  getPhoneNumberById(id: string): PhoneNumber | undefined {
-    return this.data.phoneNumbers.get(id);
+  async getPhoneNumberById(id: string): Promise<PhoneNumber | undefined> {
+    const doc = await PhoneNumberModel.findOne({ $or: [{ id }, { _id: id }] });
+    if (!doc) return undefined;
+    const data = doc.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as PhoneNumber;
   }
 
-  updatePhoneNumber(number: PhoneNumber): void {
-    this.data.phoneNumbers.set(number.id, number);
+  async getPhoneNumberByPhoneNumber(
+    phoneNumber: string,
+  ): Promise<PhoneNumber | undefined> {
+    const doc = await PhoneNumberModel.findOne({ phoneNumber });
+    if (!doc) return undefined;
+    const data = doc.toObject() as any;
+    if (!data.id && data._id) {
+      data.id = data._id.toString();
+    }
+    return data as PhoneNumber;
+  }
+
+  async updatePhoneNumber(number: PhoneNumber): Promise<void> {
+    // Create update object, excluding undefined fields
+    const updateObj: any = {};
+    for (const [key, value] of Object.entries(number)) {
+      if (value !== undefined) {
+        updateObj[key] = value;
+      }
+    }
+    await PhoneNumberModel.findOneAndUpdate({ id: number.id }, updateObj, {
+      new: true,
+    });
+  }
+
+  async updatePhoneNumberWithAssignment(
+    phoneNumberId: string,
+    teamMemberId?: string,
+  ): Promise<void> {
+    if (teamMemberId) {
+      // Assign to team member
+      await PhoneNumberModel.findOneAndUpdate(
+        { id: phoneNumberId },
+        { assignedTo: teamMemberId },
+        { new: true },
+      );
+    } else {
+      // Unassign - remove the assignedTo field
+      await PhoneNumberModel.findOneAndUpdate(
+        { id: phoneNumberId },
+        { $unset: { assignedTo: "" } },
+        { new: true },
+      );
+    }
   }
 
   // Team Members
-  addTeamMember(member: TeamMember & { password: string }): void {
-    this.data.teamMembers.set(member.id, member);
+  async addTeamMember(
+    member: TeamMember & { password: string },
+  ): Promise<void> {
+    const newMember = new TeamMemberModel(member);
+    await newMember.save();
   }
 
-  getTeamMembersByAdminId(adminId: string): TeamMember[] {
-    return Array.from(this.data.teamMembers.values())
-      .filter((m) => m.adminId === adminId)
-      .map(({ password, ...member }) => member as TeamMember);
+  async getTeamMembersByAdminId(adminId: string): Promise<TeamMember[]> {
+    const members = await TeamMemberModel.find({ adminId });
+    return members.map((member) => {
+      const memberObj = member.toObject() as any;
+      const { password, ...teamMember } = memberObj;
+
+      // Ensure team member has an id field for backward compatibility
+      if (!teamMember.id && memberObj._id) {
+        teamMember.id = memberObj._id.toString();
+      }
+
+      return teamMember as TeamMember;
+    });
   }
 
-  getTeamMemberById(id: string): TeamMember | undefined {
-    const member = this.data.teamMembers.get(id);
+  async getTeamMemberById(id: string): Promise<TeamMember | undefined> {
+    let member = await TeamMemberModel.findOne({ id });
+
+    // Fallback to MongoDB's _id for backward compatibility
+    if (!member) {
+      try {
+        member = (await TeamMemberModel.findById(id)) as any;
+      } catch (error) {
+        return undefined;
+      }
+    }
+
     if (!member) return undefined;
-    const { password, ...memberWithoutPassword } = member;
+    const memberObj = member.toObject() as any;
+    const { password, ...memberWithoutPassword } = memberObj;
+
+    // Ensure team member has an id field for backward compatibility
+    if (!memberWithoutPassword.id && memberObj._id) {
+      memberWithoutPassword.id = memberObj._id.toString();
+    }
     return memberWithoutPassword as TeamMember;
   }
 
-  // Messages
-  addMessage(message: Message): void {
-    this.data.messages.set(message.id, message);
+  async getAdminIdByTeamMemberId(
+    teamMemberId: string,
+  ): Promise<string | undefined> {
+    const member = await TeamMemberModel.findOne({ id: teamMemberId });
+    return member?.adminId;
   }
 
-  getMessagesByPhoneNumber(phoneNumberId: string): Message[] {
-    return Array.from(this.data.messages.values()).filter(
-      (m) => m.phoneNumberId === phoneNumberId
-    );
+  async removeTeamMember(memberId: string): Promise<void> {
+    await UserModel.deleteOne({ id: memberId, role: "team_member" });
+    await TeamMemberModel.deleteOne({ id: memberId });
+  }
+
+  // Messages
+  async addMessage(message: Message): Promise<void> {
+    const newMessage = new MessageModel(message);
+    await newMessage.save();
+  }
+
+  async getMessagesByPhoneNumber(phoneNumberId: string): Promise<Message[]> {
+    const messages = await MessageModel.find({ phoneNumberId }).sort({
+      timestamp: 1,
+    });
+    return messages.map((doc: any) => {
+      const data = doc.toObject();
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as Message;
+    });
   }
 
   // Contacts
-  addContact(contact: Contact): void {
-    this.data.contacts.set(contact.id, contact);
+  async addContact(contact: Contact): Promise<void> {
+    const newContact = new ContactModel(contact);
+    await newContact.save();
   }
 
-  getContactsByPhoneNumber(phoneNumberId: string): Contact[] {
-    return Array.from(this.data.contacts.values()).filter(
-      (c) => c.phoneNumberId === phoneNumberId
+  async getContactsByPhoneNumber(phoneNumberId: string): Promise<Contact[]> {
+    const contacts = await ContactModel.find({ phoneNumberId });
+    return contacts.map((doc: any) => {
+      const data = doc.toObject();
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as Contact;
+    });
+  }
+
+  async getContactById(id: string): Promise<Contact | undefined> {
+    // Try to find by custom id field first
+    let doc = await ContactModel.findOne({ id });
+
+    // If not found by custom id, try MongoDB's _id as fallback (only if it's a valid ObjectId)
+    if (!doc && /^[0-9a-f]{24}$/i.test(id)) {
+      try {
+        doc = await ContactModel.findById(id);
+      } catch (error) {
+        // findById will throw if id is not a valid ObjectId, ignore it
+      }
+    }
+
+    if (!doc) return undefined;
+
+    const data = doc.toObject() as any;
+    if (!data.id) {
+      if (data._id) {
+        data.id = data._id.toString();
+      } else {
+        console.warn("Contact has no ID field:", data);
+      }
+    }
+    return data as Contact;
+  }
+
+  async updateContact(contact: Contact): Promise<void> {
+    await ContactModel.findOneAndUpdate({ id: contact.id }, contact, {
+      new: true,
+    });
+  }
+
+  async deleteContact(id: string): Promise<void> {
+    await ContactModel.deleteOne({ id });
+  }
+
+  // Wallet operations
+  async getOrCreateWallet(adminId: string): Promise<Wallet> {
+    let wallet = (await WalletModel.findOne({ adminId })) as Wallet | null;
+    if (!wallet) {
+      const newWallet = new WalletModel({
+        adminId,
+        balance: 0,
+        currency: "USD",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      wallet = (await newWallet.save()) as Wallet;
+    }
+    return wallet;
+  }
+
+  async getWallet(adminId: string): Promise<Wallet | undefined> {
+    return (await WalletModel.findOne({ adminId })) as Wallet | null;
+  }
+
+  async updateWalletBalance(
+    adminId: string,
+    newBalance: number,
+  ): Promise<void> {
+    await WalletModel.updateOne(
+      { adminId },
+      {
+        balance: newBalance,
+        updatedAt: new Date().toISOString(),
+      },
+      { upsert: true },
     );
   }
 
-  getContactById(id: string): Contact | undefined {
-    return this.data.contacts.get(id);
+  async addWalletTransaction(transaction: WalletTransaction): Promise<void> {
+    const newTransaction = new WalletTransactionModel(transaction);
+    await newTransaction.save();
   }
 
-  updateContact(contact: Contact): void {
-    this.data.contacts.set(contact.id, contact);
+  async getWalletTransactions(
+    adminId: string,
+    limit: number = 50,
+  ): Promise<WalletTransaction[]> {
+    return (await WalletTransactionModel.find({ adminId })
+      .sort({ createdAt: -1 })
+      .limit(limit)) as WalletTransaction[];
   }
 
   // Utility

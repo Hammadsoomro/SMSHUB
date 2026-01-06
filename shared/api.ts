@@ -8,7 +8,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'team_member';
+  role: "admin" | "team_member";
   adminId?: string; // If team member, which admin they belong to
   createdAt: string;
 }
@@ -64,7 +64,7 @@ export interface TeamMember {
   email: string;
   name: string;
   adminId: string;
-  status: 'pending' | 'active';
+  status: "pending" | "active";
   createdAt: string;
 }
 
@@ -81,7 +81,7 @@ export interface Message {
   from: string;
   to: string;
   body: string;
-  direction: 'inbound' | 'outbound';
+  direction: "inbound" | "outbound";
   timestamp: string;
   sid?: string; // Twilio SID
 }
@@ -100,6 +100,47 @@ export interface SendMessageRequest {
   to: string;
   body: string;
   phoneNumberId: string;
+}
+
+// Wallet & Transactions
+export interface Wallet {
+  id: string;
+  adminId: string;
+  balance: number;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  adminId: string;
+  type: "credit" | "debit";
+  amount: number;
+  description: string;
+  reference?: string; // phoneNumberId or other reference
+  createdAt: string;
+}
+
+export interface AvailablePhoneNumber {
+  phoneNumber: string;
+  friendlyName: string;
+  locality?: string;
+  region?: string;
+  postalCode?: string;
+  countryCode: string;
+  cost: string;
+  capabilities?: {
+    SMS?: boolean;
+    MMS?: boolean;
+    voice?: boolean;
+    fax?: boolean;
+  };
+}
+
+export interface PurchaseNumberRequest {
+  phoneNumber: string;
+  cost: number;
 }
 
 // API Responses

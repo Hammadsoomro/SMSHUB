@@ -14,15 +14,14 @@ export default function Index() {
       const response = await fetch("/api/demo");
       const data = (await response.json()) as DemoResponse;
       setExampleFromServer(data.message);
-    } catch (error) {
-      console.error("Error fetching hello:", error);
+    } catch {
+      // Demo fetch is optional, silently fail
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
       <div className="text-center">
-        {/* TODO: FUSION_GENERATION_APP_PLACEHOLDER replace everything here with the actual app! */}
         <h1 className="text-2xl font-semibold text-slate-800 flex items-center justify-center gap-3">
           <svg
             className="animate-spin h-8 w-8 text-slate-400"

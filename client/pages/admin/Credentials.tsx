@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, CheckCircle2, Lock, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Lock, Loader2, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { TwilioCredentialsRequest } from "@shared/api";
+import { TwilioCredentialsRequest, TwilioCredentials } from "@shared/api";
 
 interface CredentialsForm {
   accountSid: string;
@@ -13,15 +14,50 @@ interface CredentialsForm {
 }
 
 export default function Credentials() {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [hasCredentials, setHasCredentials] = useState(false);
+  const [connectedCredentials, setConnectedCredentials] =
+    useState<TwilioCredentials | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<CredentialsForm>();
+
+  // Validate authentication on component mount and fetch credentials
+  useEffect(() => {
+    const validateAuth = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        // Fetch existing credentials
+        const response = await fetch("/api/admin/credentials", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.credentials) {
+            setConnectedCredentials(data.credentials);
+          }
+        }
+
+        setIsAuthLoading(false);
+      } catch {
+        navigate("/login", { replace: true });
+      }
+    };
+
+    validateAuth();
+  }, [navigate]);
 
   const onSubmit = async (data: CredentialsForm) => {
     // Client-side validation
@@ -40,6 +76,12 @@ export default function Credentials() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Session expired. Please login again.");
+        navigate("/login", { replace: true });
+        return;
+      }
+
       const payload: TwilioCredentialsRequest = {
         accountSid: data.accountSid.trim(),
         authToken: data.authToken.trim(),
@@ -54,6 +96,14 @@ export default function Credentials() {
         body: JSON.stringify(payload),
       });
 
+      if (response.status === 401) {
+        setError("Session expired. Please login again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login", { replace: true });
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
@@ -61,7 +111,8 @@ export default function Credentials() {
         );
       }
 
-      setHasCredentials(true);
+      const responseData = await response.json();
+      setConnectedCredentials(responseData.credentials);
       setSuccess("✅ Twilio credentials connected successfully!");
     } catch (err) {
       setError(
@@ -74,10 +125,119 @@ export default function Credentials() {
     }
   };
 
+  const handleDisconnect = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to disconnect Twilio credentials? Team members will no longer be able to send SMS.",
+      )
+    ) {
+      return;
+    }
+
+    setIsDisconnecting(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Session expired. Please login again.");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const response = await fetch("/api/admin/credentials", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        setError("Session expired. Please login again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to disconnect credentials");
+      }
+
+      setConnectedCredentials(null);
+      setSuccess("✅ Twilio credentials disconnected successfully!");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while disconnecting credentials",
+      );
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
+
+  if (isAuthLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div>
         <h1 className="text-3xl font-bold mb-8">Twilio Credentials</h1>
+
+        {/* Connection Status Card */}
+        {connectedCredentials && (
+          <Card className="p-6 bg-green-50 border-green-200 mb-8">
+            <div className="flex gap-4 justify-between items-start">
+              <div className="flex gap-4 flex-1">
+                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-green-900 mb-1">
+                    Credentials Connected
+                  </h3>
+                  <p className="text-sm text-green-700 mb-2">
+                    Twilio account is connected and active. Team members can
+                    send and receive SMS.
+                  </p>
+                  <p className="text-xs text-green-600">
+                    Connected:{" "}
+                    {new Date(
+                      connectedCredentials.connectedAt,
+                    ).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDisconnect}
+                disabled={isDisconnecting}
+                className="text-destructive border-destructive hover:bg-destructive hover:text-white flex-shrink-0"
+              >
+                {isDisconnecting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Disconnecting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Disconnect
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* Info Card */}
         <Card className="p-6 bg-blue-50 border-blue-200 mb-8">
@@ -133,7 +293,9 @@ export default function Credentials() {
                       ✓ Copy both values from Twilio Console (Account Settings)
                     </li>
                     <li>✓ Make sure there are no extra spaces</li>
-                    <li>✓ Check your internet connection</li>
+                    <li>
+                      ✓ If session expired, please login again before retrying
+                    </li>
                   </ul>
                 </details>
               </div>
@@ -141,25 +303,11 @@ export default function Credentials() {
           </Card>
         )}
 
-        {/* Credentials Form */}
-        <Card className="p-8 max-w-2xl">
-          {hasCredentials && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-              <div>
-                <p className="font-medium text-green-900">
-                  Credentials Connected
-                </p>
-                <p className="text-sm text-green-700">
-                  Your Twilio account is connected and ready to use.
-                </p>
-              </div>
-            </div>
-          )}
-
+        {/* Form Card */}
+        <Card className="p-8 border-2">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label className="text-sm font-semibold mb-2 block flex items-center gap-2">
+              <label className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <Lock className="w-4 h-4" />
                 Account SID
               </label>
@@ -167,26 +315,25 @@ export default function Credentials() {
                 {...register("accountSid", {
                   required: "Account SID is required",
                   pattern: {
-                    value: /^AC[a-f0-9]{32}$/i,
-                    message:
-                      "Invalid format (must start with AC and be 34 characters)",
+                    value: /^AC.{32}$/,
+                    message: "Invalid Account SID format",
                   },
                 })}
                 placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                className={`h-10 ${errors.accountSid ? "border-red-500 focus:border-red-500" : ""}`}
+                className="h-10 font-mono"
               />
-              {errors.accountSid && (
-                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                  ⚠️ {errors.accountSid.message}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-muted-foreground mt-1">
                 Format: Must start with "AC" and be exactly 34 characters long
               </p>
+              {errors.accountSid && (
+                <p className="text-xs text-destructive mt-1">
+                  {errors.accountSid.message}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="text-sm font-semibold mb-2 block flex items-center gap-2">
+              <label className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <Lock className="w-4 h-4" />
                 Auth Token
               </label>
@@ -200,22 +347,22 @@ export default function Credentials() {
                 })}
                 type="password"
                 placeholder="••••••••••••••••••••••••••••••••"
-                className={`h-10 ${errors.authToken ? "border-red-500 focus:border-red-500" : ""}`}
+                className="h-10"
               />
-              {errors.authToken && (
-                <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                  ⚠️ {errors.authToken.message}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-muted-foreground mt-1">
                 Must be at least 32 characters. Never share this!
               </p>
+              {errors.authToken && (
+                <p className="text-xs text-destructive mt-1">
+                  {errors.authToken.message}
+                </p>
+              )}
             </div>
 
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-primary to-secondary"
+              className="w-full h-10 bg-gradient-to-r from-primary to-secondary"
             >
               {isLoading ? (
                 <>
@@ -227,57 +374,53 @@ export default function Credentials() {
               )}
             </Button>
           </form>
-        </Card>
 
-        {/* Help Section */}
-        <Card className="p-6 mt-8 bg-muted">
-          <h3 className="font-semibold mb-4">
-            How to find your Twilio Credentials
-          </h3>
-          <ol className="space-y-3 text-sm text-muted-foreground">
-            <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">
-                1.
-              </span>
-              <span>
-                Go to{" "}
-                <a
-                  href="https://console.twilio.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Twilio Console
-                </a>
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">
-                2.
-              </span>
-              <span>Click on your account name in the top-left corner</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">
-                3.
-              </span>
-              <span>Select "Account Settings"</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">
-                4.
-              </span>
-              <span>Find your Account SID and Auth Token on that page</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-semibold text-foreground flex-shrink-0">
-                5.
-              </span>
-              <span>
-                Copy and paste them here (Auth Token is marked as "AUTH TOKEN")
-              </span>
-            </li>
-          </ol>
+          {/* Help Section */}
+          <div className="mt-12 pt-8 border-t border-border">
+            <h3 className="text-lg font-semibold mb-6">
+              How to find your Twilio Credentials
+            </h3>
+            <ol className="space-y-3 text-sm">
+              <li className="flex gap-3">
+                <span className="font-bold text-primary flex-shrink-0">1.</span>
+                <span>
+                  Go to{" "}
+                  <a
+                    href="https://www.twilio.com/console"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary font-medium hover:underline"
+                  >
+                    Twilio Console
+                  </a>
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-primary flex-shrink-0">2.</span>
+                <span>
+                  In the left sidebar, click on <strong>Account</strong> &gt;{" "}
+                  <strong>API Keys & Tokens</strong>
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-primary flex-shrink-0">3.</span>
+                <span>
+                  Copy your <strong>Account SID</strong> (starts with "AC")
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-primary flex-shrink-0">4.</span>
+                <span>
+                  Copy your <strong>Auth Token</strong> (the long string of
+                  characters)
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="font-bold text-primary flex-shrink-0">5.</span>
+                <span>Paste both into the form above and click Connect</span>
+              </li>
+            </ol>
+          </div>
         </Card>
       </div>
     </AdminLayout>

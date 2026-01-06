@@ -26,11 +26,16 @@ export default defineConfig(({ mode }) => ({
 }));
 
 function expressPlugin(): Plugin {
+  let app: any;
+
   return {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
-    configureServer(server) {
-      const app = createServer();
+    async configureServer(server) {
+      app = await createServer();
+
+      // Note: Real-time events are now handled via Ably instead of Socket.IO
+      // Ably is initialized in createServer() and handles all realtime communication
 
       // Add Express app as middleware to Vite dev server
       server.middlewares.use(app);

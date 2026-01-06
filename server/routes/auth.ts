@@ -12,7 +12,7 @@ function verifyPassword(password: string, hash: string): boolean {
   return hashPassword(password) === hash;
 }
 
-export const handleSignup: RequestHandler = (req, res) => {
+export const handleSignup: RequestHandler = async (req, res) => {
   try {
     const { email, password, name } = req.body as SignupRequest;
 
@@ -22,7 +22,8 @@ export const handleSignup: RequestHandler = (req, res) => {
     }
 
     // Check if user exists
-    if (storage.getUserByEmail(email)) {
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
     }
 
@@ -39,7 +40,7 @@ export const handleSignup: RequestHandler = (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    storage.createUser(user);
+    await storage.createUser(user);
 
     const token = generateToken({
       userId,
@@ -67,7 +68,7 @@ export const handleSignup: RequestHandler = (req, res) => {
   }
 };
 
-export const handleLogin: RequestHandler = (req, res) => {
+export const handleLogin: RequestHandler = async (req, res) => {
   try {
     const { email, password } = req.body as LoginRequest;
 
@@ -77,7 +78,7 @@ export const handleLogin: RequestHandler = (req, res) => {
     }
 
     // Find user
-    const user = storage.getUserByEmail(email);
+    const user = await storage.getUserByEmail(email);
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -87,11 +88,17 @@ export const handleLogin: RequestHandler = (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    console.log(
+      `[DEBUG login] User ${email}: id=${user.id}, role=${user.role}`,
+    );
+
     const token = generateToken({
       userId: user.id,
       email: user.email,
       role: user.role,
     });
+
+    console.log(`[DEBUG login] Generated token with role: ${user.role}`);
 
     const userResponse: User = {
       id: user.id,
@@ -114,9 +121,8 @@ export const handleLogin: RequestHandler = (req, res) => {
   }
 };
 
-export const handleVerifySession: RequestHandler = (req, res) => {
+export const handleVerifySession: RequestHandler = async (req, res) => {
   try {
-    // This handler requires authMiddleware, so if we get here, the token is valid
     const user = req.user;
 
     if (!user) {
@@ -133,5 +139,95 @@ export const handleVerifySession: RequestHandler = (req, res) => {
   } catch (error) {
     console.error("Session verification error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const handleGetProfile: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const user = await storage.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Get profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const handleUpdateProfile: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const { name, email } = req.body as { name?: string; email?: string };
+
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update user fields
+    if (name) {
+      user.name = name;
+    }
+    if (email) {
+      user.email = email;
+    }
+
+    await storage.updateUser(user);
+
+    const userResponse: User = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      adminId: user.adminId,
+      createdAt: user.createdAt,
+    };
+
+    res.json({ user: userResponse });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const handleAblyToken: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const user = await storage.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Generate Ably token with user-specific capabilities
+    const { Realtime } = require("ably");
+    const client = new Realtime({
+      key: process.env.ABLY_API_KEY,
+    });
+
+    // Create token request with appropriate capabilities
+    const tokenRequest = await client.auth.createTokenRequest({
+      clientId: userId,
+      capability: {
+        // User can subscribe to their own channel and all public channels
+        new_message: ["subscribe"],
+        contacts: ["subscribe"],
+        message_status: ["subscribe"],
+        notifications: ["subscribe"],
+        [`user:${userId}`]: ["subscribe"],
+        [`phone:*`]: ["subscribe"],
+        [`admin:*`]: ["subscribe"],
+      },
+      ttl: 60 * 60 * 1000, // 1 hour
+    });
+
+    res.json(tokenRequest);
+  } catch (error) {
+    console.error("Ably token generation error:", error);
+    res.status(500).json({ error: "Failed to generate Ably token" });
   }
 };
