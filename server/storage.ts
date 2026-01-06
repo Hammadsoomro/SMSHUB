@@ -114,9 +114,37 @@ class Storage {
   }
 
   async updatePhoneNumber(number: PhoneNumber): Promise<void> {
-    await PhoneNumberModel.findOneAndUpdate({ id: number.id }, number, {
+    // Create update object, excluding undefined fields
+    const updateObj: any = {};
+    for (const [key, value] of Object.entries(number)) {
+      if (value !== undefined) {
+        updateObj[key] = value;
+      }
+    }
+    await PhoneNumberModel.findOneAndUpdate({ id: number.id }, updateObj, {
       new: true,
     });
+  }
+
+  async updatePhoneNumberWithAssignment(
+    phoneNumberId: string,
+    teamMemberId?: string,
+  ): Promise<void> {
+    if (teamMemberId) {
+      // Assign to team member
+      await PhoneNumberModel.findOneAndUpdate(
+        { id: phoneNumberId },
+        { assignedTo: teamMemberId },
+        { new: true },
+      );
+    } else {
+      // Unassign - remove the assignedTo field
+      await PhoneNumberModel.findOneAndUpdate(
+        { id: phoneNumberId },
+        { $unset: { assignedTo: "" } },
+        { new: true },
+      );
+    }
   }
 
   // Team Members
