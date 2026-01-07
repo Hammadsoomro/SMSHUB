@@ -49,10 +49,8 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
         "[handleInboundSMS] Phone number not found in database:",
         To,
       );
-      // List all phone numbers for debugging
-      const allNumbers = await storage.getAllPhoneNumbers?.() || [];
-      console.error("[handleInboundSMS] Available phone numbers:",
-        allNumbers.map(n => n.phoneNumber).join(", ")
+      console.error(
+        "[handleInboundSMS] Webhook received but phone number is not registered in the system",
       );
       return res.status(404).send("Phone number not found");
     }
