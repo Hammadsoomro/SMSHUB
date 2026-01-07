@@ -195,12 +195,20 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       sid: twilioResponse.sid,
     };
 
+    console.log("[handleSendMessage] Storing outbound message");
+    console.log("[handleSendMessage] From:", message.from);
+    console.log("[handleSendMessage] To:", message.to);
+    console.log("[handleSendMessage] Phone Number ID:", phoneNumberId);
+
     await storage.addMessage(message);
+    console.log("[handleSendMessage] Message stored with ID:", message.id);
 
     // Check if contact exists, if not create it
-    const existingContact = (
-      await storage.getContactsByPhoneNumber(phoneNumberId)
-    ).find((c) => c.phoneNumber === to);
+    const existingContacts = await storage.getContactsByPhoneNumber(phoneNumberId);
+    console.log("[handleSendMessage] Found", existingContacts.length, "existing contacts");
+    console.log("[handleSendMessage] Looking for contact with phone:", to);
+
+    const existingContact = existingContacts.find((c) => c.phoneNumber === to);
 
     if (!existingContact) {
       const contact: Contact = {
@@ -209,16 +217,21 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
         phoneNumber: to,
         unreadCount: 0,
       };
+      console.log("[handleSendMessage] Creating new contact:", contact.id);
       await storage.addContact(contact);
+      console.log("[handleSendMessage] Contact created successfully");
     } else {
+      console.log("[handleSendMessage] Contact exists, updating...");
       // Update last message info
       await storage.updateContact({
         ...existingContact,
         lastMessage: body.substring(0, 50),
         lastMessageTime: message.timestamp,
       });
+      console.log("[handleSendMessage] Contact updated");
     }
 
+    console.log("[handleSendMessage] ✅ Message sent and stored successfully");
     res.json({ message });
   } catch (error) {
     console.error("Send message error:", error);
