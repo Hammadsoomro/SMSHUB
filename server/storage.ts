@@ -171,8 +171,22 @@ class Storage {
   async getPhoneNumberByPhoneNumber(
     phoneNumber: string,
   ): Promise<PhoneNumber | undefined> {
-    const doc = await PhoneNumberModel.findOne({ phoneNumber });
+    // Try exact match first
+    let doc = await PhoneNumberModel.findOne({ phoneNumber });
+
+    // If not found, try normalized match
+    if (!doc) {
+      const normalizedInput = normalizePhoneNumber(phoneNumber);
+      const allNumbers = await PhoneNumberModel.find({});
+
+      // Find by comparing normalized versions
+      doc = allNumbers.find((num: any) =>
+        phoneNumbersMatch(num.phoneNumber, phoneNumber),
+      ) as any;
+    }
+
     if (!doc) return undefined;
+
     const data = doc.toObject() as any;
     if (!data.id && data._id) {
       data.id = data._id.toString();
