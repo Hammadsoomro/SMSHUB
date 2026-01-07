@@ -18,6 +18,7 @@ import {
   Message,
   Contact,
 } from "@shared/api";
+import { normalizePhoneNumber, phoneNumbersMatch } from "./utils/phone-normalizer";
 
 class Storage {
   // User operations
