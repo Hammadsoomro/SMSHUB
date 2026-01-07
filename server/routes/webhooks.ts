@@ -19,16 +19,47 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
   try {
     const { From, To, Body, MessageSid } = req.body;
 
+    // Debug: Log all webhook data
+    console.log("[handleInboundSMS] Webhook received");
+    console.log("[handleInboundSMS] From:", From);
+    console.log("[handleInboundSMS] To:", To);
+    console.log("[handleInboundSMS] Body:", Body);
+    console.log("[handleInboundSMS] MessageSid:", MessageSid);
+    console.log("[handleInboundSMS] Full request body:", JSON.stringify(req.body));
+
     // Validate required fields
     if (!From || !To || !Body) {
+      console.error(
+        "[handleInboundSMS] Missing required fields - From:",
+        !!From,
+        "To:",
+        !!To,
+        "Body:",
+        !!Body,
+      );
       return res.status(400).send("Missing required fields");
     }
 
     // Find the phone number in the database
+    console.log("[handleInboundSMS] Looking up phone number:", To);
     const phoneNumber = await storage.getPhoneNumberByPhoneNumber(To);
+
     if (!phoneNumber) {
+      console.error(
+        "[handleInboundSMS] Phone number not found in database:",
+        To,
+      );
+      // List all phone numbers for debugging
+      const allNumbers = await storage.getAllPhoneNumbers?.() || [];
+      console.error("[handleInboundSMS] Available phone numbers:",
+        allNumbers.map(n => n.phoneNumber).join(", ")
+      );
       return res.status(404).send("Phone number not found");
     }
+
+    console.log("[handleInboundSMS] Phone number found:", phoneNumber.id);
+    console.log("[handleInboundSMS] Assigned to:", phoneNumber.assignedTo);
+    console.log("[handleInboundSMS] Admin ID:", phoneNumber.adminId);
 
     // Store the message
     const message: Message = {
