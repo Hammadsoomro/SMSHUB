@@ -460,7 +460,7 @@ export const handler: Handler = async (
 
     // Use serverless-http to convert Netlify event to Express
     const serverlessHandler = serverless(app, {
-      // Preserve raw body and properly set up request for both JSON and form-encoded bodies
+      // Preserve raw body for webhook signature validation
       request: (request: any, event: HandlerEvent) => {
         // Only attach body for requests that should have one
         const isMutationRequest = ["POST", "PUT", "PATCH"].includes(
@@ -474,23 +474,16 @@ export const handler: Handler = async (
           console.log(
             `[${requestId}] ✓ Raw body attached (${Buffer.byteLength(event.body, "utf-8")} bytes)`,
           );
+        }
 
-          // CRITICAL: For form-encoded bodies (Twilio webhooks), we need to set the body
-          // as a Buffer so express.urlencoded() middleware can parse it
-          const contentType = event.headers["content-type"] || "";
-          if (contentType.includes("application/x-www-form-urlencoded")) {
-            // Set body as Buffer for express.urlencoded() to parse
-            (request as any)._body = Buffer.from(event.body, "utf-8");
-            console.log(
-              `[${requestId}] ✓ Form body set as Buffer for urlencoded parser`,
-            );
-          } else if (contentType.includes("application/json")) {
-            // For JSON, set the parsed body directly
-            (request as any).body = parsedBody;
-            console.log(
-              `[${requestId}] ✓ JSON body injected into request object`,
-            );
-          }
+        // For all requests with parsed bodies, inject the parsed data
+        // Mark as already parsed so middleware won't try to parse again
+        if (parsedBody) {
+          (request as any)._body = true;
+          (request as any).body = parsedBody;
+          console.log(
+            `[${requestId}] ✓ Parsed body injected into request object`,
+          );
         }
       },
     });
