@@ -437,6 +437,17 @@ export const handler: Handler = async (
           console.log(
             `[${requestId}] ✓ Form-encoded body parsed: ${JSON.stringify(parsedBody).substring(0, 100)}`,
           );
+
+          // DEBUG: Log all fields for Twilio webhooks
+          if (event.path?.includes("/webhooks")) {
+            console.log(
+              `[${requestId}] [Twilio Webhook] All fields:`,
+              Object.keys(parsedBody).join(", "),
+            );
+            console.log(
+              `[${requestId}] [Twilio Webhook] From: ${parsedBody.From}, To: ${parsedBody.To}, Body: ${parsedBody.Body?.substring(0, 50)}`,
+            );
+          }
         } catch (parseErr) {
           console.error(
             `[${requestId}] ✗ Failed to parse form-encoded body:`,
