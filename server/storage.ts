@@ -367,6 +367,46 @@ class Storage {
   generateId(): string {
     return Math.random().toString(36).substr(2, 9);
   }
+
+  /**
+   * Normalize all existing phone numbers in the database to E.164 format
+   * This is a one-time migration to fix phone numbers stored in different formats
+   */
+  async normalizeAllPhoneNumbers(): Promise<void> {
+    try {
+      const allNumbers = await PhoneNumberModel.find({});
+      let updatedCount = 0;
+
+      for (const phoneNumberDoc of allNumbers) {
+        const original = phoneNumberDoc.phoneNumber;
+        const normalized = normalizePhoneNumber(original);
+
+        if (original !== normalized) {
+          console.log(
+            `[Storage] Normalizing phone number: ${original} → ${normalized}`,
+          );
+          phoneNumberDoc.phoneNumber = normalized;
+          await phoneNumberDoc.save();
+          updatedCount++;
+        }
+      }
+
+      if (updatedCount > 0) {
+        console.log(
+          `[Storage] ✅ Normalized ${updatedCount} phone numbers in database`,
+        );
+      } else {
+        console.log(
+          "[Storage] All phone numbers are already in E.164 format",
+        );
+      }
+    } catch (error) {
+      console.error(
+        "[Storage] Error normalizing phone numbers:",
+        error,
+      );
+    }
+  }
 }
 
 export const storage = new Storage();
