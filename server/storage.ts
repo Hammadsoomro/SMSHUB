@@ -142,7 +142,12 @@ class Storage {
 
   // Phone Numbers
   async addPhoneNumber(number: PhoneNumber): Promise<void> {
-    const newNumber = new PhoneNumberModel(number);
+    // Normalize phone number to E.164 format for consistency
+    const normalizedNumber = {
+      ...number,
+      phoneNumber: normalizePhoneNumber(number.phoneNumber),
+    };
+    const newNumber = new PhoneNumberModel(normalizedNumber);
     await newNumber.save();
   }
 
