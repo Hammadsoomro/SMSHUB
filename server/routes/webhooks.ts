@@ -71,7 +71,9 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
       sid: MessageSid,
     };
 
+    console.log("[handleInboundSMS] Storing message:", message.id);
     await storage.addMessage(message);
+    console.log("[handleInboundSMS] Message stored successfully");
 
     // Get or create contact
     const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
