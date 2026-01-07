@@ -78,6 +78,9 @@ export async function createServer() {
   // Connect to MongoDB BEFORE creating the app
   await connectDB();
 
+  // Normalize all existing phone numbers to E.164 format (one-time migration)
+  await storage.normalizeAllPhoneNumbers();
+
   // Initialize Ably for real-time messaging
   try {
     await ablyServer.initialize();
