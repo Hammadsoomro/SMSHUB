@@ -19,16 +19,48 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
   try {
     const { From, To, Body, MessageSid } = req.body;
 
+    // Debug: Log all webhook data
+    console.log("[handleInboundSMS] Webhook received");
+    console.log("[handleInboundSMS] From:", From);
+    console.log("[handleInboundSMS] To:", To);
+    console.log("[handleInboundSMS] Body:", Body);
+    console.log("[handleInboundSMS] MessageSid:", MessageSid);
+    console.log(
+      "[handleInboundSMS] Full request body:",
+      JSON.stringify(req.body),
+    );
+
     // Validate required fields
     if (!From || !To || !Body) {
+      console.error(
+        "[handleInboundSMS] Missing required fields - From:",
+        !!From,
+        "To:",
+        !!To,
+        "Body:",
+        !!Body,
+      );
       return res.status(400).send("Missing required fields");
     }
 
     // Find the phone number in the database
+    console.log("[handleInboundSMS] Looking up phone number:", To);
     const phoneNumber = await storage.getPhoneNumberByPhoneNumber(To);
+
     if (!phoneNumber) {
+      console.error(
+        "[handleInboundSMS] Phone number not found in database:",
+        To,
+      );
+      console.error(
+        "[handleInboundSMS] Webhook received but phone number is not registered in the system",
+      );
       return res.status(404).send("Phone number not found");
     }
+
+    console.log("[handleInboundSMS] Phone number found:", phoneNumber.id);
+    console.log("[handleInboundSMS] Assigned to:", phoneNumber.assignedTo);
+    console.log("[handleInboundSMS] Admin ID:", phoneNumber.adminId);
 
     // Store the message
     const message: Message = {
@@ -42,7 +74,9 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
       sid: MessageSid,
     };
 
+    console.log("[handleInboundSMS] Storing message:", message.id);
     await storage.addMessage(message);
+    console.log("[handleInboundSMS] Message stored successfully");
 
     // Get or create contact
     const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
@@ -152,9 +186,15 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response></Response>`;
 
+    console.log(
+      "[handleInboundSMS] ✅ Webhook processed successfully - message from",
+      From,
+      "to",
+      To,
+    );
     res.type("application/xml").send(twimlResponse);
   } catch (error) {
-    console.error("Inbound SMS webhook error:", error);
+    console.error("[handleInboundSMS] ❌ Inbound SMS webhook error:", error);
     res.status(500).send("Internal server error");
   }
 };
