@@ -33,15 +33,18 @@ class Storage {
   async getUserByEmail(
     email: string,
   ): Promise<(User & { password: string }) | undefined> {
-    return (await UserModel.findOne({ email: email.toLowerCase() })) as
-      | (User & { password: string })
-      | null;
+    const user = (await UserModel.findOne({
+      email: email.toLowerCase(),
+    })) as any;
+    if (!user) return undefined;
+    return user.toObject() as (User & { password: string }) | null;
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    const user = (await UserModel.findById(id)) as any;
+    const user = (await UserModel.findOne({ id })) as any;
     if (!user) return undefined;
-    const { password, ...userWithoutPassword } = user.toObject();
+    const userData = user.toObject();
+    const { password, ...userWithoutPassword } = userData;
     return userWithoutPassword as User;
   }
 

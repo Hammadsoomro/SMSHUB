@@ -52,9 +52,18 @@ export default function Messages() {
       navigate("/login");
       return;
     }
-    fetchContacts();
-    fetchAssignedPhoneNumber();
+    const initializeData = async () => {
+      await fetchAssignedPhoneNumber();
+    };
+    initializeData();
   }, [navigate]);
+
+  // Fetch contacts when assigned phone numbers change
+  useEffect(() => {
+    if (assignedPhoneNumbers.length > 0) {
+      fetchContactsForNumber(assignedPhoneNumbers[0].id);
+    }
+  }, [assignedPhoneNumbers]);
 
   const fetchAssignedPhoneNumber = async () => {
     try {
@@ -66,9 +75,37 @@ export default function Messages() {
       if (response.ok) {
         const data = await response.json();
         setAssignedPhoneNumbers(data.phoneNumbers || []);
+      } else {
+        console.warn(
+          `Failed to fetch assigned phone numbers: ${response.status}`
+        );
       }
-    } catch {
-      // Error handled silently
+    } catch (err) {
+      console.error("Error fetching assigned phone numbers:", err);
+    }
+  };
+
+  const fetchContactsForNumber = async (phoneNumberId: string) => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/messages/contacts?phoneNumberId=${phoneNumberId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch contacts: ${response.status}`);
+        throw new Error("Failed to fetch contacts");
+      }
+      const data = await response.json();
+      setContacts(data.contacts || []);
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 

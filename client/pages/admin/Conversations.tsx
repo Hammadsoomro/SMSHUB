@@ -249,17 +249,21 @@ export default function Conversations() {
         }));
 
         setPhoneNumbers(processedPhones);
+        console.log("[Conversations] Loaded phone numbers:", processedPhones);
 
         // Set active phone number if we have phones but no active one
         if (processedPhones.length > 0 && !activePhoneNumber) {
           const activePhone =
             processedPhones.find((p) => p.active) || processedPhones[0];
           setActivePhoneNumber(activePhone.phoneNumber);
+          console.log("[Conversations] Set active phone number:", activePhone.phoneNumber);
         }
       } catch (numbersError) {
         console.error("Error loading phone numbers:", numbersError);
-        throw new Error(
-          `Failed to load phone numbers: ${numbersError instanceof Error ? numbersError.message : "Unknown error"}`,
+        // Don't throw error - just show empty state
+        setPhoneNumbers([]);
+        toast.warning(
+          "Unable to load phone numbers. You may not have any assigned numbers yet.",
         );
       }
 
@@ -292,17 +296,22 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      console.log("Initializing Socket.IO...");
+      console.log("Initializing Socket.IO with token:", token.substring(0, 20) + "...");
 
       // Connect to socket service
       const socket = socketService.connect(token);
 
       if (!socket) {
-        console.error("Failed to get socket instance");
+        console.error(
+          "Failed to get socket instance - socketService.connect returned:",
+          socket
+        );
         setIsConnecting(false);
         toast.error("Unable to establish socket connection");
         return;
       }
+
+      console.log("Socket instance obtained:", socket.id, "Connected:", socket.connected);
 
       // Remove old listeners to avoid duplicates
       socket.off("connect");
