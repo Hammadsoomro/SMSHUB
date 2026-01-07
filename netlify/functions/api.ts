@@ -413,19 +413,34 @@ export const handler: Handler = async (
     }
 
     // CRITICAL FIX: Pre-parse the body before passing to Express
-    // This ensures express.json() middleware receives properly formatted data
+    // This ensures both JSON and form-encoded requests work properly
     let parsedBody: any = event.body;
     const contentType = event.headers["content-type"] || "";
 
-    if (event.body && contentType.includes("application/json")) {
-      try {
-        parsedBody = JSON.parse(event.body);
-        console.log(
-          `[${requestId}] ✓ JSON body pre-parsed: ${JSON.stringify(parsedBody).substring(0, 100)}`,
-        );
-      } catch (parseErr) {
-        console.error(`[${requestId}] ✗ Failed to pre-parse JSON:`, parseErr);
-        // Continue with original body, let Express handle it
+    if (event.body) {
+      if (contentType.includes("application/json")) {
+        // Parse JSON body
+        try {
+          parsedBody = JSON.parse(event.body);
+          console.log(
+            `[${requestId}] ✓ JSON body pre-parsed: ${JSON.stringify(parsedBody).substring(0, 100)}`,
+          );
+        } catch (parseErr) {
+          console.error(`[${requestId}] ✗ Failed to pre-parse JSON:`, parseErr);
+          // Continue with original body, let Express handle it
+        }
+      } else if (contentType.includes("application/x-www-form-urlencoded")) {
+        // Parse form-encoded body (for Twilio webhooks)
+        try {
+          const params = new URLSearchParams(event.body);
+          parsedBody = Object.fromEntries(params);
+          console.log(
+            `[${requestId}] ✓ Form-encoded body parsed: ${JSON.stringify(parsedBody).substring(0, 100)}`,
+          );
+        } catch (parseErr) {
+          console.error(`[${requestId}] ✗ Failed to parse form-encoded body:`, parseErr);
+          // Continue with original body, let Express handle it
+        }
       }
     }
 
