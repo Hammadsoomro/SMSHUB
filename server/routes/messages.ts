@@ -110,13 +110,20 @@ export const handleGetConversation: RequestHandler = async (req, res) => {
       });
     }
 
-    console.log("Found contact:", contact.phoneNumber);
+    console.log("[getConversation] Found contact:", contact.phoneNumber);
+    console.log("[getConversation] Phone number ID:", contact.phoneNumberId);
+
     const messages = await storage.getMessagesByPhoneNumber(
       contact.phoneNumberId,
     );
+    console.log("[getConversation] Total messages for phone number:", messages.length);
+
     const conversation = messages.filter(
       (m) => m.from === contact.phoneNumber || m.to === contact.phoneNumber,
     );
+
+    console.log("[getConversation] Filtered messages count:", conversation.length);
+    console.log("[getConversation] Looking for messages with phone number:", contact.phoneNumber);
 
     res.json({ messages: conversation });
   } catch (error) {
