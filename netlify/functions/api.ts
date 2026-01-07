@@ -460,7 +460,7 @@ export const handler: Handler = async (
 
     // Use serverless-http to convert Netlify event to Express
     const serverlessHandler = serverless(app, {
-      // Preserve raw body and inject parsed body for Express middleware
+      // Preserve raw body for webhook signature validation
       request: (request: any, event: HandlerEvent) => {
         // Only attach body for requests that should have one
         const isMutationRequest = ["POST", "PUT", "PATCH"].includes(
@@ -476,12 +476,9 @@ export const handler: Handler = async (
           );
         }
 
-        // CRITICAL: Set parsed body on the request so Express middleware receives it
-        // This bypasses the need for stream-based parsing
-        if (
-          parsedBody &&
-          (typeof parsedBody === "object" || typeof parsedBody === "string")
-        ) {
+        // For all requests with parsed bodies, inject the parsed data
+        // Mark as already parsed so middleware won't try to parse again
+        if (parsedBody) {
           (request as any)._body = true;
           (request as any).body = parsedBody;
           console.log(
