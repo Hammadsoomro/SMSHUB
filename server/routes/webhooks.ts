@@ -25,7 +25,10 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     console.log("[handleInboundSMS] To:", To);
     console.log("[handleInboundSMS] Body:", Body);
     console.log("[handleInboundSMS] MessageSid:", MessageSid);
-    console.log("[handleInboundSMS] Full request body:", JSON.stringify(req.body));
+    console.log(
+      "[handleInboundSMS] Full request body:",
+      JSON.stringify(req.body),
+    );
 
     // Validate required fields
     if (!From || !To || !Body) {

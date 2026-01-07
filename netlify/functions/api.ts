@@ -438,7 +438,10 @@ export const handler: Handler = async (
             `[${requestId}] ✓ Form-encoded body parsed: ${JSON.stringify(parsedBody).substring(0, 100)}`,
           );
         } catch (parseErr) {
-          console.error(`[${requestId}] ✗ Failed to parse form-encoded body:`, parseErr);
+          console.error(
+            `[${requestId}] ✗ Failed to parse form-encoded body:`,
+            parseErr,
+          );
           // Continue with original body, let Express handle it
         }
       }
@@ -449,7 +452,9 @@ export const handler: Handler = async (
       // Preserve raw body and inject parsed body for Express middleware
       request: (request: any, event: HandlerEvent) => {
         // Only attach body for requests that should have one
-        const isMutationRequest = ["POST", "PUT", "PATCH"].includes(event.httpMethod);
+        const isMutationRequest = ["POST", "PUT", "PATCH"].includes(
+          event.httpMethod,
+        );
         const isWebhook = event.path?.includes("/webhooks");
 
         if ((isMutationRequest || isWebhook) && event.body) {
@@ -462,10 +467,15 @@ export const handler: Handler = async (
 
         // CRITICAL: Set parsed body on the request so Express middleware receives it
         // This bypasses the need for stream-based parsing
-        if (parsedBody && (typeof parsedBody === "object" || typeof parsedBody === "string")) {
+        if (
+          parsedBody &&
+          (typeof parsedBody === "object" || typeof parsedBody === "string")
+        ) {
           (request as any)._body = true;
           (request as any).body = parsedBody;
-          console.log(`[${requestId}] ✓ Parsed body injected into request object`);
+          console.log(
+            `[${requestId}] ✓ Parsed body injected into request object`,
+          );
         }
       },
     });

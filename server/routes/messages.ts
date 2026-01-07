@@ -116,14 +116,23 @@ export const handleGetConversation: RequestHandler = async (req, res) => {
     const messages = await storage.getMessagesByPhoneNumber(
       contact.phoneNumberId,
     );
-    console.log("[getConversation] Total messages for phone number:", messages.length);
+    console.log(
+      "[getConversation] Total messages for phone number:",
+      messages.length,
+    );
 
     const conversation = messages.filter(
       (m) => m.from === contact.phoneNumber || m.to === contact.phoneNumber,
     );
 
-    console.log("[getConversation] Filtered messages count:", conversation.length);
-    console.log("[getConversation] Looking for messages with phone number:", contact.phoneNumber);
+    console.log(
+      "[getConversation] Filtered messages count:",
+      conversation.length,
+    );
+    console.log(
+      "[getConversation] Looking for messages with phone number:",
+      contact.phoneNumber,
+    );
 
     res.json({ messages: conversation });
   } catch (error) {
@@ -211,8 +220,13 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     console.log("[handleSendMessage] Message stored with ID:", message.id);
 
     // Check if contact exists, if not create it
-    const existingContacts = await storage.getContactsByPhoneNumber(phoneNumberId);
-    console.log("[handleSendMessage] Found", existingContacts.length, "existing contacts");
+    const existingContacts =
+      await storage.getContactsByPhoneNumber(phoneNumberId);
+    console.log(
+      "[handleSendMessage] Found",
+      existingContacts.length,
+      "existing contacts",
+    );
     console.log("[handleSendMessage] Looking for contact with phone:", to);
 
     const existingContact = existingContacts.find((c) => c.phoneNumber === to);
