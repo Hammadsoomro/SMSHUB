@@ -1008,11 +1008,11 @@ export default function Conversations() {
                                   : "bg-muted/70 backdrop-blur-sm border border-border/40"
                               }`}
                             >
-                              <p className="text-sm whitespace-pre-wrap break-words">
+                              <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                                 {message.body}
                               </p>
                               <div className="flex items-center justify-between mt-2 gap-2">
-                                <span className="text-xs opacity-70">
+                                <span className={`text-xs ${message.direction === "outbound" ? "opacity-75" : "opacity-70"}`}>
                                   {format(
                                     new Date(message.timestamp),
                                     "h:mm a",
