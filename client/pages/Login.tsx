@@ -142,14 +142,28 @@ export default function Login() {
 
             <div>
               <label className="text-sm font-medium mb-2 block">Password</label>
-              <Input
-                {...register("password", {
-                  required: "Password is required",
-                })}
-                type="password"
-                placeholder="••••••••"
-                className="h-10"
-              />
+              <div className="relative">
+                <Input
+                  {...register("password", {
+                    required: "Password is required",
+                  })}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="h-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-xs text-destructive mt-1">
                   {errors.password.message}
