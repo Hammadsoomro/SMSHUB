@@ -682,17 +682,17 @@ export default function Conversations() {
   const formatMessageTime = (dateString: string) => {
     const date = new Date(dateString);
     if (isToday(date)) {
-      return format(date, "HH:mm");
+      return format(date, "h:mm a");
     } else if (isYesterday(date)) {
       return "Yesterday";
     } else {
-      return format(date, "dd/MM/yyyy");
+      return format(date, "MMM d, yyyy");
     }
   };
 
   const formatMessageTimeFull = (dateString: string) => {
     const date = new Date(dateString);
-    return format(date, "dd/MM/yyyy HH:mm");
+    return format(date, "MMM d, yyyy 'at' h:mm a");
   };
 
   // Filter contacts based on search term
