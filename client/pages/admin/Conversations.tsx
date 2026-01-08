@@ -921,7 +921,7 @@ export default function Conversations() {
           {selectedContact ? (
             <>
               {/* Chat Header - STICKY */}
-              <div className="sticky top-0 z-10 p-4 border-b border-border bg-card/95 backdrop-blur-sm">
+              <div className="sticky top-0 z-10 p-4 border-b border-border/40 bg-gradient-to-r from-card via-card to-card/80 backdrop-blur-xl shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
