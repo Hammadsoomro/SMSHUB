@@ -166,6 +166,7 @@ export default function TeamMemberSettings() {
 
   const fetchMessageInsights = async (token: string) => {
     try {
+      setIsLoadingInsights(true);
       const response = await fetch("/api/messages/insights", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -173,9 +174,13 @@ export default function TeamMemberSettings() {
       if (response.ok) {
         const data = await response.json();
         setMessageInsights(data);
+      } else {
+        console.error("Failed to fetch insights:", response.statusText);
       }
     } catch (err) {
       console.error("Failed to fetch message insights:", err);
+    } finally {
+      setIsLoadingInsights(false);
     }
   };
 
