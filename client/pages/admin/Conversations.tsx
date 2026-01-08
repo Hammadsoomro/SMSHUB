@@ -1511,6 +1511,57 @@ export default function Conversations() {
           </DialogContent>
         </Dialog>
 
+        {/* Move Contact Dialog */}
+        <Dialog open={showMoveContact} onOpenChange={setShowMoveContact}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Move Contact</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Move <strong>{movingContact?.name || movingContact?.phoneNumber}</strong> to which category?
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setMoveToCategory("general")}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    moveToCategory === "general"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-muted/30 hover:bg-muted/60"
+                  }`}
+                >
+                  <p className="font-semibold text-sm">General</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Regular contacts
+                  </p>
+                </button>
+                <button
+                  onClick={() => setMoveToCategory("sales")}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    moveToCategory === "sales"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-muted/30 hover:bg-muted/60"
+                  }`}
+                >
+                  <p className="font-semibold text-sm">Sales</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sales contacts
+                  </p>
+                </button>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowMoveContact(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={moveContact}>Move Contact</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Add Contact Dialog */}
         <AddContactDialog
           open={showAddContact}
