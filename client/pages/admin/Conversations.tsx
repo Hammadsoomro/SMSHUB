@@ -151,6 +151,57 @@ export default function Conversations() {
     initializeAbly();
   }, []);
 
+  // Re-subscribe to messages when selected contact changes
+  useEffect(() => {
+    if (selectedContactId && ablyService.connected) {
+      const storedUser = localStorage.getItem("user");
+      const userProfile = storedUser ? JSON.parse(storedUser) : null;
+      const userId = userProfile?.id;
+
+      if (userId) {
+        console.log(
+          `[Conversations] Subscribing to messages for contact: ${selectedContactId}`,
+        );
+        const unsubscribe = ablyService.subscribeToConversation(
+          selectedContactId,
+          userId,
+          (message: any) => {
+            console.log("📱 Real-time message received:", message);
+
+            // Update messages immediately
+            if (message.contactId === selectedContactId) {
+              loadMessages(selectedContactId);
+            }
+
+            // Reload contacts to update UI
+            const currentActivePhone = activePhoneNumberRef.current;
+            if (currentActivePhone) {
+              const phoneNum = phoneNumbersRef.current.find(
+                (p) => p.phoneNumber === currentActivePhone,
+              );
+              if (phoneNum) {
+                loadContactsForPhoneNumber(phoneNum.id);
+              }
+            }
+
+            // Show notification
+            const currentNotifications = notificationsRef.current;
+            if (currentNotifications && message.direction === "inbound") {
+              showNotification(
+                "New Message",
+                `${message.from}: ${message.message.substring(0, 50)}`,
+              );
+            }
+
+            updatePageTitle();
+          },
+        );
+
+        return unsubscribe;
+      }
+    }
+  }, [selectedContactId]);
+
   // Handle phone number URL parameter
   useEffect(() => {
     const phoneNumberFromUrl = searchParams.get("phoneNumber");
