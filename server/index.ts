@@ -11,6 +11,7 @@ import {
   handleLogin,
   handleGetProfile,
   handleUpdateProfile,
+  handleChangePassword,
 } from "./routes/auth";
 
 // Admin routes
@@ -29,6 +30,7 @@ import {
   handleGetDashboardStats,
   handleGetInsights,
   handleDeleteAccount,
+  handleGetUserById,
 } from "./routes/admin";
 
 // Phone purchase routes
@@ -150,6 +152,8 @@ export async function createServer() {
   app.post("/api/auth/login", handleLogin);
   app.get("/api/auth/profile", authMiddleware, handleGetProfile);
   app.patch("/api/auth/update-profile", authMiddleware, handleUpdateProfile);
+  app.patch("/api/auth/profile", authMiddleware, handleUpdateProfile);
+  app.post("/api/auth/change-password", authMiddleware, handleChangePassword);
 
   // Webhook routes (public - for Twilio callbacks)
   // Note: Health check doesn't need signature validation
@@ -231,6 +235,7 @@ export async function createServer() {
     adminOnly,
     handleDeleteAccount,
   );
+  app.get("/api/admin/user/:userId", authMiddleware, handleGetUserById);
 
   // Messages routes (requires authentication)
   app.get("/api/messages/contacts", authMiddleware, handleGetContacts);

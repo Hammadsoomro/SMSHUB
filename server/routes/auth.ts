@@ -212,3 +212,40 @@ export const handleUpdateProfile: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const handleChangePassword: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const { currentPassword, newPassword } = req.body as {
+      currentPassword?: string;
+      newPassword?: string;
+    };
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ error: "Current and new password are required" });
+    }
+
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify current password
+    if (!verifyPassword(currentPassword, (user as any).password)) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    // Update password
+    const hashedPassword = hashPassword(newPassword);
+    (user as any).password = hashedPassword;
+
+    await storage.updateUser(user);
+
+    res.json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

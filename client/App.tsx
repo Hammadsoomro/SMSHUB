@@ -24,6 +24,9 @@ import AccountInfo from "./pages/admin/AccountInfo";
 import Insights from "./pages/admin/Insights";
 import TwilioBalance from "./pages/admin/TwilioBalance";
 
+// Team Member Pages
+import TeamMemberSettings from "./pages/TeamMemberSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -41,6 +44,7 @@ const App = () => (
           {/* Team Member Routes */}
           <Route path="/messages" element={<Messages />} />
           <Route path="/conversations" element={<Conversations />} />
+          <Route path="/settings" element={<TeamMemberSettings />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />

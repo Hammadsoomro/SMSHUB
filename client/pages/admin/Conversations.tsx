@@ -35,6 +35,10 @@ import {
   MessageSquare,
   Users,
   Loader2,
+  AlertCircle,
+  Pin,
+  PinOff,
+  ArrowRight,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
@@ -67,6 +71,7 @@ export default function Conversations() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<"general" | "sales">("general");
 
   // Loading States
   const [isLoading, setIsLoading] = useState(true);
@@ -82,6 +87,7 @@ export default function Conversations() {
   const [notifications, setNotifications] = useState(() => {
     return Notification.permission === "granted";
   });
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Profile and Modals
   const [profile, setProfile] = useState<UserType>({
@@ -94,11 +100,17 @@ export default function Conversations() {
   const [showAddContact, setShowAddContact] = useState(false);
   const [showEditContact, setShowEditContact] = useState(false);
   const [showDeleteContact, setShowDeleteContact] = useState(false);
+  const [showMoveContact, setShowMoveContact] = useState(false);
   const [editingContact, setEditingContact] =
     useState<ConversationContact | null>(null);
   const [deletingContact, setDeletingContact] =
     useState<ConversationContact | null>(null);
+  const [movingContact, setMovingContact] =
+    useState<ConversationContact | null>(null);
   const [newContactName, setNewContactName] = useState("");
+  const [moveToCategory, setMoveToCategory] = useState<"general" | "sales">(
+    "sales",
+  );
 
   // Refs for socket handlers to always have current state
   const activePhoneNumberRef = useRef<string | null>(null);
@@ -130,12 +142,16 @@ export default function Conversations() {
 
   // Initialize everything
   useEffect(() => {
+    console.log("[Conversations] Initializing component...");
     loadInitialData();
     requestNotificationPermission();
 
-    // Set theme
+    // Set theme on document root
     document.documentElement.classList.toggle("dark", isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+    console.log(
+      `[Conversations] Theme initialized: ${isDarkMode ? "dark" : "light"}`,
+    );
 
     return () => {
       try {
@@ -146,9 +162,32 @@ export default function Conversations() {
     };
   }, []);
 
+  // Update document theme when isDarkMode changes
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
+
   // Initialize Ably separately with better lifecycle management
   useEffect(() => {
-    initializeAbly();
+    let isMounted = true;
+
+    (async () => {
+      try {
+        await initializeAbly();
+      } catch (error) {
+        console.error("Ably initialization error:", error);
+        if (isMounted) {
+          // Don't block UI if Ably fails - real-time updates are nice-to-have
+          toast.warning(
+            "Real-time updates not available, but app will work normally",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Re-subscribe to messages when selected contact changes
@@ -251,6 +290,7 @@ export default function Conversations() {
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
+      setLoadError(null);
 
       // Load profile from localStorage or API
       const storedUser = localStorage.getItem("user");
@@ -309,52 +349,62 @@ export default function Conversations() {
         );
       }
     } catch (error) {
-      console.error("Error loading initial data:", error);
-      toast.error(
+      const errorMessage =
         error instanceof Error
           ? error.message
-          : "Failed to load initial data. Please refresh the page.",
-      );
+          : "Failed to load initial data. Please refresh the page.";
+      console.error("Error loading initial data:", error);
+      setLoadError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const initializeAbly = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("No auth token found for Ably connection");
-      return;
-    }
-
     try {
-      setIsConnecting(true);
-      console.log("🔌 Initializing Ably for real-time messaging...");
-
-      // Connect to Ably service
-      const connected = await ablyService.connect(token);
-
-      if (!connected) {
-        console.warn("Ably connection failed");
-        setIsConnecting(false);
-        toast.warning(
-          "Real-time messaging connection failed, but app will still work",
-        );
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("No auth token found for Ably connection");
         return;
       }
 
-      // Show success message
+      setIsConnecting(true);
+      console.log("🔌 Initializing Ably for real-time messaging...");
+
+      // Connect to Ably service with timeout
+      const connectionPromise = ablyService.connect(token);
+      const timeoutPromise = new Promise<boolean>((resolve) => {
+        setTimeout(() => {
+          console.warn("Ably connection timeout");
+          resolve(false);
+        }, 15000); // 15 second timeout
+      });
+
+      const connected = await Promise.race([connectionPromise, timeoutPromise]);
+
       setIsConnecting(false);
-      toast.success(
-        "✨ Real-time messaging connected - SMS updates in real-time!",
-      );
+
+      if (!connected) {
+        console.warn("Ably connection failed or timed out");
+        // Don't show error toast - just silently continue
+        // Real-time updates are optional
+        return;
+      }
+
+      console.log("✅ Ably connected successfully");
 
       // Subscribe to contact updates once connected
-      setupAblyListeners();
+      try {
+        setupAblyListeners();
+      } catch (listenerError) {
+        console.error("Error setting up Ably listeners:", listenerError);
+        // Continue anyway - core functionality doesn't require listeners
+      }
     } catch (error) {
       console.error("Error initializing Ably:", error);
       setIsConnecting(false);
-      toast.error("Failed to initialize real-time connection");
+      // Don't show error - real-time updates are optional
     }
   };
 
@@ -401,7 +451,30 @@ export default function Conversations() {
   const loadContactsForPhoneNumber = async (phoneNumberId: string) => {
     try {
       const contactsData = await ApiService.getContacts(phoneNumberId);
-      setContacts(contactsData || []);
+      setContacts((prevContacts) => {
+        // Merge with existing data to preserve any optimistic updates
+        const updatedContacts = (contactsData || []).map((freshContact) => {
+          const existingContact = prevContacts.find(
+            (c) => c.id === freshContact.id,
+          );
+          // If existing contact has lower unreadCount (e.g., we just marked as read),
+          // keep the local state
+          if (
+            existingContact &&
+            freshContact.unreadCount > existingContact.unreadCount
+          ) {
+            console.log(
+              `[loadContactsForPhoneNumber] Preserving unreadCount=${existingContact.unreadCount} for ${freshContact.phoneNumber} (server had ${freshContact.unreadCount})`,
+            );
+            return {
+              ...freshContact,
+              unreadCount: existingContact.unreadCount,
+            };
+          }
+          return freshContact;
+        });
+        return updatedContacts;
+      });
     } catch (error) {
       console.error("Error loading contacts:", error);
       toast.error("Failed to load contacts");
@@ -426,18 +499,31 @@ export default function Conversations() {
 
   const markMessagesAsRead = async (contactId: string) => {
     try {
-      await ApiService.markAsRead(contactId);
+      console.log(`[markMessagesAsRead] Marking contact ${contactId} as read`);
 
-      // Update contact unread count in UI
-      setContacts((prev) =>
-        prev.map((contact) =>
+      // Update UI immediately (optimistic update)
+      setContacts((prev) => {
+        const updated = prev.map((contact) =>
           contact.id === contactId ? { ...contact, unreadCount: 0 } : contact,
-        ),
+        );
+        console.log(
+          `[markMessagesAsRead] UI updated, new state:`,
+          updated.find((c) => c.id === contactId),
+        );
+        return updated;
+      });
+
+      // Then call server
+      await ApiService.markAsRead(contactId);
+      console.log(
+        `[markMessagesAsRead] Server confirmed contact ${contactId} as read`,
       );
 
       updatePageTitle();
     } catch (error) {
       console.error("Error marking messages as read:", error);
+      // Show error toast but don't update UI (keep optimistic update)
+      toast.error("Failed to update read status, but continuing...");
     }
   };
 
@@ -528,8 +614,26 @@ export default function Conversations() {
       );
     }
 
-    await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
-    await loadContactsForPhoneNumber(currentActivePhoneId);
+    try {
+      const newContact = await ApiService.addContact(
+        name,
+        phoneNumber,
+        currentActivePhoneId,
+      );
+      await loadContactsForPhoneNumber(currentActivePhoneId);
+
+      // Auto-select the newly added contact
+      if (newContact?.id) {
+        setSelectedContactId(newContact.id);
+        console.log(
+          `[addContactFromDialog] Auto-opening chat for new contact: ${newContact.id}`,
+        );
+        toast.success(`Contact "${name}" added and chat opened!`);
+      }
+    } catch (error: any) {
+      console.error("Error adding contact:", error);
+      throw error;
+    }
   };
 
   const editContact = async () => {
@@ -600,6 +704,78 @@ export default function Conversations() {
       toast.error(
         error.message || "Failed to delete contact. Please try again.",
       );
+    }
+  };
+
+  const togglePinContact = async (contactId: string) => {
+    try {
+      const contact = contacts.find((c) => c.id === contactId);
+      if (!contact) return;
+
+      // Optimistic update
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === contactId ? { ...c, isPinned: !c.isPinned } : c,
+        ),
+      );
+
+      // Update on server
+      await ApiService.updateContact(contactId, {
+        isPinned: !contact.isPinned,
+      } as any);
+
+      const pinStatus = !contact.isPinned;
+      toast.success(
+        pinStatus
+          ? `${contact.name || contact.phoneNumber} pinned`
+          : "Unpinned",
+      );
+    } catch (error: any) {
+      console.error("Error toggling pin:", error);
+      toast.error(error.message || "Failed to toggle pin");
+      // Revert optimistic update on error
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
+    }
+  };
+
+  const moveContact = async () => {
+    if (!movingContact) return;
+
+    try {
+      setShowMoveContact(false);
+
+      // Optimistic update
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === movingContact.id ? { ...c, category: moveToCategory } : c,
+        ),
+      );
+
+      // Update on server
+      await ApiService.updateContact(movingContact.id, {
+        category: moveToCategory,
+      } as any);
+
+      toast.success(
+        `Contact moved to ${moveToCategory === "sales" ? "Sales" : "General"}`,
+      );
+      setMovingContact(null);
+      setMoveToCategory("sales");
+    } catch (error: any) {
+      console.error("Error moving contact:", error);
+      toast.error(error.message || "Failed to move contact");
+      // Revert optimistic update
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
     }
   };
 
@@ -693,19 +869,69 @@ export default function Conversations() {
     return format(date, "MMM d, yyyy 'at' h:mm a");
   };
 
-  // Filter contacts based on search term
-  const filteredContacts = contacts.filter(
-    (contact) =>
-      (contact.name &&
-        contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      contact.phoneNumber.includes(searchTerm),
-  );
+  // Filter contacts based on search term and active tab
+  const filteredContacts = contacts
+    .filter((contact) => {
+      // Filter by category
+      const contactCategory = contact.category || "general";
+      if (contactCategory !== activeTab) return false;
+
+      // Filter by search term
+      return (
+        (contact.name &&
+          contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        contact.phoneNumber.includes(searchTerm)
+      );
+    })
+    .sort((a, b) => {
+      // Sort pinned contacts to the top
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0;
+    });
 
   const selectedContact = contacts.find((c) => c.id === selectedContactId);
   const totalUnreadCount = contacts.reduce(
     (sum, contact) => sum + contact.unreadCount,
     0,
   );
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-destructive" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-2">
+              Failed to Load Connectlify
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">{loadError}</p>
+          </div>
+          <div className="space-y-2">
+            <Button
+              onClick={() => {
+                setLoadError(null);
+                setIsLoading(true);
+                loadInitialData();
+              }}
+              className="w-full"
+            >
+              Retry
+            </Button>
+            <Button
+              onClick={() => navigate("/login")}
+              variant="outline"
+              className="w-full"
+            >
+              Back to Login
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -763,6 +989,38 @@ export default function Conversations() {
             </div>
           </div>
 
+          {/* Category Tabs */}
+          <div className="px-2 pt-3 border-b border-border/40">
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => {
+                  setActiveTab("general");
+                  setSearchTerm("");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "general"
+                    ? "bg-primary text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                }`}
+              >
+                General
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("sales");
+                  setSearchTerm("");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "sales"
+                    ? "bg-primary text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                }`}
+              >
+                Sales
+              </button>
+            </div>
+          </div>
+
           {/* Add Contact Button */}
           <div className="p-3 border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5">
             <Button
@@ -810,53 +1068,60 @@ export default function Conversations() {
                     }`}
                     onClick={() => setSelectedContactId(contact.id)}
                   >
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <Avatar className="w-10 h-10 flex-shrink-0">
-                            <AvatarImage src={contact.avatar} />
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {(contact.name || contact.phoneNumber)
-                                .substring(0, 2)
-                                .toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                    <CardContent className="p-3 relative">
+                      <div className="flex gap-3">
+                        {/* Avatar */}
+                        <Avatar className="w-10 h-10 flex-shrink-0">
+                          <AvatarImage src={contact.avatar} />
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {(contact.name || contact.phoneNumber)
+                              .substring(0, 2)
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium truncate text-sm">
-                                {contact.name || contact.phoneNumber}
-                              </h4>
-                              {contact.lastMessageTime && (
-                                <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                                  {formatMessageTime(contact.lastMessageTime)}
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="text-xs text-muted-foreground font-mono truncate">
-                              {contact.phoneNumber}
-                            </p>
-
-                            {contact.lastMessage && (
-                              <p className="text-xs text-muted-foreground truncate mt-1">
-                                {contact.lastMessage}
-                              </p>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          {/* Name, Time, Pin */}
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium truncate text-sm flex-1">
+                              {contact.name || contact.phoneNumber}
+                            </h4>
+                            {contact.isPinned && (
+                              <Pin className="w-3 h-3 text-primary flex-shrink-0" />
+                            )}
+                            {contact.lastMessageTime && (
+                              <span className="text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
+                                {formatMessageTime(contact.lastMessageTime)}
+                              </span>
                             )}
                           </div>
+
+                          {/* Phone number */}
+                          <p className="text-xs text-muted-foreground font-mono truncate mb-1">
+                            {contact.phoneNumber}
+                          </p>
+
+                          {/* Last message - allow wrapping instead of truncate */}
+                          {contact.lastMessage && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 break-words">
+                              {contact.lastMessage}
+                            </p>
+                          )}
                         </div>
 
                         <div className="flex items-center space-x-2 flex-shrink-0">
-                          {contact.unreadCount > 0 && (
-                            <Badge
-                              variant="destructive"
-                              className="text-xs h-5 min-w-[20px]"
-                            >
-                              {contact.unreadCount > 99
-                                ? "99+"
-                                : contact.unreadCount}
-                            </Badge>
-                          )}
+                          {contact.unreadCount > 0 &&
+                            selectedContactId !== contact.id && (
+                              <Badge
+                                variant="destructive"
+                                className="text-xs h-5 min-w-[20px]"
+                              >
+                                {contact.unreadCount > 99
+                                  ? "99+"
+                                  : contact.unreadCount}
+                              </Badge>
+                            )}
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -879,8 +1144,53 @@ export default function Conversations() {
                                 }}
                               >
                                 <Edit className="w-4 h-4 mr-2" />
-                                Edit Contact
+                                Edit Name
                               </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePinContact(contact.id);
+                                }}
+                              >
+                                {contact.isPinned ? (
+                                  <>
+                                    <PinOff className="w-4 h-4 mr-2" />
+                                    Unpin
+                                  </>
+                                ) : (
+                                  <>
+                                    <Pin className="w-4 h-4 mr-2" />
+                                    Pin to Top
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setMovingContact(contact);
+                                  const currentCategory =
+                                    contact.category || "general";
+                                  setMoveToCategory(
+                                    currentCategory === "general"
+                                      ? "sales"
+                                      : "general",
+                                  );
+                                  setShowMoveContact(true);
+                                }}
+                              >
+                                <ArrowRight className="w-4 h-4 mr-2" />
+                                Move to{" "}
+                                {(contact.category || "general") === "general"
+                                  ? "Sales"
+                                  : "General"}
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1196,6 +1506,61 @@ export default function Conversations() {
               <Button variant="destructive" onClick={deleteContact}>
                 Delete Contact
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Move Contact Dialog */}
+        <Dialog open={showMoveContact} onOpenChange={setShowMoveContact}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Move Contact</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Move{" "}
+                <strong>
+                  {movingContact?.name || movingContact?.phoneNumber}
+                </strong>{" "}
+                to which category?
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setMoveToCategory("general")}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    moveToCategory === "general"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-muted/30 hover:bg-muted/60"
+                  }`}
+                >
+                  <p className="font-semibold text-sm">General</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Regular contacts
+                  </p>
+                </button>
+                <button
+                  onClick={() => setMoveToCategory("sales")}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    moveToCategory === "sales"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-muted/30 hover:bg-muted/60"
+                  }`}
+                >
+                  <p className="font-semibold text-sm">Sales</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sales contacts
+                  </p>
+                </button>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowMoveContact(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={moveContact}>Move Contact</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -94,6 +94,8 @@ export interface Contact {
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount: number;
+  isPinned?: boolean;
+  category?: "general" | "sales"; // Default: general
 }
 
 export interface SendMessageRequest {

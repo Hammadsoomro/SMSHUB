@@ -769,3 +769,33 @@ export const handleDeleteAccount: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Failed to delete account" });
   }
 };
+
+// Get user by ID (for team members to see admin details)
+export const handleGetUserById: RequestHandler = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    const user = await storage.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Return public user info only (not password hash)
+    const userResponse = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+    };
+
+    res.json(userResponse);
+  } catch (error) {
+    console.error("Get user by ID error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
