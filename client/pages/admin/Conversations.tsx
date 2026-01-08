@@ -934,78 +934,69 @@ export default function Conversations() {
                 </div>
               </div>
 
-              {/* Messages Area */}
+              {/* Messages Area - SCROLLABLE */}
               <ScrollArea className="flex-1 p-4">
-                {isLoadingMessages ? (
-                  <div className="flex items-center justify-center h-32">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    <span className="ml-2 text-muted-foreground">
-                      Loading messages...
-                    </span>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">No messages yet</p>
-                        <p className="text-sm">
-                          Send a message to start the conversation
-                        </p>
-                      </div>
-                    ) : (
-                      messages.map((message, index) => {
-                        const showDateSeparator =
-                          index === 0 ||
-                          (!isToday(new Date(message.timestamp)) &&
-                            !isToday(new Date(messages[index - 1]?.timestamp)));
+                <div className="space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium">No messages yet</p>
+                      <p className="text-sm">
+                        Send a message to start the conversation
+                      </p>
+                    </div>
+                  ) : (
+                    messages.map((message, index) => {
+                      const showDateSeparator =
+                        index === 0 ||
+                        (!isToday(new Date(message.timestamp)) &&
+                          !isToday(new Date(messages[index - 1]?.timestamp)));
 
-                        return (
-                          <div key={message.id}>
-                            {showDateSeparator && (
-                              <div className="flex items-center my-4">
-                                <Separator className="flex-1" />
-                                <span className="px-3 text-xs text-muted-foreground bg-background">
-                                  {formatMessageTimeFull(message.timestamp)}
-                                </span>
-                                <Separator className="flex-1" />
-                              </div>
-                            )}
+                      return (
+                        <div key={message.id}>
+                          {showDateSeparator && (
+                            <div className="flex items-center my-4">
+                              <Separator className="flex-1" />
+                              <span className="px-3 text-xs text-muted-foreground bg-background">
+                                {formatMessageTimeFull(message.timestamp)}
+                              </span>
+                              <Separator className="flex-1" />
+                            </div>
+                          )}
 
+                          <div
+                            className={`flex ${
+                              message.direction === "outbound"
+                                ? "justify-end"
+                                : "justify-start"
+                            }`}
+                          >
                             <div
-                              className={`flex ${
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
                                 message.direction === "outbound"
-                                  ? "justify-end"
-                                  : "justify-start"
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted"
                               }`}
                             >
-                              <div
-                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
-                                  message.direction === "outbound"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted"
-                                }`}
-                              >
-                                <p className="text-sm whitespace-pre-wrap break-words">
-                                  {message.body}
-                                </p>
-                                <div className="flex items-center justify-between mt-2 gap-2">
-                                  <span className="text-xs opacity-70">
-                                    {format(
-                                      new Date(message.timestamp),
-                                      "HH:mm",
-                                    )}
-                                  </span>
-                                </div>
+                              <p className="text-sm whitespace-pre-wrap break-words">
+                                {message.body}
+                              </p>
+                              <div className="flex items-center justify-between mt-2 gap-2">
+                                <span className="text-xs opacity-70">
+                                  {format(
+                                    new Date(message.timestamp),
+                                    "HH:mm",
+                                  )}
+                                </span>
                               </div>
                             </div>
                           </div>
-                        );
-                      })
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
               </ScrollArea>
 
               {/* Message Input */}
