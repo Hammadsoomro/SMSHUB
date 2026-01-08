@@ -452,12 +452,13 @@ export default function Conversations() {
     try {
       const contactsData = await ApiService.getContacts(phoneNumberId);
       setContacts((prevContacts) => {
-        // Merge with existing data to preserve any optimistic updates
+        // Merge with existing data to preserve only optimistic read state
         const updatedContacts = (contactsData || []).map((freshContact) => {
           const existingContact = prevContacts.find(
             (c) => c.id === freshContact.id,
           );
-          // Preserve local state properties (isPinned, category, name edits, etc.)
+          // Only preserve unreadCount if we marked as read optimistically
+          // Use fresh data from server for all other fields (category, isPinned, name)
           if (existingContact) {
             // Keep unreadCount from local state if it's lower (we marked as read)
             const unreadCount =
@@ -465,12 +466,9 @@ export default function Conversations() {
                 ? existingContact.unreadCount
                 : freshContact.unreadCount;
 
-            // Preserve pinned and category status from local edits
+            // Use fresh data from server, only override unreadCount if we marked as read
             return {
               ...freshContact,
-              isPinned: existingContact.isPinned ?? freshContact.isPinned,
-              category: existingContact.category ?? freshContact.category,
-              name: existingContact.name ?? freshContact.name,
               unreadCount,
             };
           }
