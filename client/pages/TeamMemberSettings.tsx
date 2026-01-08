@@ -60,9 +60,8 @@ export default function TeamMemberSettings() {
   const navigate = useNavigate();
   const [user, setUser] = useState<TeamMemberProfile | null>(null);
   const [assignedNumbers, setAssignedNumbers] = useState<PhoneNumber[]>([]);
-  const [messageInsights, setMessageInsights] = useState<MessageInsights | null>(
-    null,
-  );
+  const [messageInsights, setMessageInsights] =
+    useState<MessageInsights | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
     return stored === "dark";
@@ -219,7 +218,9 @@ export default function TeamMemberSettings() {
       const data = await response.json();
       const updatedUser = { ...data.user };
       setUser((prev) =>
-        prev ? { ...prev, name: updatedUser.name, email: updatedUser.email } : null,
+        prev
+          ? { ...prev, name: updatedUser.name, email: updatedUser.email }
+          : null,
       );
       // Store in localStorage for persistence across page reloads
       localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -350,7 +351,9 @@ export default function TeamMemberSettings() {
             </Button>
             <div>
               <h1 className="text-xl font-bold">Account Settings</h1>
-              <p className="text-xs text-muted-foreground">Manage your profile</p>
+              <p className="text-xs text-muted-foreground">
+                Manage your profile
+              </p>
             </div>
           </div>
 
@@ -460,7 +463,10 @@ export default function TeamMemberSettings() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="flex items-center gap-2">
+                      <Label
+                        htmlFor="email"
+                        className="flex items-center gap-2"
+                      >
                         <Mail className="w-4 h-4" />
                         Email Address
                       </Label>
@@ -654,13 +660,17 @@ export default function TeamMemberSettings() {
                       <User className="w-5 h-5" />
                       Administrator
                     </CardTitle>
-                    <CardDescription>Your account administrator</CardDescription>
+                    <CardDescription>
+                      Your account administrator
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
                       <div className="flex items-center gap-2 text-sm">
                         <User className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Admin Name</span>
+                        <span className="text-muted-foreground">
+                          Admin Name
+                        </span>
                       </div>
                       <span className="font-medium">{user.adminName}</span>
                     </div>

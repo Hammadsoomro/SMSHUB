@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import { Contact } from "@shared/api";
 
 interface ContactContextType {
