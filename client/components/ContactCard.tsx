@@ -76,10 +76,7 @@ function ContactCard({
 
           <div className="flex items-center space-x-2 flex-shrink-0">
             {contact.unreadCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="text-xs h-5 min-w-[20px]"
-              >
+              <Badge variant="destructive" className="text-xs h-5 min-w-[20px]">
                 {contact.unreadCount > 99 ? "99+" : contact.unreadCount}
               </Badge>
             )}

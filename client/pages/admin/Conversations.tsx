@@ -163,7 +163,6 @@ export default function Conversations() {
 
         // Subscribe to each contact
         contacts.forEach((contact) => {
-
           const unsubscribe = ablyService.subscribeToConversation(
             contact.id,
             userId,
