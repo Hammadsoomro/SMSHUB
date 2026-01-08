@@ -150,7 +150,25 @@ export default function Conversations() {
 
   // Initialize Ably separately with better lifecycle management
   useEffect(() => {
-    initializeAbly();
+    let isMounted = true;
+
+    (async () => {
+      try {
+        await initializeAbly();
+      } catch (error) {
+        console.error("Ably initialization error:", error);
+        if (isMounted) {
+          // Don't block UI if Ably fails - real-time updates are nice-to-have
+          toast.warning(
+            "Real-time updates not available, but app will work normally",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Re-subscribe to messages when selected contact changes
