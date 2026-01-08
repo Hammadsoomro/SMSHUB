@@ -36,6 +36,8 @@ import {
   handleGetAvailableNumbers,
   handlePurchaseNumber,
   handleGetTwilioBalance,
+  handleAddPhoneNumber,
+  handleSyncPhoneNumbers,
 } from "./routes/phone-purchase";
 
 // Messages routes
@@ -77,6 +79,9 @@ export function getSocketIOInstance(): IOServer | null {
 export async function createServer() {
   // Connect to MongoDB BEFORE creating the app
   await connectDB();
+
+  // Normalize all existing phone numbers to E.164 format (one-time migration)
+  await storage.normalizeAllPhoneNumbers();
 
   // Initialize Ably for real-time messaging
   try {
@@ -271,6 +276,18 @@ export async function createServer() {
     authMiddleware,
     adminOnly,
     handlePurchaseNumber,
+  );
+  app.post(
+    "/api/admin/add-phone-number",
+    authMiddleware,
+    adminOnly,
+    handleAddPhoneNumber,
+  );
+  app.post(
+    "/api/admin/sync-phone-numbers",
+    authMiddleware,
+    adminOnly,
+    handleSyncPhoneNumbers,
   );
 
   // Debug endpoint for Twilio credentials (dev only)
