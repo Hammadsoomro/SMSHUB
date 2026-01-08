@@ -705,28 +705,30 @@ export default function Conversations() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
+      className={`h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
     >
       {/* Animated Background */}
       <AnimatedBackground />
 
-      {/* Top Navigation Bar */}
-      <ConversationsTopBar
-        phoneNumbers={phoneNumbers}
-        activePhoneNumber={activePhoneNumber}
-        onPhoneNumberSelect={switchPhoneNumber}
-        profile={profile}
-        isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
-        notifications={notifications}
-        onToggleNotifications={toggleNotifications}
-        totalUnreadCount={totalUnreadCount}
-      />
+      {/* Top Navigation Bar - STICKY */}
+      <div className="sticky top-0 z-20">
+        <ConversationsTopBar
+          phoneNumbers={phoneNumbers}
+          activePhoneNumber={activePhoneNumber}
+          onPhoneNumberSelect={switchPhoneNumber}
+          profile={profile}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
+          notifications={notifications}
+          onToggleNotifications={toggleNotifications}
+          totalUnreadCount={totalUnreadCount}
+        />
+      </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex w-full flex-1">
+      <div className="relative z-10 flex w-full flex-1 overflow-hidden">
         {/* Left Sidebar - Contact List & Controls */}
-        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col">
+        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col overflow-hidden">
           {/* Header Section */}
           <div className="p-4 border-b border-border bg-muted/20">
             {/* Search Contacts */}
