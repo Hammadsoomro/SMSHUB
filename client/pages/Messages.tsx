@@ -160,6 +160,11 @@ export default function Messages() {
       return;
     }
 
+    if (!activePhoneNumberId) {
+      setError("No phone number assigned. Please contact your administrator.");
+      return;
+    }
+
     // Check if contact already exists
     const existingContact = contacts.find((c) => c.phoneNumber === phoneNumber);
 
@@ -169,7 +174,7 @@ export default function Messages() {
       // Create temporary contact object for new conversation
       const tempContact: Contact = {
         id: `temp-${Date.now()}`,
-        phoneNumberId: "",
+        phoneNumberId: activePhoneNumberId,
         phoneNumber,
         unreadCount: 0,
       };
