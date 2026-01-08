@@ -121,20 +121,37 @@ export default function Messages() {
 
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
-      setConversation({
-        contact: conversation.contact,
+      setConversation((prev) => ({
+        ...prev,
         messages: data.messages || [],
-      });
-    } catch {
-      // Error handled silently
+      }));
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+      setError("Failed to load messages");
     }
   };
 
   const handleSelectContact = (contact: Contact) => {
     setNewConversationNumber("");
     setSearchTerm("");
-    setConversation({ ...conversation, contact });
+    setError("");
+    setConversation({ contact, messages: [] });
+    // Load messages asynchronously without blocking
     fetchMessages(contact.id);
+
+    // Subscribe to real-time updates
+    const storedUser = localStorage.getItem("user");
+    const userProfile = storedUser ? JSON.parse(storedUser) : null;
+    if (userProfile?.id) {
+      ablyService.subscribeToConversation(
+        contact.id,
+        userProfile.id,
+        () => {
+          // Refresh messages when new ones arrive
+          fetchMessages(contact.id);
+        },
+      );
+    }
   };
 
   const handleStartNewConversation = (phoneNumber: string) => {
