@@ -457,18 +457,21 @@ export default function Conversations() {
           const existingContact = prevContacts.find(
             (c) => c.id === freshContact.id,
           );
-          // If existing contact has lower unreadCount (e.g., we just marked as read),
-          // keep the local state
-          if (
-            existingContact &&
-            freshContact.unreadCount > existingContact.unreadCount
-          ) {
-            console.log(
-              `[loadContactsForPhoneNumber] Preserving unreadCount=${existingContact.unreadCount} for ${freshContact.phoneNumber} (server had ${freshContact.unreadCount})`,
-            );
+          // Preserve local state properties (isPinned, category, name edits, etc.)
+          if (existingContact) {
+            // Keep unreadCount from local state if it's lower (we marked as read)
+            const unreadCount =
+              freshContact.unreadCount > existingContact.unreadCount
+                ? existingContact.unreadCount
+                : freshContact.unreadCount;
+
+            // Preserve pinned and category status from local edits
             return {
               ...freshContact,
-              unreadCount: existingContact.unreadCount,
+              isPinned: existingContact.isPinned ?? freshContact.isPinned,
+              category: existingContact.category ?? freshContact.category,
+              name: existingContact.name ?? freshContact.name,
+              unreadCount,
             };
           }
           return freshContact;
