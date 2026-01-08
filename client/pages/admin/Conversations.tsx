@@ -990,6 +990,38 @@ export default function Conversations() {
             </div>
           </div>
 
+          {/* Category Tabs */}
+          <div className="px-2 pt-3 border-b border-border/40">
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => {
+                  setActiveTab("general");
+                  setSearchTerm("");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "general"
+                    ? "bg-primary text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                }`}
+              >
+                General
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("sales");
+                  setSearchTerm("");
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === "sales"
+                    ? "bg-primary text-white"
+                    : "bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                }`}
+              >
+                Sales
+              </button>
+            </div>
+          </div>
+
           {/* Add Contact Button */}
           <div className="p-3 border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5">
             <Button
