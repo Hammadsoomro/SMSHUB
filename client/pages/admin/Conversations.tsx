@@ -35,6 +35,7 @@ import {
   MessageSquare,
   Users,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
