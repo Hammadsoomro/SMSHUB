@@ -439,7 +439,11 @@ export default function Messages() {
                       >
                         <p className="text-sm break-words">{msg.body}</p>
                         <p className="text-xs opacity-70 mt-1">
-                          {new Date(msg.timestamp).toLocaleTimeString()}
+                          {new Date(msg.timestamp).toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
                         </p>
                       </div>
                     </div>
