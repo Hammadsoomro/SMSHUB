@@ -1069,84 +1069,46 @@ export default function Conversations() {
                     }`}
                     onClick={() => setSelectedContactId(contact.id)}
                   >
-                    <CardContent className="p-3">
-                      <div className="flex flex-col gap-2 w-full">
-                        {/* Top row: Name, Time, Pin indicator */}
-                        <div className="flex items-center justify-between gap-2 w-full">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Avatar className="w-8 h-8 flex-shrink-0">
-                              <AvatarImage src={contact.avatar} />
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                {(contact.name || contact.phoneNumber)
-                                  .substring(0, 2)
-                                  .toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
+                    <CardContent className="p-3 relative">
+                      <div className="flex gap-3">
+                        {/* Avatar */}
+                        <Avatar className="w-10 h-10 flex-shrink-0">
+                          <AvatarImage src={contact.avatar} />
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {(contact.name || contact.phoneNumber)
+                              .substring(0, 2)
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          {/* Name, Time, Pin */}
+                          <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium truncate text-sm flex-1">
                               {contact.name || contact.phoneNumber}
                             </h4>
-                          </div>
-                          {contact.isPinned && (
-                            <Pin className="w-3 h-3 text-primary flex-shrink-0" />
-                          )}
-                          {contact.lastMessageTime && (
-                            <span className="text-xs text-muted-foreground flex-shrink-0">
-                              {formatMessageTime(contact.lastMessageTime)}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Phone number */}
-                        <p className="text-xs text-muted-foreground font-mono truncate px-1">
-                          {contact.phoneNumber}
-                        </p>
-
-                        {/* Last message - improved layout */}
-                        {contact.lastMessage && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 px-1">
-                            {contact.lastMessage}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-
-                    {/* Invisible section for layout structure - will be replaced with menu */}
-                    <div className="absolute top-3 right-3">&nbsp;</div>
-
-                    <CardContent className="hidden">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <Avatar className="w-10 h-10 flex-shrink-0">
-                            <AvatarImage src={contact.avatar} />
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {(contact.name || contact.phoneNumber)
-                                .substring(0, 2)
-                                .toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium truncate text-sm">
-                                {contact.name || contact.phoneNumber}
-                              </h4>
-                              {contact.lastMessageTime && (
-                                <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                                  {formatMessageTime(contact.lastMessageTime)}
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="text-xs text-muted-foreground font-mono truncate">
-                              {contact.phoneNumber}
-                            </p>
-
-                            {contact.lastMessage && (
-                              <p className="text-xs text-muted-foreground truncate mt-1">
-                                {contact.lastMessage}
-                              </p>
+                            {contact.isPinned && (
+                              <Pin className="w-3 h-3 text-primary flex-shrink-0" />
+                            )}
+                            {contact.lastMessageTime && (
+                              <span className="text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
+                                {formatMessageTime(contact.lastMessageTime)}
+                              </span>
                             )}
                           </div>
+
+                          {/* Phone number */}
+                          <p className="text-xs text-muted-foreground font-mono truncate mb-1">
+                            {contact.phoneNumber}
+                          </p>
+
+                          {/* Last message - allow wrapping instead of truncate */}
+                          {contact.lastMessage && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 break-words">
+                              {contact.lastMessage}
+                            </p>
+                          )}
                         </div>
 
                         <div className="flex items-center space-x-2 flex-shrink-0">
