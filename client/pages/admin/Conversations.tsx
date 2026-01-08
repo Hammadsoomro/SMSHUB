@@ -999,8 +999,8 @@ export default function Conversations() {
                 </div>
               </ScrollArea>
 
-              {/* Message Input */}
-              <div className="p-4 border-t border-border bg-card">
+              {/* Message Input - STICKY */}
+              <div className="sticky bottom-0 z-10 p-4 border-t border-border bg-card/95 backdrop-blur-sm">
                 <div className="flex space-x-2">
                   <Input
                     value={newMessage}
