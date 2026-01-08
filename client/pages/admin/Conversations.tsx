@@ -82,6 +82,7 @@ export default function Conversations() {
   const [notifications, setNotifications] = useState(() => {
     return Notification.permission === "granted";
   });
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Profile and Modals
   const [profile, setProfile] = useState<UserType>({
