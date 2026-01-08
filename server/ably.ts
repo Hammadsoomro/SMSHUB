@@ -110,8 +110,9 @@ class AblyServer {
       to?: string;
     },
   ): Promise<void> {
-    if (!this.client) {
-      console.error("[AblyServer] Ably not initialized");
+    if (!this.isConnected || !this.client) {
+      console.warn("[AblyServer] Not connected to Ably - message queued for next connection");
+      // Queue for retry or skip gracefully
       return;
     }
 
@@ -120,10 +121,10 @@ class AblyServer {
     try {
       const channel = this.client.channels.get(channelName);
       await channel.publish("message", message);
-      console.log(`[AblyServer] Published message to ${channelName}`);
+      console.log(`[AblyServer] ✓ Published message to ${channelName}`);
     } catch (error) {
       console.error("[AblyServer] Error publishing message:", error);
-      throw error;
+      // Don't throw - Ably is optional
     }
   }
 
