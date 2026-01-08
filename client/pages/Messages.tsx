@@ -196,9 +196,9 @@ export default function Messages() {
   );
 
   const messagesContent = (
-    <div className="h-full bg-background flex flex-col">
+    <div className="h-full bg-background flex flex-col overflow-hidden">
       {/* Search Bar */}
-      <div className="border-b border-border bg-background px-6 py-4 flex items-center gap-4">
+      <div className="border-b border-border bg-background px-6 py-4 flex items-center gap-4 flex-shrink-0">
         <div className="flex-1 max-w-md">
           <div className="relative flex gap-2">
             <div className="flex-1 relative">
@@ -236,11 +236,11 @@ export default function Messages() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Contacts Sidebar */}
         <div className="w-80 border-r border-border bg-card overflow-hidden flex flex-col">
           {/* Contacts List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -295,9 +295,9 @@ export default function Messages() {
 
         {/* Chat Area */}
         {conversation.contact ? (
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Chat Header - Sticky */}
-            <div className="sticky top-0 z-10 border-b border-border bg-card h-16 flex items-center justify-between px-6">
+          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+            {/* Chat Header */}
+            <div className="border-b border-border bg-card h-16 flex items-center justify-between px-6 flex-shrink-0">
               <div>
                 <p className="font-semibold">
                   {conversation.contact.name ||
@@ -311,7 +311,7 @@ export default function Messages() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
               {conversation.messages.length > 0 ? (
                 conversation.messages.map((msg) => (
                   <div
@@ -344,10 +344,10 @@ export default function Messages() {
               )}
             </div>
 
-            {/* Message Input - Sticky */}
+            {/* Message Input */}
             <form
               onSubmit={handleSendMessage}
-              className="sticky bottom-0 z-10 border-t border-border bg-card p-4"
+              className="border-t border-border bg-card p-4 flex-shrink-0"
             >
               <div className="flex gap-2">
                 <Input
@@ -373,8 +373,8 @@ export default function Messages() {
             </form>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-card">
-            <div className="text-center">
+          <div className="flex-1 flex items-center justify-center bg-card overflow-y-auto min-h-0">
+            <div className="text-center py-8">
               <div className="p-4 bg-muted rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-8 h-8 text-muted-foreground" />
               </div>
