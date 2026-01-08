@@ -706,6 +706,78 @@ export default function Conversations() {
     }
   };
 
+  const togglePinContact = async (contactId: string) => {
+    try {
+      const contact = contacts.find((c) => c.id === contactId);
+      if (!contact) return;
+
+      // Optimistic update
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === contactId ? { ...c, isPinned: !c.isPinned } : c,
+        ),
+      );
+
+      // Update on server
+      await ApiService.updateContact(contactId, {
+        isPinned: !contact.isPinned,
+      } as any);
+
+      const pinStatus = !contact.isPinned;
+      toast.success(
+        pinStatus ? `${contact.name || contact.phoneNumber} pinned` : "Unpinned",
+      );
+    } catch (error: any) {
+      console.error("Error toggling pin:", error);
+      toast.error(error.message || "Failed to toggle pin");
+      // Revert optimistic update on error
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
+    }
+  };
+
+  const moveContact = async () => {
+    if (!movingContact) return;
+
+    try {
+      setShowMoveContact(false);
+
+      // Optimistic update
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === movingContact.id
+            ? { ...c, category: moveToCategory }
+            : c,
+        ),
+      );
+
+      // Update on server
+      await ApiService.updateContact(movingContact.id, {
+        category: moveToCategory,
+      } as any);
+
+      toast.success(
+        `Contact moved to ${moveToCategory === "sales" ? "Sales" : "General"}`,
+      );
+      setMovingContact(null);
+      setMoveToCategory("sales");
+    } catch (error: any) {
+      console.error("Error moving contact:", error);
+      toast.error(error.message || "Failed to move contact");
+      // Revert optimistic update
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
+    }
+  };
+
   const switchPhoneNumber = async (phoneNumber: string) => {
     try {
       const phoneNumberObj = phoneNumbers.find(
