@@ -68,6 +68,7 @@ export default function Conversations() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<"general" | "sales">("general");
 
   // Loading States
   const [isLoading, setIsLoading] = useState(true);
