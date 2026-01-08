@@ -555,4 +555,84 @@ export class TwilioClient {
       req.end();
     });
   }
+
+  /**
+   * Get all incoming phone numbers from the Twilio account
+   * Returns array of phone numbers in E.164 format
+   */
+  async getAllIncomingPhoneNumbers(): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+      const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
+        "base64",
+      );
+
+      const options = {
+        hostname: "api.twilio.com",
+        path: `/2010-04-01/Accounts/${this.accountSid}/IncomingPhoneNumbers.json?Limit=100`,
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      };
+
+      const req = https.request(options, (res) => {
+        let data = "";
+
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        res.on("end", () => {
+          try {
+            const response = JSON.parse(data);
+
+            // Handle HTTP errors
+            if (res.statusCode && res.statusCode >= 400) {
+              return reject(
+                new Error(
+                  `Twilio API error: ${response.message || "Failed to fetch phone numbers"}`,
+                ),
+              );
+            }
+
+            // Extract phone numbers from the response
+            const phoneNumbers =
+              response.incoming_phone_numbers?.map(
+                (num: any) => num.phone_number,
+              ) || [];
+
+            resolve(phoneNumbers);
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+
+      req.on("error", (error) => {
+        reject(error);
+      });
+
+      req.end();
+    });
+  }
+
+  /**
+   * Verify that a phone number belongs to this Twilio account
+   * Returns true if the number is in the account's incoming phone numbers
+   */
+  async verifyPhoneNumberOwnership(phoneNumber: string): Promise<boolean> {
+    try {
+      const allNumbers = await this.getAllIncomingPhoneNumbers();
+      // Check if the number exists (may be in different format)
+      return allNumbers.some((num) => {
+        // Normalize both numbers for comparison
+        const normalized1 = num.replace(/\D/g, "");
+        const normalized2 = phoneNumber.replace(/\D/g, "");
+        return normalized1 === normalized2;
+      });
+    } catch (error) {
+      console.error("Error verifying phone number ownership:", error);
+      return false;
+    }
+  }
 }
