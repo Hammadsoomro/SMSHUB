@@ -52,6 +52,7 @@ import {
   handleAddContact,
   handleUpdateContact,
   handleDeleteContact,
+  handleGetMessageInsights,
 } from "./routes/messages";
 
 // Webhooks
