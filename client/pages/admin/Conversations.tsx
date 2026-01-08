@@ -936,6 +936,14 @@ export default function Conversations() {
 
               {/* Messages Area - SCROLLABLE */}
               <ScrollArea className="flex-1 p-4">
+                {isLoadingMessages && messages.length === 0 && (
+                  <div className="flex items-center justify-center mb-4">
+                    <Badge variant="secondary" className="text-xs">
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                      Loading messages...
+                    </Badge>
+                  </div>
+                )}
                 <div className="space-y-4">
                   {messages.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
