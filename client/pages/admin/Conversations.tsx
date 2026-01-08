@@ -705,7 +705,7 @@ export default function Conversations() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
+      className={`h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
     >
       {/* Animated Background */}
       <AnimatedBackground />
@@ -724,11 +724,11 @@ export default function Conversations() {
       />
 
       {/* Main Content */}
-      <div className="relative z-10 flex w-full flex-1">
+      <div className="relative z-10 flex w-full flex-1 overflow-hidden">
         {/* Left Sidebar - Contact List & Controls */}
-        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col">
+        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col overflow-hidden">
           {/* Header Section */}
-          <div className="p-4 border-b border-border bg-muted/20">
+          <div className="p-4 border-b border-border bg-muted/20 flex-shrink-0">
             {/* Search Contacts */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -742,7 +742,7 @@ export default function Conversations() {
           </div>
 
           {/* Add Contact Button */}
-          <div className="p-3 border-b border-border">
+          <div className="p-3 border-b border-border flex-shrink-0">
             <Button
               className="w-full"
               size="sm"
@@ -765,7 +765,7 @@ export default function Conversations() {
           </div>
 
           {/* Contacts List */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-2">
               {filteredContacts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -882,7 +882,7 @@ export default function Conversations() {
           </ScrollArea>
 
           {/* Ad Banner at Bottom */}
-          <div className="p-3 border-t border-border bg-muted/20">
+          <div className="p-3 border-t border-border bg-muted/20 flex-shrink-0">
             <div className="text-center mb-2">
               <span className="text-xs text-muted-foreground">
                 Advertisement
@@ -893,11 +893,11 @@ export default function Conversations() {
         </div>
 
         {/* Right Side - Chat Area */}
-        <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl">
+        <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl overflow-hidden">
           {selectedContact ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-border bg-card">
+              <div className="p-4 border-b border-border bg-card flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
@@ -933,81 +933,83 @@ export default function Conversations() {
               </div>
 
               {/* Messages Area */}
-              <ScrollArea className="flex-1 p-4">
-                {isLoadingMessages ? (
-                  <div className="flex items-center justify-center h-32">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    <span className="ml-2 text-muted-foreground">
-                      Loading messages...
-                    </span>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">No messages yet</p>
-                        <p className="text-sm">
-                          Send a message to start the conversation
-                        </p>
-                      </div>
-                    ) : (
-                      messages.map((message, index) => {
-                        const showDateSeparator =
-                          index === 0 ||
-                          (!isToday(new Date(message.timestamp)) &&
-                            !isToday(new Date(messages[index - 1]?.timestamp)));
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="p-4">
+                  {isLoadingMessages ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      <span className="ml-2 text-muted-foreground">
+                        Loading messages...
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {messages.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                          <p className="text-lg font-medium">No messages yet</p>
+                          <p className="text-sm">
+                            Send a message to start the conversation
+                          </p>
+                        </div>
+                      ) : (
+                        messages.map((message, index) => {
+                          const showDateSeparator =
+                            index === 0 ||
+                            (!isToday(new Date(message.timestamp)) &&
+                              !isToday(new Date(messages[index - 1]?.timestamp)));
 
-                        return (
-                          <div key={message.id}>
-                            {showDateSeparator && (
-                              <div className="flex items-center my-4">
-                                <Separator className="flex-1" />
-                                <span className="px-3 text-xs text-muted-foreground bg-background">
-                                  {formatMessageTimeFull(message.timestamp)}
-                                </span>
-                                <Separator className="flex-1" />
-                              </div>
-                            )}
+                          return (
+                            <div key={message.id}>
+                              {showDateSeparator && (
+                                <div className="flex items-center my-4">
+                                  <Separator className="flex-1" />
+                                  <span className="px-3 text-xs text-muted-foreground bg-background">
+                                    {formatMessageTimeFull(message.timestamp)}
+                                  </span>
+                                  <Separator className="flex-1" />
+                                </div>
+                              )}
 
-                            <div
-                              className={`flex ${
-                                message.direction === "outbound"
-                                  ? "justify-end"
-                                  : "justify-start"
-                              }`}
-                            >
                               <div
-                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                                className={`flex ${
                                   message.direction === "outbound"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted"
+                                    ? "justify-end"
+                                    : "justify-start"
                                 }`}
                               >
-                                <p className="text-sm whitespace-pre-wrap break-words">
-                                  {message.body}
-                                </p>
-                                <div className="flex items-center justify-between mt-2 gap-2">
-                                  <span className="text-xs opacity-70">
-                                    {format(
-                                      new Date(message.timestamp),
-                                      "HH:mm",
-                                    )}
-                                  </span>
+                                <div
+                                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                                    message.direction === "outbound"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted"
+                                  }`}
+                                >
+                                  <p className="text-sm whitespace-pre-wrap break-words">
+                                    {message.body}
+                                  </p>
+                                  <div className="flex items-center justify-between mt-2 gap-2">
+                                    <span className="text-xs opacity-70">
+                                      {format(
+                                        new Date(message.timestamp),
+                                        "HH:mm",
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
+                          );
+                        })
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
               </ScrollArea>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-border bg-card">
+              <div className="p-4 border-t border-border bg-card flex-shrink-0">
                 <div className="flex space-x-2">
                   <Input
                     value={newMessage}
@@ -1042,8 +1044,8 @@ export default function Conversations() {
             </>
           ) : (
             /* Welcome Screen */
-            <div className="flex-1 flex items-center justify-center bg-muted/5">
-              <div className="text-center space-y-6 max-w-md">
+            <div className="flex-1 flex items-center justify-center bg-muted/5 overflow-y-auto">
+              <div className="text-center space-y-6 max-w-md py-8">
                 <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
                   <MessageSquare className="w-12 h-12 text-primary" />
                 </div>
