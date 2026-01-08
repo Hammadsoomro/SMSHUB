@@ -151,49 +151,81 @@ export default function Conversations() {
     initializeAbly();
   }, []);
 
-  // Re-subscribe to messages when selected contact changes
+  // Subscribe to ALL contacts when active phone number changes or contacts are loaded
+  // This ensures we receive SMS for all contacts regardless of which one is selected
   useEffect(() => {
-    if (selectedContactId && ablyService.connected) {
+    if (
+      contacts.length > 0 &&
+      ablyService.connected &&
+      activePhoneNumber
+    ) {
       const storedUser = localStorage.getItem("user");
       const userProfile = storedUser ? JSON.parse(storedUser) : null;
       const userId = userProfile?.id;
 
       if (userId) {
         console.log(
-          `[Conversations] 🔌 Ably real-time connection: Subscribing to contact ${selectedContactId}`,
+          `[Conversations] 🔌 Subscribing to ALL ${contacts.length} contacts for real-time SMS`,
         );
-        const unsubscribe = ablyService.subscribeToConversation(
-          selectedContactId,
-          userId,
-          (message: any) => {
-            console.log("📱 Real-time SMS received via Ably (NOT polling):", message);
 
-            // Only reload messages if this is for the currently selected contact
-            if (message.contactId === selectedContactId) {
-              console.log(`📨 Loading new messages for selected contact...`);
-              loadMessages(selectedContactId);
+        const unsubscribers: Array<() => void> = [];
+
+        // Subscribe to each contact
+        contacts.forEach((contact) => {
+          console.log(`[Conversations] 📡 Setting up listener for contact: ${contact.id} (${contact.phoneNumber})`);
+
+          const unsubscribe = ablyService.subscribeToConversation(
+            contact.id,
+            userId,
+            (message: any) => {
+              console.log(
+                `📱 Real-time SMS received via Ably for ${message.from}:`,
+                message,
+              );
+
+              // Load messages for the contact that received the SMS
+              console.log(`📨 Loading messages for contact: ${message.contactId}`);
+              loadMessages(message.contactId);
+
+              // Show notification and play sound for inbound messages
+              const currentNotifications = notificationsRef.current;
+              if (
+                currentNotifications &&
+                message.direction === "inbound"
+              ) {
+                console.log("🔔 Playing notification sound...");
+                playNotificationSound();
+
+                // Get contact name for notification
+                const contactRef = contactsRef.current.find(
+                  (c) => c.id === message.contactId,
+                );
+                const contactName = contactRef?.name || message.from;
+
+                showNotification(
+                  "نیا SMS پیغام 📱",
+                  `${contactName}: ${message.message.substring(0, 50)}`,
+                );
+              }
 
               // Update the page title to show unread count
               updatePageTitle();
-            }
+            },
+          );
 
-            // Show notification and play sound for inbound messages
-            const currentNotifications = notificationsRef.current;
-            if (currentNotifications && message.direction === "inbound") {
-              console.log("🔔 Playing notification sound...");
-              playNotificationSound();
-              showNotification(
-                "نیا SMS پیغام 📱",
-                `${message.from}: ${message.message.substring(0, 50)}`,
-              );
-            }
-          },
-        );
+          if (unsubscribe) {
+            unsubscribers.push(unsubscribe);
+          }
+        });
 
-        return unsubscribe;
+        // Cleanup function - unsubscribe from all contacts
+        return () => {
+          console.log("[Conversations] Unsubscribing from all contacts");
+          unsubscribers.forEach((unsub) => unsub());
+        };
       }
     }
-  }, [selectedContactId]);
+  }, [contacts, activePhoneNumber, ablyService.connected]);
 
   // Handle phone number URL parameter
   useEffect(() => {
