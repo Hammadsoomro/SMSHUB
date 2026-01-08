@@ -451,30 +451,46 @@ export default function Conversations() {
       return;
     }
 
+    const messageToSend = newMessage.trim();
+    const selectedContact = contacts.find((c) => c.id === selectedContactId);
+
+    if (!selectedContact) {
+      toast.error("Selected contact not found");
+      return;
+    }
+
+    const phoneNum = phoneNumbers.find(
+      (p) => p.phoneNumber === activePhoneNumber,
+    );
+    if (!phoneNum) {
+      toast.error("Phone number not found");
+      return;
+    }
+
+    // Optimistic update - add message to UI immediately
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`,
+      phoneNumberId: phoneNum.id,
+      from: activePhoneNumber,
+      to: selectedContact.phoneNumber,
+      body: messageToSend,
+      direction: "outbound",
+      timestamp: new Date().toISOString(),
+      sid: "",
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setNewMessage("");
+    setIsSending(true);
+
     try {
-      setIsSending(true);
-      const selectedContact = contacts.find((c) => c.id === selectedContactId);
-
-      if (!selectedContact) {
-        throw new Error("Selected contact not found");
-      }
-
-      const phoneNum = phoneNumbers.find(
-        (p) => p.phoneNumber === activePhoneNumber,
-      );
-      if (!phoneNum) {
-        throw new Error("Phone number not found");
-      }
-
       await ApiService.sendSMS(
         selectedContact.phoneNumber,
-        newMessage.trim(),
+        messageToSend,
         phoneNum.id,
       );
 
-      setNewMessage("");
-
-      // Reload messages and contacts to show the sent message
+      // Reload messages and contacts in background
       await Promise.all([
         loadMessages(selectedContactId),
         loadContactsForPhoneNumber(phoneNum.id),
@@ -483,6 +499,12 @@ export default function Conversations() {
       toast.success("Your message has been sent successfully");
     } catch (error: any) {
       console.error("Error sending message:", error);
+      // Remove optimistic message on error
+      setMessages((prev) =>
+        prev.filter((m) => m.id !== optimisticMessage.id),
+      );
+      // Restore message text on error
+      setNewMessage(messageToSend);
       toast.error(error.message || "Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
