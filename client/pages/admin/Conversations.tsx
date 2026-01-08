@@ -160,37 +160,21 @@ export default function Conversations() {
       const userId = userProfile?.id;
 
       if (userId) {
-        console.log(
-          `[Conversations] 🔌 Subscribing to ALL ${contacts.length} contacts for real-time SMS`,
-        );
-
         const unsubscribers: Array<() => void> = [];
 
         // Subscribe to each contact
         contacts.forEach((contact) => {
-          console.log(
-            `[Conversations] 📡 Setting up listener for contact: ${contact.id} (${contact.phoneNumber})`,
-          );
 
           const unsubscribe = ablyService.subscribeToConversation(
             contact.id,
             userId,
             (message: any) => {
-              console.log(
-                `📱 Real-time SMS received via Ably for ${message.from}:`,
-                message,
-              );
-
               // Load messages for the contact that received the SMS
-              console.log(
-                `📨 Loading messages for contact: ${message.contactId}`,
-              );
               loadMessages(message.contactId);
 
               // Show notification and play sound for inbound messages
               const currentNotifications = notificationsRef.current;
               if (currentNotifications && message.direction === "inbound") {
-                console.log("🔔 Playing notification sound...");
                 playNotificationSound();
 
                 // Get contact name for notification
@@ -217,7 +201,6 @@ export default function Conversations() {
 
         // Cleanup function - unsubscribe from all contacts
         return () => {
-          console.log("[Conversations] Unsubscribing from all contacts");
           unsubscribers.forEach((unsub) => unsub());
         };
       }
