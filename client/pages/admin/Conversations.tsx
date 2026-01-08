@@ -1,9 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -13,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"; // Used in top bar
 import {
   Dialog,
   DialogContent,
@@ -43,6 +41,7 @@ import AdBanner from "@/components/AdBanner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
 import ConversationsTopBar from "@/components/ConversationsTopBar";
+import ContactCard from "@/components/ContactCard";
 import { Message, Contact, PhoneNumber, User as UserType } from "@shared/api";
 
 interface ConversationContact extends Contact {
@@ -141,7 +140,7 @@ export default function Conversations() {
       try {
         ablyService.disconnect();
       } catch (error) {
-        console.error("Error during Conversations cleanup:", error);
+        // Silent fail - cleanup not critical
       }
     };
   }, []);
@@ -151,56 +150,60 @@ export default function Conversations() {
     initializeAbly();
   }, []);
 
-  // Re-subscribe to messages when selected contact changes
+  // Subscribe to ALL contacts when active phone number changes or contacts are loaded
+  // This ensures we receive SMS for all contacts regardless of which one is selected
   useEffect(() => {
-    if (selectedContactId && ablyService.connected) {
+    if (contacts.length > 0 && ablyService.connected && activePhoneNumber) {
       const storedUser = localStorage.getItem("user");
       const userProfile = storedUser ? JSON.parse(storedUser) : null;
       const userId = userProfile?.id;
 
       if (userId) {
-        console.log(
-          `[Conversations] Subscribing to messages for contact: ${selectedContactId}`,
-        );
-        const unsubscribe = ablyService.subscribeToConversation(
-          selectedContactId,
-          userId,
-          (message: any) => {
-            console.log("📱 Real-time message received:", message);
+        const unsubscribers: Array<() => void> = [];
 
-            // Update messages immediately
-            if (message.contactId === selectedContactId) {
-              loadMessages(selectedContactId);
-            }
+        // Subscribe to each contact
+        contacts.forEach((contact) => {
+          const unsubscribe = ablyService.subscribeToConversation(
+            contact.id,
+            userId,
+            (message: any) => {
+              // Load messages for the contact that received the SMS
+              loadMessages(message.contactId);
 
-            // Reload contacts to update UI
-            const currentActivePhone = activePhoneNumberRef.current;
-            if (currentActivePhone) {
-              const phoneNum = phoneNumbersRef.current.find(
-                (p) => p.phoneNumber === currentActivePhone,
-              );
-              if (phoneNum) {
-                loadContactsForPhoneNumber(phoneNum.id);
+              // Show notification and play sound for inbound messages
+              const currentNotifications = notificationsRef.current;
+              if (currentNotifications && message.direction === "inbound") {
+                playNotificationSound();
+
+                // Get contact name for notification
+                const contactRef = contactsRef.current.find(
+                  (c) => c.id === message.contactId,
+                );
+                const contactName = contactRef?.name || message.from;
+
+                showNotification(
+                  "نیا SMS پیغام 📱",
+                  `${contactName}: ${message.message.substring(0, 50)}`,
+                );
               }
-            }
 
-            // Show notification
-            const currentNotifications = notificationsRef.current;
-            if (currentNotifications && message.direction === "inbound") {
-              showNotification(
-                "New Message",
-                `${message.from}: ${message.message.substring(0, 50)}`,
-              );
-            }
+              // Update the page title to show unread count
+              updatePageTitle();
+            },
+          );
 
-            updatePageTitle();
-          },
-        );
+          if (unsubscribe) {
+            unsubscribers.push(unsubscribe);
+          }
+        });
 
-        return unsubscribe;
+        // Cleanup function - unsubscribe from all contacts
+        return () => {
+          unsubscribers.forEach((unsub) => unsub());
+        };
       }
     }
-  }, [selectedContactId]);
+  }, [contacts, activePhoneNumber, ablyService.connected]);
 
   // Handle phone number URL parameter
   useEffect(() => {
@@ -258,7 +261,6 @@ export default function Conversations() {
 
       if (!token) {
         // No token found, redirect to login
-        console.warn("No authentication token found. Redirecting to login...");
         navigate("/login");
         return;
       }
@@ -329,13 +331,11 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      console.log("🔌 Initializing Ably for real-time messaging...");
 
       // Connect to Ably service
       const connected = await ablyService.connect(token);
 
       if (!connected) {
-        console.warn("Ably connection failed");
         setIsConnecting(false);
         toast.warning(
           "Real-time messaging connection failed, but app will still work",
@@ -374,7 +374,7 @@ export default function Conversations() {
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
-          console.log("👥 Contact list updated via Ably:", data);
+          // Contact update received
           const currentActivePhone = activePhoneNumberRef.current;
           if (currentActivePhone) {
             const phoneNum = phoneNumbersRef.current.find(
@@ -612,6 +612,42 @@ export default function Conversations() {
     }
   };
 
+  const playNotificationSound = () => {
+    // Create notification sound using Web Audio API
+    try {
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const now = audioContext.currentTime;
+      const duration = 0.5;
+
+      // Create multiple tones for a pleasant notification sound
+      const notes = [
+        { frequency: 800, start: now, duration: 0.15 },
+        { frequency: 1000, start: now + 0.15, duration: 0.15 },
+        { frequency: 1200, start: now + 0.3, duration: 0.2 },
+      ];
+
+      notes.forEach(({ frequency, start, duration: noteDuration }) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = "sine";
+
+        gainNode.gain.setValueAtTime(0.3, start);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, start + noteDuration);
+
+        oscillator.start(start);
+        oscillator.stop(start + noteDuration);
+      });
+    } catch (error) {
+      console.warn("Could not play notification sound:", error);
+    }
+  };
+
   const showNotification = (title: string, body: string) => {
     if (notifications && Notification.permission === "granted") {
       const notification = new Notification(title, {
@@ -705,7 +741,7 @@ export default function Conversations() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
+      className={`h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
     >
       {/* Animated Background */}
       <AnimatedBackground />
@@ -724,11 +760,11 @@ export default function Conversations() {
       />
 
       {/* Main Content */}
-      <div className="relative z-10 flex w-full flex-1">
+      <div className="relative z-10 flex w-full flex-1 overflow-hidden">
         {/* Left Sidebar - Contact List & Controls */}
-        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col">
+        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col overflow-hidden">
           {/* Header Section */}
-          <div className="p-4 border-b border-border bg-muted/20">
+          <div className="p-4 border-b border-border bg-muted/20 flex-shrink-0">
             {/* Search Contacts */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -742,7 +778,7 @@ export default function Conversations() {
           </div>
 
           {/* Add Contact Button */}
-          <div className="p-3 border-b border-border">
+          <div className="p-3 border-b border-border flex-shrink-0">
             <Button
               className="w-full"
               size="sm"
@@ -765,7 +801,7 @@ export default function Conversations() {
           </div>
 
           {/* Contacts List */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-2">
               {filteredContacts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -779,110 +815,29 @@ export default function Conversations() {
                 </div>
               ) : (
                 filteredContacts.map((contact) => (
-                  <Card
+                  <ContactCard
                     key={contact.id}
-                    className={`mb-2 cursor-pointer transition-all duration-200 hover:shadow-sm ${
-                      selectedContactId === contact.id
-                        ? "bg-primary/10 border-primary shadow-sm"
-                        : "hover:bg-muted/50"
-                    }`}
-                    onClick={() => setSelectedContactId(contact.id)}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3 flex-1 min-w-0">
-                          <Avatar className="w-10 h-10 flex-shrink-0">
-                            <AvatarImage src={contact.avatar} />
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {(contact.name || contact.phoneNumber)
-                                .substring(0, 2)
-                                .toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium truncate text-sm">
-                                {contact.name || contact.phoneNumber}
-                              </h4>
-                              {contact.lastMessageTime && (
-                                <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                                  {formatMessageTime(contact.lastMessageTime)}
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="text-xs text-muted-foreground font-mono truncate">
-                              {contact.phoneNumber}
-                            </p>
-
-                            {contact.lastMessage && (
-                              <p className="text-xs text-muted-foreground truncate mt-1">
-                                {contact.lastMessage}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2 flex-shrink-0">
-                          {contact.unreadCount > 0 && (
-                            <Badge
-                              variant="destructive"
-                              className="text-xs h-5 min-w-[20px]"
-                            >
-                              {contact.unreadCount > 99
-                                ? "99+"
-                                : contact.unreadCount}
-                            </Badge>
-                          )}
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="p-1 h-auto opacity-60 hover:opacity-100"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingContact(contact);
-                                  setNewContactName(contact.name || "");
-                                  setShowEditContact(true);
-                                }}
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit Contact
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeletingContact(contact);
-                                  setShowDeleteContact(true);
-                                }}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Contact
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    contact={contact}
+                    isSelected={selectedContactId === contact.id}
+                    formatMessageTime={formatMessageTime}
+                    onSelectContact={setSelectedContactId}
+                    onEditContact={(c) => {
+                      setEditingContact(c);
+                      setNewContactName(c.name || "");
+                      setShowEditContact(true);
+                    }}
+                    onDeleteContact={(c) => {
+                      setDeletingContact(c);
+                      setShowDeleteContact(true);
+                    }}
+                  />
                 ))
               )}
             </div>
           </ScrollArea>
 
           {/* Ad Banner at Bottom */}
-          <div className="p-3 border-t border-border bg-muted/20">
+          <div className="p-3 border-t border-border bg-muted/20 flex-shrink-0">
             <div className="text-center mb-2">
               <span className="text-xs text-muted-foreground">
                 Advertisement
@@ -893,11 +848,11 @@ export default function Conversations() {
         </div>
 
         {/* Right Side - Chat Area */}
-        <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl">
+        <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl overflow-hidden">
           {selectedContact ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-border bg-card">
+              <div className="p-4 border-b border-border bg-card flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
@@ -933,81 +888,85 @@ export default function Conversations() {
               </div>
 
               {/* Messages Area */}
-              <ScrollArea className="flex-1 p-4">
-                {isLoadingMessages ? (
-                  <div className="flex items-center justify-center h-32">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    <span className="ml-2 text-muted-foreground">
-                      Loading messages...
-                    </span>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">No messages yet</p>
-                        <p className="text-sm">
-                          Send a message to start the conversation
-                        </p>
-                      </div>
-                    ) : (
-                      messages.map((message, index) => {
-                        const showDateSeparator =
-                          index === 0 ||
-                          (!isToday(new Date(message.timestamp)) &&
-                            !isToday(new Date(messages[index - 1]?.timestamp)));
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="p-4">
+                  {isLoadingMessages ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      <span className="ml-2 text-muted-foreground">
+                        Loading messages...
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {messages.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                          <p className="text-lg font-medium">No messages yet</p>
+                          <p className="text-sm">
+                            Send a message to start the conversation
+                          </p>
+                        </div>
+                      ) : (
+                        messages.map((message, index) => {
+                          const showDateSeparator =
+                            index === 0 ||
+                            (!isToday(new Date(message.timestamp)) &&
+                              !isToday(
+                                new Date(messages[index - 1]?.timestamp),
+                              ));
 
-                        return (
-                          <div key={message.id}>
-                            {showDateSeparator && (
-                              <div className="flex items-center my-4">
-                                <Separator className="flex-1" />
-                                <span className="px-3 text-xs text-muted-foreground bg-background">
-                                  {formatMessageTimeFull(message.timestamp)}
-                                </span>
-                                <Separator className="flex-1" />
-                              </div>
-                            )}
+                          return (
+                            <div key={message.id}>
+                              {showDateSeparator && (
+                                <div className="flex items-center my-4">
+                                  <Separator className="flex-1" />
+                                  <span className="px-3 text-xs text-muted-foreground bg-background">
+                                    {formatMessageTimeFull(message.timestamp)}
+                                  </span>
+                                  <Separator className="flex-1" />
+                                </div>
+                              )}
 
-                            <div
-                              className={`flex ${
-                                message.direction === "outbound"
-                                  ? "justify-end"
-                                  : "justify-start"
-                              }`}
-                            >
                               <div
-                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                                className={`flex ${
                                   message.direction === "outbound"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted"
+                                    ? "justify-end"
+                                    : "justify-start"
                                 }`}
                               >
-                                <p className="text-sm whitespace-pre-wrap break-words">
-                                  {message.body}
-                                </p>
-                                <div className="flex items-center justify-between mt-2 gap-2">
-                                  <span className="text-xs opacity-70">
-                                    {format(
-                                      new Date(message.timestamp),
-                                      "HH:mm",
-                                    )}
-                                  </span>
+                                <div
+                                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                                    message.direction === "outbound"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted"
+                                  }`}
+                                >
+                                  <p className="text-sm whitespace-pre-wrap break-words">
+                                    {message.body}
+                                  </p>
+                                  <div className="flex items-center justify-between mt-2 gap-2">
+                                    <span className="text-xs opacity-70">
+                                      {format(
+                                        new Date(message.timestamp),
+                                        "HH:mm",
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
+                          );
+                        })
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
               </ScrollArea>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-border bg-card">
+              <div className="p-4 border-t border-border bg-card flex-shrink-0">
                 <div className="flex space-x-2">
                   <Input
                     value={newMessage}
@@ -1042,8 +1001,8 @@ export default function Conversations() {
             </>
           ) : (
             /* Welcome Screen */
-            <div className="flex-1 flex items-center justify-center bg-muted/5">
-              <div className="text-center space-y-6 max-w-md">
+            <div className="flex-1 flex items-center justify-center bg-muted/5 overflow-y-auto">
+              <div className="text-center space-y-6 max-w-md py-8">
                 <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
                   <MessageSquare className="w-12 h-12 text-primary" />
                 </div>
