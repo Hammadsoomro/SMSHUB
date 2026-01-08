@@ -141,7 +141,7 @@ export default function Conversations() {
       try {
         ablyService.disconnect();
       } catch (error) {
-        console.error("Error during Conversations cleanup:", error);
+        // Silent fail - cleanup not critical
       }
     };
   }, []);
@@ -263,7 +263,6 @@ export default function Conversations() {
 
       if (!token) {
         // No token found, redirect to login
-        console.warn("No authentication token found. Redirecting to login...");
         navigate("/login");
         return;
       }
@@ -334,13 +333,11 @@ export default function Conversations() {
 
     try {
       setIsConnecting(true);
-      console.log("🔌 Initializing Ably for real-time messaging...");
 
       // Connect to Ably service
       const connected = await ablyService.connect(token);
 
       if (!connected) {
-        console.warn("Ably connection failed");
         setIsConnecting(false);
         toast.warning(
           "Real-time messaging connection failed, but app will still work",
@@ -379,7 +376,7 @@ export default function Conversations() {
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
-          console.log("👥 Contact list updated via Ably:", data);
+          // Contact update received
           const currentActivePhone = activePhoneNumberRef.current;
           if (currentActivePhone) {
             const phoneNum = phoneNumbersRef.current.find(
