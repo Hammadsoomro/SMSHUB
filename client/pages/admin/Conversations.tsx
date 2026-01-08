@@ -805,10 +805,10 @@ export default function Conversations() {
                 filteredContacts.map((contact) => (
                   <Card
                     key={contact.id}
-                    className={`mb-2 cursor-pointer transition-all duration-200 hover:shadow-sm ${
+                    className={`mb-2 cursor-pointer transition-all duration-300 border-0 ${
                       selectedContactId === contact.id
-                        ? "bg-primary/10 border-primary shadow-sm"
-                        : "hover:bg-muted/50"
+                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
+                        : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
                     }`}
                     onClick={() => setSelectedContactId(contact.id)}
                   >
