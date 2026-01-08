@@ -775,10 +775,18 @@ export default function Conversations() {
       );
       setMovingContact(null);
       setMoveToCategory("sales");
+
+      // Reload fresh data from server to ensure consistency
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
     } catch (error: any) {
       console.error("Error moving contact:", error);
       toast.error(error.message || "Failed to move contact");
-      // Revert optimistic update
+      // Revert optimistic update on error
       const phoneNum = phoneNumbers.find(
         (p) => p.phoneNumber === activePhoneNumber,
       );
