@@ -740,91 +740,110 @@ export default function TeamMemberSettings() {
               )}
 
               {/* Message Insights */}
-              {messageInsights && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5" />
-                      Message Insights
-                    </CardTitle>
-                    <CardDescription>
-                      Your messaging statistics and analytics
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-900">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase">
-                            Total Messages
-                          </p>
-                        </div>
-                        <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                          {messageInsights.totalMessages}
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 rounded-lg border border-green-200 dark:border-green-900">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Send className="w-4 h-4 text-green-600 dark:text-green-400" />
-                          <p className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase">
-                            Sent Today
-                          </p>
-                        </div>
-                        <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                          {messageInsights.sentToday}
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-900">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                          <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase">
-                            Received Today
-                          </p>
-                        </div>
-                        <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                          {messageInsights.receivedToday}
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30 rounded-lg border border-orange-200 dark:border-orange-900">
-                        <div className="flex items-center gap-2 mb-2">
-                          <BarChart3 className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                          <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase">
-                            Response Rate
-                          </p>
-                        </div>
-                        <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                          {messageInsights.responseRate.toFixed(1)}%
-                        </p>
-                      </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Message Insights
+                  </CardTitle>
+                  <CardDescription>
+                    Your messaging statistics and analytics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingInsights ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mr-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Loading your message insights...
+                      </p>
                     </div>
-
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <p className="text-xs text-muted-foreground mb-1">
-                            Total Sent
-                          </p>
-                          <p className="text-lg font-semibold">
-                            {messageInsights.sentMessages}
+                  ) : messageInsights ? (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-900">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase">
+                              Total Messages
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                            {messageInsights.totalMessages}
                           </p>
                         </div>
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <p className="text-xs text-muted-foreground mb-1">
-                            Total Received
+
+                        <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 rounded-lg border border-green-200 dark:border-green-900">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Send className="w-4 h-4 text-green-600 dark:text-green-400" />
+                            <p className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase">
+                              Sent Today
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                            {messageInsights.sentToday}
                           </p>
-                          <p className="text-lg font-semibold">
-                            {messageInsights.receivedMessages}
+                        </div>
+
+                        <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/30 dark:to-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-900">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                            <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase">
+                              Received Today
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                            {messageInsights.receivedToday}
+                          </p>
+                        </div>
+
+                        <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/30 rounded-lg border border-orange-200 dark:border-orange-900">
+                          <div className="flex items-center gap-2 mb-2">
+                            <BarChart3 className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                            <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase">
+                              Response Rate
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
+                            {messageInsights.responseRate.toFixed(1)}%
                           </p>
                         </div>
                       </div>
+
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Total Sent
+                            </p>
+                            <p className="text-lg font-semibold">
+                              {messageInsights.sentMessages}
+                            </p>
+                          </div>
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Total Received
+                            </p>
+                            <p className="text-lg font-semibold">
+                              {messageInsights.receivedMessages}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">
+                        No message data available yet
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">
+                        Start sending and receiving messages to see your analytics
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
