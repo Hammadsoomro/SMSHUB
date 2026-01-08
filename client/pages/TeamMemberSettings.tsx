@@ -217,10 +217,12 @@ export default function TeamMemberSettings() {
       }
 
       const data = await response.json();
+      const updatedUser = { ...data.user };
       setUser((prev) =>
-        prev ? { ...prev, name: data.user.name, email: data.user.email } : null,
+        prev ? { ...prev, name: updatedUser.name, email: updatedUser.email } : null,
       );
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // Store in localStorage for persistence across page reloads
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       setSuccess("Profile updated successfully");
       toast.success("Profile updated successfully");
     } catch (err) {
