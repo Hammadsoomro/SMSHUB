@@ -252,6 +252,7 @@ export default function Conversations() {
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
+      setLoadError(null);
 
       // Load profile from localStorage or API
       const storedUser = localStorage.getItem("user");
@@ -310,12 +311,13 @@ export default function Conversations() {
         );
       }
     } catch (error) {
-      console.error("Error loading initial data:", error);
-      toast.error(
+      const errorMessage =
         error instanceof Error
           ? error.message
-          : "Failed to load initial data. Please refresh the page.",
-      );
+          : "Failed to load initial data. Please refresh the page.";
+      console.error("Error loading initial data:", error);
+      setLoadError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
