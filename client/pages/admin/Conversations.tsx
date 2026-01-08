@@ -1043,13 +1043,13 @@ export default function Conversations() {
                       }
                     }}
                     disabled={isSending}
-                    className="flex-1"
+                    className="flex-1 bg-muted/50 border-border/40 focus:border-primary/60 focus:ring-primary/20 rounded-lg"
                   />
                   <Button
                     onClick={sendMessage}
                     disabled={!newMessage.trim() || isSending}
                     size="sm"
-                    className="px-4"
+                    className="px-6 bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300"
                   >
                     {isSending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
