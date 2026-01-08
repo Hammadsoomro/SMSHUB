@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { MessageSquare, Loader2, AlertCircle, Sun, Moon } from "lucide-react";
+import { MessageSquare, Loader2, AlertCircle, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { SignupRequest } from "@shared/api";
 
 interface SignupFormData {
