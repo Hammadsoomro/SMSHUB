@@ -18,6 +18,7 @@ import {
   Message,
   Contact,
 } from "@shared/api";
+import { normalizePhoneNumber, phoneNumbersMatch } from "./utils/phone-normalizer";
 
 class Storage {
   // User operations
@@ -141,7 +142,12 @@ class Storage {
 
   // Phone Numbers
   async addPhoneNumber(number: PhoneNumber): Promise<void> {
-    const newNumber = new PhoneNumberModel(number);
+    // Normalize phone number to E.164 format for consistency
+    const normalizedNumber = {
+      ...number,
+      phoneNumber: normalizePhoneNumber(number.phoneNumber),
+    };
+    const newNumber = new PhoneNumberModel(normalizedNumber);
     await newNumber.save();
   }
 
@@ -170,8 +176,22 @@ class Storage {
   async getPhoneNumberByPhoneNumber(
     phoneNumber: string,
   ): Promise<PhoneNumber | undefined> {
-    const doc = await PhoneNumberModel.findOne({ phoneNumber });
+    // Try exact match first
+    let doc = await PhoneNumberModel.findOne({ phoneNumber });
+
+    // If not found, try normalized match
+    if (!doc) {
+      const normalizedInput = normalizePhoneNumber(phoneNumber);
+      const allNumbers = await PhoneNumberModel.find({});
+
+      // Find by comparing normalized versions
+      doc = allNumbers.find((num: any) =>
+        phoneNumbersMatch(num.phoneNumber, phoneNumber),
+      ) as any;
+    }
+
     if (!doc) return undefined;
+
     const data = doc.toObject() as any;
     if (!data.id && data._id) {
       data.id = data._id.toString();
@@ -346,6 +366,46 @@ class Storage {
   // Utility
   generateId(): string {
     return Math.random().toString(36).substr(2, 9);
+  }
+
+  /**
+   * Normalize all existing phone numbers in the database to E.164 format
+   * This is a one-time migration to fix phone numbers stored in different formats
+   */
+  async normalizeAllPhoneNumbers(): Promise<void> {
+    try {
+      const allNumbers = await PhoneNumberModel.find({});
+      let updatedCount = 0;
+
+      for (const phoneNumberDoc of allNumbers) {
+        const original = phoneNumberDoc.phoneNumber;
+        const normalized = normalizePhoneNumber(original);
+
+        if (original !== normalized) {
+          console.log(
+            `[Storage] Normalizing phone number: ${original} → ${normalized}`,
+          );
+          phoneNumberDoc.phoneNumber = normalized;
+          await phoneNumberDoc.save();
+          updatedCount++;
+        }
+      }
+
+      if (updatedCount > 0) {
+        console.log(
+          `[Storage] ✅ Normalized ${updatedCount} phone numbers in database`,
+        );
+      } else {
+        console.log(
+          "[Storage] All phone numbers are already in E.164 format",
+        );
+      }
+    } catch (error) {
+      console.error(
+        "[Storage] Error normalizing phone numbers:",
+        error,
+      );
+    }
   }
 }
 
