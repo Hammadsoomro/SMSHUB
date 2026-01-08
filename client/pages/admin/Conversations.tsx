@@ -500,9 +500,7 @@ export default function Conversations() {
     } catch (error: any) {
       console.error("Error sending message:", error);
       // Remove optimistic message on error
-      setMessages((prev) =>
-        prev.filter((m) => m.id !== optimisticMessage.id),
-      );
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
       // Restore message text on error
       setNewMessage(messageToSend);
       toast.error(error.message || "Failed to send message. Please try again.");
@@ -1012,7 +1010,9 @@ export default function Conversations() {
                                 {message.body}
                               </p>
                               <div className="flex items-center justify-between mt-2 gap-2">
-                                <span className={`text-xs ${message.direction === "outbound" ? "opacity-75" : "opacity-70"}`}>
+                                <span
+                                  className={`text-xs ${message.direction === "outbound" ? "opacity-75" : "opacity-70"}`}
+                                >
                                   {format(
                                     new Date(message.timestamp),
                                     "h:mm a",

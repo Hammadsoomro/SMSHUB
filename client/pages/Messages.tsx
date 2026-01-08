@@ -173,14 +173,10 @@ export default function Messages() {
     const storedUser = localStorage.getItem("user");
     const userProfile = storedUser ? JSON.parse(storedUser) : null;
     if (userProfile?.id) {
-      ablyService.subscribeToConversation(
-        contact.id,
-        userProfile.id,
-        () => {
-          // Refresh messages when new ones arrive
-          fetchMessages(contact.id);
-        },
-      );
+      ablyService.subscribeToConversation(contact.id, userProfile.id, () => {
+        // Refresh messages when new ones arrive
+        fetchMessages(contact.id);
+      });
     }
   };
 
