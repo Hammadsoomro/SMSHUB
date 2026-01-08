@@ -838,7 +838,8 @@ export default function TeamMemberSettings() {
                         No message data available yet
                       </p>
                       <p className="text-xs text-muted-foreground/70 mt-1">
-                        Start sending and receiving messages to see your analytics
+                        Start sending and receiving messages to see your
+                        analytics
                       </p>
                     </div>
                   )}
