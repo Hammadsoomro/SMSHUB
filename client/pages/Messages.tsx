@@ -30,6 +30,8 @@ interface PhoneNumber {
 
 export default function Messages() {
   const navigate = useNavigate();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [conversation, setConversation] = useState<ConversationState>({
     contact: null,
@@ -47,6 +49,11 @@ export default function Messages() {
   const [activePhoneNumberId, setActivePhoneNumberId] = useState<string | null>(
     null,
   );
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversation.messages]);
 
   useEffect(() => {
     const user = localStorage.getItem("user");
