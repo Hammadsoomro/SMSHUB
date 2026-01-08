@@ -410,17 +410,17 @@ export default function Conversations() {
 
   const loadMessages = async (contactId: string) => {
     try {
-      setIsLoadingMessages(true);
+      // Don't show loading spinner if we already have messages
       const messagesData = await ApiService.getMessages(
         contactId,
         activePhoneNumber || undefined,
       );
       setMessages(messagesData || []);
+      setIsLoadingMessages(false);
     } catch (error) {
       console.error("Error loading messages:", error);
-      toast.error("Failed to load messages");
-    } finally {
       setIsLoadingMessages(false);
+      // Don't show error toast to avoid blocking UI
     }
   };
 
