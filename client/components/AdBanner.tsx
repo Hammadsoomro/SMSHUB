@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface AdBannerProps {
   width: number;
@@ -12,17 +12,23 @@ export default function AdBanner({
   slot = "ca-pub-8199077937393778",
 }: AdBannerProps) {
   const adContainerRef = useRef<HTMLDivElement>(null);
+  const [loadAttempted, setLoadAttempted] = useState(false);
 
   useEffect(() => {
-    // Push adsbygoogle script to render ads
-    if (window.adsbygoogle) {
-      try {
-        window.adsbygoogle.push({});
-      } catch (err) {
-        console.log("AdSense render error:", err);
+    // Don't block on ad loading - just try to render if available
+    const timer = setTimeout(() => {
+      if (window.adsbygoogle && !loadAttempted) {
+        try {
+          window.adsbygoogle.push({});
+          setLoadAttempted(true);
+        } catch (err) {
+          // Silent fail - ads not critical for functionality
+        }
       }
-    }
-  }, [width, height, slot]);
+    }, 3000); // Lazy load after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [loadAttempted]);
 
   return (
     <div
