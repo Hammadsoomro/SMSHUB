@@ -191,11 +191,34 @@ export default function Messages() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() || !conversation.contact) return;
+    if (!messageText.trim() || !conversation.contact || !activePhoneNumberId)
+      return;
 
-    setIsSending(true);
+    const messageToSend = messageText;
+    setMessageText("");
     setError("");
+    setIsSending(true);
+
     try {
+      // Optimistic update - show message immediately
+      const optimisticMessage: Message = {
+        id: `temp-${Date.now()}`,
+        phoneNumberId: activePhoneNumberId,
+        from:
+          assignedPhoneNumbers.find((p) => p.id === activePhoneNumberId)
+            ?.phoneNumber || "",
+        to: conversation.contact.phoneNumber,
+        body: messageToSend,
+        direction: "outbound",
+        timestamp: new Date().toISOString(),
+        sid: "",
+      };
+
+      setConversation((prev) => ({
+        ...prev,
+        messages: [...prev.messages, optimisticMessage],
+      }));
+
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/send", {
         method: "POST",
@@ -205,8 +228,8 @@ export default function Messages() {
         },
         body: JSON.stringify({
           to: conversation.contact.phoneNumber,
-          body: messageText,
-          phoneNumberId: conversation.contact.phoneNumberId || "",
+          body: messageToSend,
+          phoneNumberId: activePhoneNumberId,
         }),
       });
 
@@ -215,16 +238,22 @@ export default function Messages() {
         throw new Error(errorData.error || "Failed to send message");
       }
 
-      setMessageText("");
+      // Refresh messages after sending
+      await fetchMessages(conversation.contact.id);
 
       // If this was a new conversation, refresh contacts
       if (conversation.contact.id.startsWith("temp-")) {
-        await fetchContacts();
-      } else {
-        await fetchMessages(conversation.contact.id);
+        await fetchContacts(activePhoneNumberId);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send message");
+      // Restore message text on error
+      setMessageText(messageToSend);
+      // Remove optimistic message on error
+      setConversation((prev) => ({
+        ...prev,
+        messages: prev.messages.filter((m) => !m.id.startsWith("temp-")),
+      }));
     } finally {
       setIsSending(false);
     }
