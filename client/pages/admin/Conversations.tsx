@@ -766,9 +766,9 @@ export default function Conversations() {
           </div>
 
           {/* Add Contact Button */}
-          <div className="p-3 border-b border-border">
+          <div className="p-3 border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5">
             <Button
-              className="w-full"
+              className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300"
               size="sm"
               onClick={() => setShowAddContact(true)}
               disabled={phoneNumbers.length === 0}
