@@ -161,8 +161,12 @@ export default function Messages() {
     setNewConversationNumber("");
     setSearchTerm("");
     setError("");
-    setConversation({ contact, messages: [] });
-    // Load messages asynchronously without blocking
+
+    // Show cached messages immediately if available
+    const cachedMessages = messagesCacheRef.current[contact.id] || [];
+    setConversation({ contact, messages: cachedMessages });
+
+    // Fetch fresh messages in the background
     fetchMessages(contact.id);
 
     // Subscribe to real-time updates
