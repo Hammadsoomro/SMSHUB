@@ -407,3 +407,175 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Failed to purchase number" });
   }
 };
+
+/**
+ * Add an existing phone number to the database
+ * Used when you want to add a number that already exists in your Twilio account
+ */
+export const handleAddPhoneNumber: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumber } = req.body as { phoneNumber: string };
+
+    if (!phoneNumber) {
+      return res.status(400).json({ error: "Phone number is required" });
+    }
+
+    // Check if number is already in the system
+    const existingNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    if (
+      existingNumbers.some(
+        (n) =>
+          n.phoneNumber === phoneNumber || n.phoneNumber === phoneNumber.replace(/\D/g, ""),
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ error: "This number is already registered in your account" });
+    }
+
+    // Get admin's Twilio credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res
+        .status(400)
+        .json({ error: "Please connect your Twilio credentials first" });
+    }
+
+    // Validate that credentials have the required fields
+    if (!credentials.accountSid || !credentials.authToken) {
+      return res.status(400).json({
+        error: "Incomplete Twilio credentials. Please reconnect your account.",
+      });
+    }
+
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
+    // Additional validation for decrypted token
+    if (!decryptedAuthToken || decryptedAuthToken.trim().length === 0) {
+      return res.status(400).json({
+        error: "Invalid Twilio auth token. Please reconnect your credentials.",
+      });
+    }
+
+    // Verify the number belongs to this Twilio account
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      decryptedAuthToken,
+    );
+
+    const ownsNumber = await twilioClient.verifyPhoneNumberOwnership(
+      phoneNumber,
+    );
+    if (!ownsNumber) {
+      return res.status(400).json({
+        error: "This phone number does not belong to your Twilio account",
+      });
+    }
+
+    // Store phone number in database
+    const newPhoneNumber: PhoneNumber = {
+      id: storage.generateId(),
+      adminId,
+      phoneNumber,
+      purchasedAt: new Date().toISOString(),
+      active: true,
+    };
+
+    await storage.addPhoneNumber(newPhoneNumber);
+
+    res.json({
+      phoneNumber: newPhoneNumber,
+      message: "Phone number added successfully",
+    });
+  } catch (error) {
+    console.error("Add phone number error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to add phone number";
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+/**
+ * Sync all existing phone numbers from Twilio account to the database
+ * This adds all active numbers from your Twilio account that aren't already registered
+ */
+export const handleSyncPhoneNumbers: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+
+    // Get admin's Twilio credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res
+        .status(400)
+        .json({ error: "Please connect your Twilio credentials first" });
+    }
+
+    // Validate that credentials have the required fields
+    if (!credentials.accountSid || !credentials.authToken) {
+      return res.status(400).json({
+        error: "Incomplete Twilio credentials. Please reconnect your account.",
+      });
+    }
+
+    // Decrypt the auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
+    // Additional validation for decrypted token
+    if (!decryptedAuthToken || decryptedAuthToken.trim().length === 0) {
+      return res.status(400).json({
+        error: "Invalid Twilio auth token. Please reconnect your credentials.",
+      });
+    }
+
+    // Fetch all incoming phone numbers from Twilio
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      decryptedAuthToken,
+    );
+
+    const incomingPhoneNumbers = await twilioClient.getAllIncomingPhoneNumbers();
+
+    if (!incomingPhoneNumbers || incomingPhoneNumbers.length === 0) {
+      return res.json({
+        message: "No phone numbers found in your Twilio account",
+        synced: [],
+      });
+    }
+
+    // Get existing numbers
+    const existingNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const existingPhoneStrings = existingNumbers.map((n) => n.phoneNumber);
+
+    // Add new numbers
+    const syncedNumbers: PhoneNumber[] = [];
+    for (const twilioNumber of incomingPhoneNumbers) {
+      if (!existingPhoneStrings.includes(twilioNumber)) {
+        const newPhoneNumber: PhoneNumber = {
+          id: storage.generateId(),
+          adminId,
+          phoneNumber: twilioNumber,
+          purchasedAt: new Date().toISOString(),
+          active: true,
+        };
+
+        await storage.addPhoneNumber(newPhoneNumber);
+        syncedNumbers.push(newPhoneNumber);
+        console.log(`[Sync] Added phone number: ${twilioNumber}`);
+      }
+    }
+
+    res.json({
+      message: `Synced ${syncedNumbers.length} new phone number(s)`,
+      synced: syncedNumbers,
+      total: existingNumbers.length + syncedNumbers.length,
+    });
+  } catch (error) {
+    console.error("Sync phone numbers error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to sync phone numbers";
+    res.status(500).json({ error: errorMessage });
+  }
+};
