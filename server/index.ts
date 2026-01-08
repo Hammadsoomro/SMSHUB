@@ -84,15 +84,13 @@ export async function createServer() {
   await storage.normalizeAllPhoneNumbers();
 
   // Initialize Ably for real-time messaging
-  try {
-    await ablyServer.initialize();
-    console.log("✅ Ably initialized for real-time messaging");
-  } catch (error) {
+  await ablyServer.initialize();
+  if (ablyServer.isInitialized) {
+    console.log("✅ Ably initialized successfully for real-time messaging");
+  } else {
     console.warn(
-      "⚠️  Ably initialization failed (optional for fallback):",
-      error,
+      "⚠️  Ably not connected - real-time features will be unavailable (optional for fallback)",
     );
-    // Continue - Ably is optional, app will still work without it
   }
 
   const app = express() as Express;
