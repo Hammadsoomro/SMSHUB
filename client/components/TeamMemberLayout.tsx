@@ -187,6 +187,13 @@ export default function TeamMemberLayout({ children }: TeamMemberLayoutProps) {
             <MessageSquare className="w-5 h-5 flex-shrink-0 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
             <span className="font-medium text-sm">Messages</span>
           </Link>
+          <Link
+            to="/settings"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/40 transition-all duration-200 group"
+          >
+            <Settings className="w-5 h-5 flex-shrink-0 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
+            <span className="font-medium text-sm">Settings</span>
+          </Link>
         </nav>
 
         {/* Footer */}
