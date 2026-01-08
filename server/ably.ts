@@ -138,8 +138,8 @@ class AblyServer {
       contact?: any;
     },
   ): Promise<void> {
-    if (!this.client) {
-      console.error("[AblyServer] Ably not initialized");
+    if (!this.isConnected || !this.client) {
+      console.warn("[AblyServer] Not connected to Ably - contact update skipped");
       return;
     }
 
@@ -148,10 +148,10 @@ class AblyServer {
     try {
       const channel = this.client.channels.get(channelName);
       await channel.publish("update", data);
-      console.log(`[AblyServer] Published contact update to ${channelName}`);
+      console.log(`[AblyServer] ✓ Published contact update to ${channelName}`);
     } catch (error) {
       console.error("[AblyServer] Error publishing contact update:", error);
-      throw error;
+      // Don't throw - Ably is optional
     }
   }
 
