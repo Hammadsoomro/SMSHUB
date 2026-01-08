@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
+import { ContactProvider } from "./contexts/ContactContext";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -31,9 +32,10 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+    <ContactProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
@@ -62,7 +64,8 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-    </TooltipProvider>
+      </TooltipProvider>
+    </ContactProvider>
   </QueryClientProvider>
 );
 
