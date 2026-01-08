@@ -235,6 +235,7 @@ export async function createServer() {
     adminOnly,
     handleDeleteAccount,
   );
+  app.get("/api/admin/user/:userId", authMiddleware, handleGetUserById);
 
   // Messages routes (requires authentication)
   app.get("/api/messages/contacts", authMiddleware, handleGetContacts);
