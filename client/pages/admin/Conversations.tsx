@@ -404,7 +404,30 @@ export default function Conversations() {
   const loadContactsForPhoneNumber = async (phoneNumberId: string) => {
     try {
       const contactsData = await ApiService.getContacts(phoneNumberId);
-      setContacts(contactsData || []);
+      setContacts((prevContacts) => {
+        // Merge with existing data to preserve any optimistic updates
+        const updatedContacts = (contactsData || []).map((freshContact) => {
+          const existingContact = prevContacts.find(
+            (c) => c.id === freshContact.id,
+          );
+          // If existing contact has lower unreadCount (e.g., we just marked as read),
+          // keep the local state
+          if (
+            existingContact &&
+            freshContact.unreadCount > existingContact.unreadCount
+          ) {
+            console.log(
+              `[loadContactsForPhoneNumber] Preserving unreadCount=${existingContact.unreadCount} for ${freshContact.phoneNumber} (server had ${freshContact.unreadCount})`,
+            );
+            return {
+              ...freshContact,
+              unreadCount: existingContact.unreadCount,
+            };
+          }
+          return freshContact;
+        });
+        return updatedContacts;
+      });
     } catch (error) {
       console.error("Error loading contacts:", error);
       toast.error("Failed to load contacts");
