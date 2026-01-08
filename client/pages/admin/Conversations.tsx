@@ -366,14 +366,15 @@ export default function Conversations() {
 
       if (!userId) {
         console.error("No user ID found for Ably subscriptions");
-        return;
+        return () => {};
       }
 
       // Subscribe to contact updates for the current user
+      // This will be called whenever a new message arrives to update the contact list
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
-          console.log("👥 Contacts updated:", data);
+          console.log("👥 Contact list updated via Ably:", data);
           const currentActivePhone = activePhoneNumberRef.current;
           if (currentActivePhone) {
             const phoneNum = phoneNumbersRef.current.find(
@@ -386,73 +387,14 @@ export default function Conversations() {
         },
       );
 
-      // Subscribe to messages for the currently selected contact
-      const subscribeToMessages = () => {
-        const currentSelectedContactId = selectedContactIdRef.current;
-        if (currentSelectedContactId) {
-          const unsubscribeMessages = ablyService.subscribeToConversation(
-            currentSelectedContactId,
-            userId,
-            (message: any) => {
-              console.log("📱 New message received:", message);
-
-              // Reload messages for the current contact
-              if (currentSelectedContactId === message.contactId) {
-                loadMessages(currentSelectedContactId);
-              }
-
-              // Reload contacts to update last message and unread count
-              const currentActivePhone = activePhoneNumberRef.current;
-              if (currentActivePhone) {
-                const phoneNum = phoneNumbersRef.current.find(
-                  (p) => p.phoneNumber === currentActivePhone,
-                );
-                if (phoneNum) {
-                  loadContactsForPhoneNumber(phoneNum.id);
-                }
-              }
-
-              // Show notification for incoming messages
-              const currentNotifications = notificationsRef.current;
-              if (currentNotifications && message.direction === "inbound") {
-                showNotification(
-                  "New Message",
-                  `${message.from}: ${message.message.substring(0, 50)}`,
-                );
-              }
-
-              // Update page title
-              updatePageTitle();
-            },
-          );
-
-          return unsubscribeMessages;
-        }
-        return () => {};
-      };
-
-      let unsubscribeMessages = subscribeToMessages();
-
-      // Update message subscription when contact changes
-      const originalSelectedContactId = selectedContactIdRef.current;
-      const messageSubscriptionEffect = setInterval(() => {
-        const currentSelectedContactId = selectedContactIdRef.current;
-        if (currentSelectedContactId !== originalSelectedContactId) {
-          // Contact changed, resubscribe
-          unsubscribeMessages?.();
-          unsubscribeMessages = subscribeToMessages();
-        }
-      }, 500);
-
-      // Cleanup subscriptions on unmount
+      // Cleanup function - unsubscribe from contacts
       return () => {
-        clearInterval(messageSubscriptionEffect);
         unsubscribeContacts?.();
-        unsubscribeMessages?.();
       };
     } catch (error) {
       console.error("Error initializing Ably listeners:", error);
       toast.error("Failed to initialize real-time listeners");
+      return () => {};
     }
   };
 
