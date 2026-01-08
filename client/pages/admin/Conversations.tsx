@@ -1145,8 +1145,53 @@ export default function Conversations() {
                                 }}
                               >
                                 <Edit className="w-4 h-4 mr-2" />
-                                Edit Contact
+                                Edit Name
                               </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePinContact(contact.id);
+                                }}
+                              >
+                                {contact.isPinned ? (
+                                  <>
+                                    <PinOff className="w-4 h-4 mr-2" />
+                                    Unpin
+                                  </>
+                                ) : (
+                                  <>
+                                    <Pin className="w-4 h-4 mr-2" />
+                                    Pin to Top
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setMovingContact(contact);
+                                  const currentCategory =
+                                    contact.category || "general";
+                                  setMoveToCategory(
+                                    currentCategory === "general"
+                                      ? "sales"
+                                      : "general",
+                                  );
+                                  setShowMoveContact(true);
+                                }}
+                              >
+                                <ArrowRight className="w-4 h-4 mr-2" />
+                                Move to{" "}
+                                {(contact.category || "general") === "general"
+                                  ? "Sales"
+                                  : "General"}
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
