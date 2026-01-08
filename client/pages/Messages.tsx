@@ -28,6 +28,10 @@ interface PhoneNumber {
   active: boolean;
 }
 
+interface MessageCache {
+  [contactId: string]: Message[];
+}
+
 export default function Messages() {
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
