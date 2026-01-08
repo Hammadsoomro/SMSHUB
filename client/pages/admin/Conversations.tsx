@@ -607,8 +607,24 @@ export default function Conversations() {
       );
     }
 
-    await ApiService.addContact(name, phoneNumber, currentActivePhoneId);
-    await loadContactsForPhoneNumber(currentActivePhoneId);
+    try {
+      const newContact = await ApiService.addContact(
+        name,
+        phoneNumber,
+        currentActivePhoneId,
+      );
+      await loadContactsForPhoneNumber(currentActivePhoneId);
+
+      // Auto-select the newly added contact
+      if (newContact?.id) {
+        setSelectedContactId(newContact.id);
+        console.log(`[addContactFromDialog] Auto-opening chat for new contact: ${newContact.id}`);
+        toast.success(`Contact "${name}" added and chat opened!`);
+      }
+    } catch (error: any) {
+      console.error("Error adding contact:", error);
+      throw error;
+    }
   };
 
   const editContact = async () => {
