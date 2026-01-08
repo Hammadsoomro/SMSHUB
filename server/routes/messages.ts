@@ -368,3 +368,111 @@ export const handleDeleteContact: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const handleGetMessageInsights: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId!;
+    const user = await storage.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Determine the admin ID
+    let adminId = userId;
+    if (user.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
+    }
+
+    // Get phone numbers assigned to this user
+    const allPhoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    let phoneNumbers = allPhoneNumbers;
+
+    // For team members, filter to only assigned numbers
+    if (user.role === "team_member") {
+      phoneNumbers = allPhoneNumbers.filter((pn) => pn.assignedTo === userId);
+    }
+
+    if (phoneNumbers.length === 0) {
+      return res.json({
+        totalMessages: 0,
+        sentMessages: 0,
+        receivedMessages: 0,
+        sentToday: 0,
+        receivedToday: 0,
+        responseRate: 0,
+      });
+    }
+
+    // Collect all messages for assigned phone numbers
+    let allMessages: any[] = [];
+    for (const phoneNumber of phoneNumbers) {
+      const messages = await storage.getMessagesByPhoneNumber(
+        phoneNumber.id || phoneNumber._id,
+      );
+      allMessages = allMessages.concat(messages || []);
+    }
+
+    if (allMessages.length === 0) {
+      return res.json({
+        totalMessages: 0,
+        sentMessages: 0,
+        receivedMessages: 0,
+        sentToday: 0,
+        receivedToday: 0,
+        responseRate: 0,
+      });
+    }
+
+    // Helper function to safely parse message dates
+    const getMessageDate = (message: any, now?: Date): Date => {
+      if (message.timestamp) {
+        return new Date(message.timestamp);
+      }
+      if (message.createdAt) {
+        return new Date(message.createdAt);
+      }
+      return now || new Date();
+    };
+
+    // Calculate metrics
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const totalMessages = allMessages.length;
+
+    const sentMessages = allMessages.filter(
+      (m) => m.direction === "outbound" || m.from,
+    );
+    const receivedMessages = allMessages.filter(
+      (m) => m.direction === "inbound" || m.to,
+    );
+
+    const sentToday = sentMessages.filter(
+      (m) => getMessageDate(m, now) >= todayStart,
+    ).length;
+
+    const receivedToday = receivedMessages.filter(
+      (m) => getMessageDate(m, now) >= todayStart,
+    ).length;
+
+    // Calculate response rate
+    const responseRate =
+      sentMessages.length > 0
+        ? (receivedMessages.length / sentMessages.length) * 100
+        : 0;
+
+    res.json({
+      totalMessages,
+      sentMessages: sentMessages.length,
+      receivedMessages: receivedMessages.length,
+      sentToday,
+      receivedToday,
+      responseRate: Math.round(responseRate * 10) / 10, // Round to 1 decimal place
+    });
+  } catch (error) {
+    console.error("Get message insights error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

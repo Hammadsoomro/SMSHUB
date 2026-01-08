@@ -217,7 +217,11 @@ export default function ConversationsTopBar({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuItem
-                onClick={() => navigate("/admin/settings")}
+                onClick={() =>
+                  navigate(
+                    profile.role === "admin" ? "/admin/settings" : "/settings",
+                  )
+                }
                 className="cursor-pointer"
               >
                 <UserIcon className="w-4 h-4 mr-2" />

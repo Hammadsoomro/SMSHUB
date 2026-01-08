@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
+import { ContactProvider } from "./contexts/ContactContext";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -31,38 +32,40 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+    <ContactProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
-          {/* Team Member Routes */}
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/conversations" element={<Conversations />} />
-          <Route path="/settings" element={<TeamMemberSettings />} />
+            {/* Team Member Routes */}
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/conversations" element={<Conversations />} />
+            <Route path="/settings" element={<TeamMemberSettings />} />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/conversations" element={<Conversations />} />
-          <Route path="/admin/credentials" element={<Credentials />} />
-          <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
-          <Route path="/admin/bought-numbers" element={<BoughtNumbers />} />
-          <Route path="/admin/team" element={<TeamManagement />} />
-          <Route path="/admin/settings" element={<Settings />} />
-          <Route path="/admin/account" element={<AccountInfo />} />
-          <Route path="/admin/insights" element={<Insights />} />
-          <Route path="/admin/twilio-balance" element={<TwilioBalance />} />
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/conversations" element={<Conversations />} />
+            <Route path="/admin/credentials" element={<Credentials />} />
+            <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
+            <Route path="/admin/bought-numbers" element={<BoughtNumbers />} />
+            <Route path="/admin/team" element={<TeamManagement />} />
+            <Route path="/admin/settings" element={<Settings />} />
+            <Route path="/admin/account" element={<AccountInfo />} />
+            <Route path="/admin/insights" element={<Insights />} />
+            <Route path="/admin/twilio-balance" element={<TwilioBalance />} />
 
-          {/* Catch All */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            {/* Catch All */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ContactProvider>
   </QueryClientProvider>
 );
 

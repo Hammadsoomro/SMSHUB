@@ -189,11 +189,11 @@ export default function TeamMemberLayout({ children }: TeamMemberLayoutProps) {
         {/* Navigation */}
         <nav className="flex-1 px-3 py-6 space-y-1">
           <Link
-            to="/messages"
+            to="/conversations"
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/40 transition-all duration-200 group"
           >
             <MessageSquare className="w-5 h-5 flex-shrink-0 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
-            <span className="font-medium text-sm">Messages</span>
+            <span className="font-medium text-sm">Conversations</span>
           </Link>
           <Link
             to="/settings"
