@@ -277,6 +277,18 @@ export async function createServer() {
     adminOnly,
     handlePurchaseNumber,
   );
+  app.post(
+    "/api/admin/add-phone-number",
+    authMiddleware,
+    adminOnly,
+    handleAddPhoneNumber,
+  );
+  app.post(
+    "/api/admin/sync-phone-numbers",
+    authMiddleware,
+    adminOnly,
+    handleSyncPhoneNumbers,
+  );
 
   // Debug endpoint for Twilio credentials (dev only)
   app.get(
