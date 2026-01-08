@@ -11,6 +11,7 @@ import {
   handleLogin,
   handleGetProfile,
   handleUpdateProfile,
+  handleChangePassword,
 } from "./routes/auth";
 
 // Admin routes
