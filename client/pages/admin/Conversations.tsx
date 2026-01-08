@@ -108,7 +108,9 @@ export default function Conversations() {
   const [movingContact, setMovingContact] =
     useState<ConversationContact | null>(null);
   const [newContactName, setNewContactName] = useState("");
-  const [moveToCategory, setMoveToCategory] = useState<"general" | "sales">("sales");
+  const [moveToCategory, setMoveToCategory] = useState<"general" | "sales">(
+    "sales",
+  );
 
   // Refs for socket handlers to always have current state
   const activePhoneNumberRef = useRef<string | null>(null);
@@ -147,7 +149,9 @@ export default function Conversations() {
     // Set theme on document root
     document.documentElement.classList.toggle("dark", isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-    console.log(`[Conversations] Theme initialized: ${isDarkMode ? "dark" : "light"}`);
+    console.log(
+      `[Conversations] Theme initialized: ${isDarkMode ? "dark" : "light"}`,
+    );
 
     return () => {
       try {
@@ -377,10 +381,7 @@ export default function Conversations() {
         }, 15000); // 15 second timeout
       });
 
-      const connected = await Promise.race([
-        connectionPromise,
-        timeoutPromise,
-      ]);
+      const connected = await Promise.race([connectionPromise, timeoutPromise]);
 
       setIsConnecting(false);
 
@@ -498,9 +499,7 @@ export default function Conversations() {
 
   const markMessagesAsRead = async (contactId: string) => {
     try {
-      console.log(
-        `[markMessagesAsRead] Marking contact ${contactId} as read`,
-      );
+      console.log(`[markMessagesAsRead] Marking contact ${contactId} as read`);
 
       // Update UI immediately (optimistic update)
       setContacts((prev) => {
@@ -626,7 +625,9 @@ export default function Conversations() {
       // Auto-select the newly added contact
       if (newContact?.id) {
         setSelectedContactId(newContact.id);
-        console.log(`[addContactFromDialog] Auto-opening chat for new contact: ${newContact.id}`);
+        console.log(
+          `[addContactFromDialog] Auto-opening chat for new contact: ${newContact.id}`,
+        );
         toast.success(`Contact "${name}" added and chat opened!`);
       }
     } catch (error: any) {
@@ -725,7 +726,9 @@ export default function Conversations() {
 
       const pinStatus = !contact.isPinned;
       toast.success(
-        pinStatus ? `${contact.name || contact.phoneNumber} pinned` : "Unpinned",
+        pinStatus
+          ? `${contact.name || contact.phoneNumber} pinned`
+          : "Unpinned",
       );
     } catch (error: any) {
       console.error("Error toggling pin:", error);
@@ -749,9 +752,7 @@ export default function Conversations() {
       // Optimistic update
       setContacts((prev) =>
         prev.map((c) =>
-          c.id === movingContact.id
-            ? { ...c, category: moveToCategory }
-            : c,
+          c.id === movingContact.id ? { ...c, category: moveToCategory } : c,
         ),
       );
 
@@ -870,20 +871,18 @@ export default function Conversations() {
 
   // Filter contacts based on search term and active tab
   const filteredContacts = contacts
-    .filter(
-      (contact) => {
-        // Filter by category
-        const contactCategory = contact.category || "general";
-        if (contactCategory !== activeTab) return false;
+    .filter((contact) => {
+      // Filter by category
+      const contactCategory = contact.category || "general";
+      if (contactCategory !== activeTab) return false;
 
-        // Filter by search term
-        return (
-          (contact.name &&
-            contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          contact.phoneNumber.includes(searchTerm)
-        );
-      },
-    )
+      // Filter by search term
+      return (
+        (contact.name &&
+          contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        contact.phoneNumber.includes(searchTerm)
+      );
+    })
     .sort((a, b) => {
       // Sort pinned contacts to the top
       if (a.isPinned && !b.isPinned) return -1;
@@ -1519,7 +1518,11 @@ export default function Conversations() {
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Move <strong>{movingContact?.name || movingContact?.phoneNumber}</strong> to which category?
+                Move{" "}
+                <strong>
+                  {movingContact?.name || movingContact?.phoneNumber}
+                </strong>{" "}
+                to which category?
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button

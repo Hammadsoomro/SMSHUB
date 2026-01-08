@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TeamMemberLayout from "@/components/TeamMemberLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,7 +126,8 @@ export default function TeamMemberSettings() {
         setAssignedNumbers(data.phoneNumbers || []);
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to load settings";
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to load settings";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -173,7 +180,8 @@ export default function TeamMemberSettings() {
       setSuccess("Profile updated successfully");
       toast.success("Profile updated successfully");
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to update profile";
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to update profile";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -184,7 +192,11 @@ export default function TeamMemberSettings() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+    if (
+      !formData.currentPassword ||
+      !formData.newPassword ||
+      !formData.confirmPassword
+    ) {
       setError("All password fields are required");
       return;
     }
@@ -228,7 +240,8 @@ export default function TeamMemberSettings() {
         confirmPassword: "",
       }));
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to change password";
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to change password";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -287,7 +300,9 @@ export default function TeamMemberSettings() {
             <Card>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Update your name and email address</CardDescription>
+                <CardDescription>
+                  Update your name and email address
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -342,12 +357,17 @@ export default function TeamMemberSettings() {
             <Card>
               <CardHeader>
                 <CardTitle>Change Password</CardTitle>
-                <CardDescription>Update your password to keep your account secure</CardDescription>
+                <CardDescription>
+                  Update your password to keep your account secure
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleChangePassword} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="currentPassword"
+                      className="flex items-center gap-2"
+                    >
                       <Lock className="w-4 h-4" />
                       Current Password
                     </Label>
@@ -376,7 +396,10 @@ export default function TeamMemberSettings() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="newPassword"
+                      className="flex items-center gap-2"
+                    >
                       <Lock className="w-4 h-4" />
                       New Password
                     </Label>
@@ -405,7 +428,10 @@ export default function TeamMemberSettings() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="confirmPassword"
+                      className="flex items-center gap-2"
+                    >
                       <Lock className="w-4 h-4" />
                       Confirm Password
                     </Label>
@@ -440,7 +466,9 @@ export default function TeamMemberSettings() {
             <Card>
               <CardHeader>
                 <CardTitle>Account Information</CardTitle>
-                <CardDescription>Your account details and administrator information</CardDescription>
+                <CardDescription>
+                  Your account details and administrator information
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Your Info */}
@@ -460,7 +488,9 @@ export default function TeamMemberSettings() {
                         <Mail className="w-4 h-4 text-muted-foreground" />
                         <span className="text-muted-foreground">Email</span>
                       </div>
-                      <span className="font-medium">{user?.email || "N/A"}</span>
+                      <span className="font-medium">
+                        {user?.email || "N/A"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -472,7 +502,9 @@ export default function TeamMemberSettings() {
                     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2 text-sm">
                         <User className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Admin Name</span>
+                        <span className="text-muted-foreground">
+                          Admin Name
+                        </span>
                       </div>
                       <span className="font-medium">{user.adminName}</span>
                     </div>
@@ -482,7 +514,9 @@ export default function TeamMemberSettings() {
                 {/* Assigned Phone Numbers */}
                 {assignedNumbers.length > 0 && (
                   <div className="space-y-4 pt-4 border-t">
-                    <h3 className="font-semibold text-sm">Assigned Phone Numbers</h3>
+                    <h3 className="font-semibold text-sm">
+                      Assigned Phone Numbers
+                    </h3>
                     <div className="space-y-2">
                       {assignedNumbers.map((number) => (
                         <div

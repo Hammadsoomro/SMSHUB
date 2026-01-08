@@ -1,7 +1,15 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Phone, LogOut, Sun, Moon, Loader2, Settings } from "lucide-react";
+import {
+  MessageSquare,
+  Phone,
+  LogOut,
+  Sun,
+  Moon,
+  Loader2,
+  Settings,
+} from "lucide-react";
 import { toast } from "sonner";
 import ablyService from "@/services/ablyService";
 
