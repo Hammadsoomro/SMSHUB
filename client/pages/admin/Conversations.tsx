@@ -100,11 +100,15 @@ export default function Conversations() {
   const [showAddContact, setShowAddContact] = useState(false);
   const [showEditContact, setShowEditContact] = useState(false);
   const [showDeleteContact, setShowDeleteContact] = useState(false);
+  const [showMoveContact, setShowMoveContact] = useState(false);
   const [editingContact, setEditingContact] =
     useState<ConversationContact | null>(null);
   const [deletingContact, setDeletingContact] =
     useState<ConversationContact | null>(null);
+  const [movingContact, setMovingContact] =
+    useState<ConversationContact | null>(null);
   const [newContactName, setNewContactName] = useState("");
+  const [moveToCategory, setMoveToCategory] = useState<"general" | "sales">("sales");
 
   // Refs for socket handlers to always have current state
   const activePhoneNumberRef = useRef<string | null>(null);
