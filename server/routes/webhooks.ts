@@ -111,72 +111,64 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     }
 
     // Publish Ably events to notify connected clients in real-time
-    if (ablyServer.isInitialized && phoneNumber.assignedTo) {
+    if (ablyServer.isInitialized) {
+      const contactId = savedContact.id;
+      const publishData = {
+        contactId: contactId,
+        phoneNumberId: phoneNumber.id,
+        message: Body,
+        from: From,
+        to: To,
+        direction: "inbound" as const,
+        timestamp: message.timestamp,
+      };
+
+      const contactUpdate = {
+        action: "update" as const,
+        contact: {
+          id: savedContact.id,
+          phoneNumberId: savedContact.phoneNumberId,
+          phoneNumber: savedContact.phoneNumber,
+          name: savedContact.name,
+          lastMessage: savedContact.lastMessage,
+          lastMessageTime: savedContact.lastMessageTime,
+          unreadCount: savedContact.unreadCount,
+        },
+      };
+
       try {
-        // Create a dummy contact ID for the message channel if not available
-        const contactId = savedContact.id;
+        // Always publish to admin so they see updates in real-time
+        if (phoneNumber.adminId) {
+          console.log(`[Webhooks] Publishing to admin: ${phoneNumber.adminId}`);
+          await ablyServer.publishMessage(phoneNumber.adminId, contactId, {
+            ...publishData,
+            userId: phoneNumber.adminId,
+          });
+          await ablyServer.broadcastContactUpdate(
+            phoneNumber.adminId,
+            contactUpdate,
+          );
+        }
 
-        await ablyServer.publishMessage(phoneNumber.assignedTo, contactId, {
-          contactId: contactId,
-          userId: phoneNumber.assignedTo,
-          phoneNumberId: phoneNumber.id,
-          message: Body,
-          from: From,
-          to: To,
-          direction: "inbound" as const,
-          timestamp: message.timestamp,
-        });
-
-        // Also publish contact update event
-        await ablyServer.broadcastContactUpdate(phoneNumber.assignedTo, {
-          action: "update",
-          contact: {
-            id: savedContact.id,
-            phoneNumberId: savedContact.phoneNumberId,
-            phoneNumber: savedContact.phoneNumber,
-            name: savedContact.name,
-            lastMessage: savedContact.lastMessage,
-            lastMessageTime: savedContact.lastMessageTime,
-            unreadCount: savedContact.unreadCount,
-          },
-        });
+        // Also publish to assigned team member if assigned
+        if (
+          phoneNumber.assignedTo &&
+          phoneNumber.assignedTo !== phoneNumber.adminId
+        ) {
+          console.log(
+            `[Webhooks] Publishing to team member: ${phoneNumber.assignedTo}`,
+          );
+          await ablyServer.publishMessage(phoneNumber.assignedTo, contactId, {
+            ...publishData,
+            userId: phoneNumber.assignedTo,
+          });
+          await ablyServer.broadcastContactUpdate(
+            phoneNumber.assignedTo,
+            contactUpdate,
+          );
+        }
       } catch (error) {
-        console.error("[Webhooks] Error publishing Ably message:", error);
-        // Continue even if Ably fails - message is already stored
-      }
-    } else if (ablyServer.isInitialized && phoneNumber.adminId) {
-      try {
-        // If no assignee, publish to admin
-        const contactId = savedContact.id;
-
-        await ablyServer.publishMessage(phoneNumber.adminId, contactId, {
-          contactId: contactId,
-          userId: phoneNumber.adminId,
-          phoneNumberId: phoneNumber.id,
-          message: Body,
-          from: From,
-          to: To,
-          direction: "inbound" as const,
-          timestamp: message.timestamp,
-        });
-
-        await ablyServer.broadcastContactUpdate(phoneNumber.adminId, {
-          action: "update",
-          contact: {
-            id: savedContact.id,
-            phoneNumberId: savedContact.phoneNumberId,
-            phoneNumber: savedContact.phoneNumber,
-            name: savedContact.name,
-            lastMessage: savedContact.lastMessage,
-            lastMessageTime: savedContact.lastMessageTime,
-            unreadCount: savedContact.unreadCount,
-          },
-        });
-      } catch (error) {
-        console.error(
-          "[Webhooks] Error publishing Ably message to admin:",
-          error,
-        );
+        console.error("[Webhooks] Error publishing Ably events:", error);
         // Continue even if Ably fails - message is already stored
       }
     }
