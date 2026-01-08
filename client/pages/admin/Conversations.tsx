@@ -418,7 +418,7 @@ export default function Conversations() {
       setMessages(messagesData || []);
     } catch (error) {
       console.error("Error loading messages:", error);
-      toast.error("Failed to load messages");
+      // Don't show error toast to avoid blocking UI
     } finally {
       setIsLoadingMessages(false);
     }
@@ -451,30 +451,46 @@ export default function Conversations() {
       return;
     }
 
+    const messageToSend = newMessage.trim();
+    const selectedContact = contacts.find((c) => c.id === selectedContactId);
+
+    if (!selectedContact) {
+      toast.error("Selected contact not found");
+      return;
+    }
+
+    const phoneNum = phoneNumbers.find(
+      (p) => p.phoneNumber === activePhoneNumber,
+    );
+    if (!phoneNum) {
+      toast.error("Phone number not found");
+      return;
+    }
+
+    // Optimistic update - add message to UI immediately
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`,
+      phoneNumberId: phoneNum.id,
+      from: activePhoneNumber,
+      to: selectedContact.phoneNumber,
+      body: messageToSend,
+      direction: "outbound",
+      timestamp: new Date().toISOString(),
+      sid: "",
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setNewMessage("");
+    setIsSending(true);
+
     try {
-      setIsSending(true);
-      const selectedContact = contacts.find((c) => c.id === selectedContactId);
-
-      if (!selectedContact) {
-        throw new Error("Selected contact not found");
-      }
-
-      const phoneNum = phoneNumbers.find(
-        (p) => p.phoneNumber === activePhoneNumber,
-      );
-      if (!phoneNum) {
-        throw new Error("Phone number not found");
-      }
-
       await ApiService.sendSMS(
         selectedContact.phoneNumber,
-        newMessage.trim(),
+        messageToSend,
         phoneNum.id,
       );
 
-      setNewMessage("");
-
-      // Reload messages and contacts to show the sent message
+      // Reload messages and contacts in background
       await Promise.all([
         loadMessages(selectedContactId),
         loadContactsForPhoneNumber(phoneNum.id),
@@ -483,6 +499,10 @@ export default function Conversations() {
       toast.success("Your message has been sent successfully");
     } catch (error: any) {
       console.error("Error sending message:", error);
+      // Remove optimistic message on error
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
+      // Restore message text on error
+      setNewMessage(messageToSend);
       toast.error(error.message || "Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
@@ -660,17 +680,17 @@ export default function Conversations() {
   const formatMessageTime = (dateString: string) => {
     const date = new Date(dateString);
     if (isToday(date)) {
-      return format(date, "HH:mm");
+      return format(date, "h:mm a");
     } else if (isYesterday(date)) {
       return "Yesterday";
     } else {
-      return format(date, "dd/MM/yyyy");
+      return format(date, "MMM d, yyyy");
     }
   };
 
   const formatMessageTimeFull = (dateString: string) => {
     const date = new Date(dateString);
-    return format(date, "dd/MM/yyyy HH:mm");
+    return format(date, "MMM d, yyyy 'at' h:mm a");
   };
 
   // Filter contacts based on search term
@@ -705,30 +725,32 @@ export default function Conversations() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
+      className={`h-screen flex flex-col relative overflow-hidden ${isDarkMode ? "dark" : ""}`}
     >
       {/* Animated Background */}
       <AnimatedBackground />
 
-      {/* Top Navigation Bar */}
-      <ConversationsTopBar
-        phoneNumbers={phoneNumbers}
-        activePhoneNumber={activePhoneNumber}
-        onPhoneNumberSelect={switchPhoneNumber}
-        profile={profile}
-        isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
-        notifications={notifications}
-        onToggleNotifications={toggleNotifications}
-        totalUnreadCount={totalUnreadCount}
-      />
+      {/* Top Navigation Bar - STICKY */}
+      <div className="sticky top-0 z-20">
+        <ConversationsTopBar
+          phoneNumbers={phoneNumbers}
+          activePhoneNumber={activePhoneNumber}
+          onPhoneNumberSelect={switchPhoneNumber}
+          profile={profile}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
+          notifications={notifications}
+          onToggleNotifications={toggleNotifications}
+          totalUnreadCount={totalUnreadCount}
+        />
+      </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex w-full flex-1">
+      <div className="relative z-10 flex w-full flex-1 overflow-hidden bg-gradient-to-br from-background via-background to-muted/5">
         {/* Left Sidebar - Contact List & Controls */}
-        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col">
+        <div className="w-80 bg-card/60 backdrop-blur-2xl border-r border-border/60 flex flex-col overflow-hidden shadow-xl">
           {/* Header Section */}
-          <div className="p-4 border-b border-border bg-muted/20">
+          <div className="p-4 border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5 backdrop-blur-sm">
             {/* Search Contacts */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -742,9 +764,9 @@ export default function Conversations() {
           </div>
 
           {/* Add Contact Button */}
-          <div className="p-3 border-b border-border">
+          <div className="p-3 border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5">
             <Button
-              className="w-full"
+              className="w-full bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300"
               size="sm"
               onClick={() => setShowAddContact(true)}
               disabled={phoneNumbers.length === 0}
@@ -781,10 +803,10 @@ export default function Conversations() {
                 filteredContacts.map((contact) => (
                   <Card
                     key={contact.id}
-                    className={`mb-2 cursor-pointer transition-all duration-200 hover:shadow-sm ${
+                    className={`mb-2 cursor-pointer transition-all duration-300 border-0 ${
                       selectedContactId === contact.id
-                        ? "bg-primary/10 border-primary shadow-sm"
-                        : "hover:bg-muted/50"
+                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
+                        : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
                     }`}
                     onClick={() => setSelectedContactId(contact.id)}
                   >
@@ -896,8 +918,8 @@ export default function Conversations() {
         <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl">
           {selectedContact ? (
             <>
-              {/* Chat Header */}
-              <div className="p-4 border-b border-border bg-card">
+              {/* Chat Header - STICKY */}
+              <div className="sticky top-0 z-10 p-4 border-b border-border/40 bg-gradient-to-r from-card via-card to-card/80 backdrop-blur-xl shadow-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
@@ -932,82 +954,83 @@ export default function Conversations() {
                 </div>
               </div>
 
-              {/* Messages Area */}
+              {/* Messages Area - SCROLLABLE */}
               <ScrollArea className="flex-1 p-4">
-                {isLoadingMessages ? (
-                  <div className="flex items-center justify-center h-32">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                    <span className="ml-2 text-muted-foreground">
+                {isLoadingMessages && messages.length === 0 && (
+                  <div className="flex items-center justify-center mb-4">
+                    <Badge variant="secondary" className="text-xs">
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
                       Loading messages...
-                    </span>
+                    </Badge>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">No messages yet</p>
-                        <p className="text-sm">
-                          Send a message to start the conversation
-                        </p>
-                      </div>
-                    ) : (
-                      messages.map((message, index) => {
-                        const showDateSeparator =
-                          index === 0 ||
-                          (!isToday(new Date(message.timestamp)) &&
-                            !isToday(new Date(messages[index - 1]?.timestamp)));
+                )}
+                <div className="space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium">No messages yet</p>
+                      <p className="text-sm">
+                        Send a message to start the conversation
+                      </p>
+                    </div>
+                  ) : (
+                    messages.map((message, index) => {
+                      const showDateSeparator =
+                        index === 0 ||
+                        (!isToday(new Date(message.timestamp)) &&
+                          !isToday(new Date(messages[index - 1]?.timestamp)));
 
-                        return (
-                          <div key={message.id}>
-                            {showDateSeparator && (
-                              <div className="flex items-center my-4">
-                                <Separator className="flex-1" />
-                                <span className="px-3 text-xs text-muted-foreground bg-background">
-                                  {formatMessageTimeFull(message.timestamp)}
-                                </span>
-                                <Separator className="flex-1" />
-                              </div>
-                            )}
+                      return (
+                        <div key={message.id}>
+                          {showDateSeparator && (
+                            <div className="flex items-center my-4">
+                              <Separator className="flex-1" />
+                              <span className="px-3 text-xs text-muted-foreground bg-background">
+                                {formatMessageTimeFull(message.timestamp)}
+                              </span>
+                              <Separator className="flex-1" />
+                            </div>
+                          )}
 
+                          <div
+                            className={`flex ${
+                              message.direction === "outbound"
+                                ? "justify-end"
+                                : "justify-start"
+                            }`}
+                          >
                             <div
-                              className={`flex ${
+                              className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 ${
                                 message.direction === "outbound"
-                                  ? "justify-end"
-                                  : "justify-start"
+                                  ? "bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-md"
+                                  : "bg-muted/70 backdrop-blur-sm border border-border/40"
                               }`}
                             >
-                              <div
-                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
-                                  message.direction === "outbound"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted"
-                                }`}
-                              >
-                                <p className="text-sm whitespace-pre-wrap break-words">
-                                  {message.body}
-                                </p>
-                                <div className="flex items-center justify-between mt-2 gap-2">
-                                  <span className="text-xs opacity-70">
-                                    {format(
-                                      new Date(message.timestamp),
-                                      "HH:mm",
-                                    )}
-                                  </span>
-                                </div>
+                              <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                                {message.body}
+                              </p>
+                              <div className="flex items-center justify-between mt-2 gap-2">
+                                <span
+                                  className={`text-xs ${message.direction === "outbound" ? "opacity-75" : "opacity-70"}`}
+                                >
+                                  {format(
+                                    new Date(message.timestamp),
+                                    "h:mm a",
+                                  )}
+                                </span>
                               </div>
                             </div>
                           </div>
-                        );
-                      })
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
               </ScrollArea>
 
-              {/* Message Input */}
-              <div className="p-4 border-t border-border bg-card">
+              {/* Message Input - STICKY */}
+              <div className="sticky bottom-0 z-10 p-4 border-t border-border/40 bg-gradient-to-t from-card via-card to-card/80 backdrop-blur-xl shadow-2xl">
                 <div className="flex space-x-2">
                   <Input
                     value={newMessage}
@@ -1020,13 +1043,13 @@ export default function Conversations() {
                       }
                     }}
                     disabled={isSending}
-                    className="flex-1"
+                    className="flex-1 bg-muted/50 border-border/40 focus:border-primary/60 focus:ring-primary/20 rounded-lg"
                   />
                   <Button
                     onClick={sendMessage}
                     disabled={!newMessage.trim() || isSending}
                     size="sm"
-                    className="px-4"
+                    className="px-6 bg-gradient-to-r from-primary to-secondary hover:shadow-lg transition-all duration-300"
                   >
                     {isSending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

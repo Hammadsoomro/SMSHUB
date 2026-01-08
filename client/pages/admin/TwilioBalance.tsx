@@ -220,7 +220,12 @@ export default function TwilioBalance() {
               {/* Last Updated */}
               {lastUpdated && (
                 <p className="text-xs text-muted-foreground">
-                  Last updated: {lastUpdated.toLocaleTimeString()}
+                  Last updated:{" "}
+                  {lastUpdated.toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
                 </p>
               )}
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import TeamMemberLayout from "@/components/TeamMemberLayout";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Message, Contact } from "@shared/api";
+import ablyService from "@/services/ablyService";
 
 interface ConversationState {
   contact: Contact | null;
@@ -27,8 +28,14 @@ interface PhoneNumber {
   active: boolean;
 }
 
+interface MessageCache {
+  [contactId: string]: Message[];
+}
+
 export default function Messages() {
   const navigate = useNavigate();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [conversation, setConversation] = useState<ConversationState>({
     contact: null,
@@ -43,6 +50,16 @@ export default function Messages() {
   const [assignedPhoneNumbers, setAssignedPhoneNumbers] = useState<
     PhoneNumber[]
   >([]);
+  const [activePhoneNumberId, setActivePhoneNumberId] = useState<string | null>(
+    null,
+  );
+  const messagesCacheRef = useRef<MessageCache>({});
+  const contactsCacheRef = useRef<Contact[]>([]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversation.messages]);
 
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -50,11 +67,20 @@ export default function Messages() {
       navigate("/login");
       return;
     }
-    fetchContacts();
-    fetchAssignedPhoneNumber();
+    initializeMessages();
   }, [navigate]);
 
-  const fetchAssignedPhoneNumber = async () => {
+  const initializeMessages = async () => {
+    try {
+      setIsLoading(true);
+      // First load assigned phone numbers
+      await fetchAssignedPhoneNumbers();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAssignedPhoneNumbers = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/assigned-phone-number", {
@@ -63,32 +89,54 @@ export default function Messages() {
 
       if (response.ok) {
         const data = await response.json();
-        setAssignedPhoneNumbers(data.phoneNumbers || []);
+        const phoneNumbers = data.phoneNumbers || [];
+        setAssignedPhoneNumbers(phoneNumbers);
+
+        // Set first phone number as active and load its contacts
+        if (phoneNumbers.length > 0) {
+          const firstPhone = phoneNumbers[0];
+          setActivePhoneNumberId(firstPhone.id);
+          await fetchContacts(firstPhone.id);
+        }
       }
-    } catch {
-      // Error handled silently
+    } catch (err) {
+      console.error("Error fetching phone numbers:", err);
+      setError("Failed to load phone numbers");
     }
   };
 
-  const fetchContacts = async () => {
+  const fetchContacts = async (phoneNumberId: string) => {
+    if (!phoneNumberId) return;
     try {
-      setIsLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/messages/contacts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `/api/messages/contacts?phoneNumberId=${encodeURIComponent(phoneNumberId)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (!response.ok) throw new Error("Failed to fetch contacts");
       const data = await response.json();
-      setContacts(data.contacts || []);
-    } catch {
-      // Error handled silently
-    } finally {
-      setIsLoading(false);
+      const contacts = data.contacts || [];
+      setContacts(contacts);
+      contactsCacheRef.current = contacts;
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+      setError("Failed to load contacts");
     }
   };
 
   const fetchMessages = async (contactId: string) => {
+    // Check if messages are cached
+    if (messagesCacheRef.current[contactId]) {
+      setConversation((prev) => ({
+        ...prev,
+        messages: messagesCacheRef.current[contactId],
+      }));
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`/api/messages/conversation/${contactId}`, {
@@ -97,25 +145,49 @@ export default function Messages() {
 
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
-      setConversation({
-        contact: conversation.contact,
-        messages: data.messages || [],
-      });
-    } catch {
-      // Error handled silently
+      const messages = data.messages || [];
+      messagesCacheRef.current[contactId] = messages;
+      setConversation((prev) => ({
+        ...prev,
+        messages,
+      }));
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+      setError("Failed to load messages");
     }
   };
 
   const handleSelectContact = (contact: Contact) => {
     setNewConversationNumber("");
     setSearchTerm("");
-    setConversation({ ...conversation, contact });
+    setError("");
+
+    // Show cached messages immediately if available
+    const cachedMessages = messagesCacheRef.current[contact.id] || [];
+    setConversation({ contact, messages: cachedMessages });
+
+    // Fetch fresh messages in the background
     fetchMessages(contact.id);
+
+    // Subscribe to real-time updates
+    const storedUser = localStorage.getItem("user");
+    const userProfile = storedUser ? JSON.parse(storedUser) : null;
+    if (userProfile?.id) {
+      ablyService.subscribeToConversation(contact.id, userProfile.id, () => {
+        // Refresh messages when new ones arrive
+        fetchMessages(contact.id);
+      });
+    }
   };
 
   const handleStartNewConversation = (phoneNumber: string) => {
     if (!phoneNumber.trim()) {
       setError("Please enter a phone number");
+      return;
+    }
+
+    if (!activePhoneNumberId) {
+      setError("No phone number assigned. Please contact your administrator.");
       return;
     }
 
@@ -128,7 +200,7 @@ export default function Messages() {
       // Create temporary contact object for new conversation
       const tempContact: Contact = {
         id: `temp-${Date.now()}`,
-        phoneNumberId: "",
+        phoneNumberId: activePhoneNumberId,
         phoneNumber,
         unreadCount: 0,
       };
@@ -150,11 +222,35 @@ export default function Messages() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() || !conversation.contact) return;
+    if (!messageText.trim() || !conversation.contact || !activePhoneNumberId)
+      return;
 
-    setIsSending(true);
+    const messageToSend = messageText;
+    const contactId = conversation.contact.id;
+    setMessageText("");
     setError("");
+    setIsSending(true);
+
     try {
+      // Optimistic update - show message immediately
+      const optimisticMessage: Message = {
+        id: `temp-${Date.now()}`,
+        phoneNumberId: activePhoneNumberId,
+        from:
+          assignedPhoneNumbers.find((p) => p.id === activePhoneNumberId)
+            ?.phoneNumber || "",
+        to: conversation.contact.phoneNumber,
+        body: messageToSend,
+        direction: "outbound",
+        timestamp: new Date().toISOString(),
+        sid: "",
+      };
+
+      setConversation((prev) => ({
+        ...prev,
+        messages: [...prev.messages, optimisticMessage],
+      }));
+
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/send", {
         method: "POST",
@@ -164,8 +260,8 @@ export default function Messages() {
         },
         body: JSON.stringify({
           to: conversation.contact.phoneNumber,
-          body: messageText,
-          phoneNumberId: conversation.contact.phoneNumberId || "",
+          body: messageToSend,
+          phoneNumberId: activePhoneNumberId,
         }),
       });
 
@@ -174,16 +270,27 @@ export default function Messages() {
         throw new Error(errorData.error || "Failed to send message");
       }
 
-      setMessageText("");
+      // Clear message cache to force refresh
+      messagesCacheRef.current[contactId] = [];
+
+      // Refresh messages after sending
+      await fetchMessages(contactId);
 
       // If this was a new conversation, refresh contacts
-      if (conversation.contact.id.startsWith("temp-")) {
-        await fetchContacts();
-      } else {
-        await fetchMessages(conversation.contact.id);
+      if (contactId.startsWith("temp-")) {
+        await fetchContacts(activePhoneNumberId);
+        // Clear contacts cache to force refresh
+        contactsCacheRef.current = [];
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send message");
+      // Restore message text on error
+      setMessageText(messageToSend);
+      // Remove optimistic message on error
+      setConversation((prev) => ({
+        ...prev,
+        messages: prev.messages.filter((m) => !m.id.startsWith("temp-")),
+      }));
     } finally {
       setIsSending(false);
     }
@@ -313,25 +420,32 @@ export default function Messages() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {conversation.messages.length > 0 ? (
-                conversation.messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.direction === "outbound" ? "justify-end" : "justify-start"}`}
-                  >
+                <>
+                  {conversation.messages.map((msg) => (
                     <div
-                      className={`max-w-xs px-4 py-2 rounded-lg ${
-                        msg.direction === "outbound"
-                          ? "bg-primary text-white"
-                          : "bg-muted text-foreground"
-                      }`}
+                      key={msg.id}
+                      className={`flex ${msg.direction === "outbound" ? "justify-end" : "justify-start"}`}
                     >
-                      <p className="text-sm break-words">{msg.body}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {new Date(msg.timestamp).toLocaleTimeString()}
-                      </p>
+                      <div
+                        className={`max-w-xs px-4 py-2 rounded-lg ${
+                          msg.direction === "outbound"
+                            ? "bg-primary text-white"
+                            : "bg-muted text-foreground"
+                        }`}
+                      >
+                        <p className="text-sm break-words">{msg.body}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {new Date(msg.timestamp).toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
