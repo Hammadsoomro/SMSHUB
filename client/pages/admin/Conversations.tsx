@@ -731,6 +731,14 @@ export default function Conversations() {
           ? `${contact.name || contact.phoneNumber} pinned`
           : "Unpinned",
       );
+
+      // Reload fresh data from server to ensure consistency
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
     } catch (error: any) {
       console.error("Error toggling pin:", error);
       toast.error(error.message || "Failed to toggle pin");
