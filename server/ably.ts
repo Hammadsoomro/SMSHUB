@@ -168,8 +168,8 @@ class AblyServer {
       preview?: string;
     },
   ): Promise<void> {
-    if (!this.client) {
-      console.error("[AblyServer] Ably not initialized");
+    if (!this.isConnected || !this.client) {
+      console.warn("[AblyServer] Not connected to Ably - SMS notification skipped");
       return;
     }
 
@@ -179,11 +179,11 @@ class AblyServer {
       const channel = this.client.channels.get(channelName);
       await channel.publish("sms_received", data);
       console.log(
-        `[AblyServer] Published incoming SMS notification to ${channelName}`,
+        `[AblyServer] ✓ Published incoming SMS notification to ${channelName}`,
       );
     } catch (error) {
       console.error("[AblyServer] Error publishing SMS notification:", error);
-      throw error;
+      // Don't throw - Ably is optional
     }
   }
 
@@ -200,8 +200,8 @@ class AblyServer {
       error?: string;
     },
   ): Promise<void> {
-    if (!this.client) {
-      console.error("[AblyServer] Ably not initialized");
+    if (!this.isConnected || !this.client) {
+      console.warn("[AblyServer] Not connected to Ably - message status skipped");
       return;
     }
 
@@ -210,10 +210,10 @@ class AblyServer {
     try {
       const channel = this.client.channels.get(channelName);
       await channel.publish("message_status", data);
-      console.log(`[AblyServer] Published message status to ${channelName}`);
+      console.log(`[AblyServer] ✓ Published message status to ${channelName}`);
     } catch (error) {
       console.error("[AblyServer] Error publishing message status:", error);
-      throw error;
+      // Don't throw - Ably is optional
     }
   }
 
@@ -228,8 +228,8 @@ class AblyServer {
       action: "assigned" | "unassigned";
     },
   ): Promise<void> {
-    if (!this.client) {
-      console.error("[AblyServer] Ably not initialized");
+    if (!this.isConnected || !this.client) {
+      console.warn("[AblyServer] Not connected to Ably - phone assignment skipped");
       return;
     }
 
@@ -239,14 +239,14 @@ class AblyServer {
       const channel = this.client.channels.get(channelName);
       await channel.publish("phone_number_assignment", data);
       console.log(
-        `[AblyServer] Published phone number assignment to ${channelName}`,
+        `[AblyServer] ✓ Published phone number assignment to ${channelName}`,
       );
     } catch (error) {
       console.error(
         "[AblyServer] Error publishing phone number assignment:",
         error,
       );
-      throw error;
+      // Don't throw - Ably is optional
     }
   }
 
@@ -258,10 +258,20 @@ class AblyServer {
   }
 
   /**
-   * Check if initialized
+   * Check if connected to Ably
    */
   get isInitialized(): boolean {
-    return this.client !== null;
+    return this.isConnected && this.client !== null;
+  }
+
+  /**
+   * Get connection status
+   */
+  getConnectionStatus(): string {
+    if (!this.client) {
+      return "not_initialized";
+    }
+    return this.client.connection.state || "unknown";
   }
 }
 
