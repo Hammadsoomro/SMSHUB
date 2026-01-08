@@ -154,11 +154,7 @@ export default function Conversations() {
   // Subscribe to ALL contacts when active phone number changes or contacts are loaded
   // This ensures we receive SMS for all contacts regardless of which one is selected
   useEffect(() => {
-    if (
-      contacts.length > 0 &&
-      ablyService.connected &&
-      activePhoneNumber
-    ) {
+    if (contacts.length > 0 && ablyService.connected && activePhoneNumber) {
       const storedUser = localStorage.getItem("user");
       const userProfile = storedUser ? JSON.parse(storedUser) : null;
       const userId = userProfile?.id;
@@ -172,7 +168,9 @@ export default function Conversations() {
 
         // Subscribe to each contact
         contacts.forEach((contact) => {
-          console.log(`[Conversations] 📡 Setting up listener for contact: ${contact.id} (${contact.phoneNumber})`);
+          console.log(
+            `[Conversations] 📡 Setting up listener for contact: ${contact.id} (${contact.phoneNumber})`,
+          );
 
           const unsubscribe = ablyService.subscribeToConversation(
             contact.id,
@@ -184,15 +182,14 @@ export default function Conversations() {
               );
 
               // Load messages for the contact that received the SMS
-              console.log(`📨 Loading messages for contact: ${message.contactId}`);
+              console.log(
+                `📨 Loading messages for contact: ${message.contactId}`,
+              );
               loadMessages(message.contactId);
 
               // Show notification and play sound for inbound messages
               const currentNotifications = notificationsRef.current;
-              if (
-                currentNotifications &&
-                message.direction === "inbound"
-              ) {
+              if (currentNotifications && message.direction === "inbound") {
                 console.log("🔔 Playing notification sound...");
                 playNotificationSound();
 
@@ -640,7 +637,8 @@ export default function Conversations() {
   const playNotificationSound = () => {
     // Create notification sound using Web Audio API
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
       const now = audioContext.currentTime;
       const duration = 0.5;
 
@@ -1017,7 +1015,9 @@ export default function Conversations() {
                           const showDateSeparator =
                             index === 0 ||
                             (!isToday(new Date(message.timestamp)) &&
-                              !isToday(new Date(messages[index - 1]?.timestamp)));
+                              !isToday(
+                                new Date(messages[index - 1]?.timestamp),
+                              ));
 
                           return (
                             <div key={message.id}>
