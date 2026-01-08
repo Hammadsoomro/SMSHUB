@@ -748,11 +748,11 @@ export default function Conversations() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex w-full flex-1 overflow-hidden">
+      <div className="relative z-10 flex w-full flex-1 overflow-hidden bg-gradient-to-br from-background via-background to-muted/5">
         {/* Left Sidebar - Contact List & Controls */}
-        <div className="w-80 bg-card/80 backdrop-blur-xl border-r border-border flex flex-col overflow-hidden">
+        <div className="w-80 bg-card/60 backdrop-blur-2xl border-r border-border/60 flex flex-col overflow-hidden shadow-xl">
           {/* Header Section */}
-          <div className="p-4 border-b border-border bg-muted/20">
+          <div className="p-4 border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5 backdrop-blur-sm">
             {/* Search Contacts */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
