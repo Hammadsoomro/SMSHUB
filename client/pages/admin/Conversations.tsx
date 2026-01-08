@@ -612,6 +612,41 @@ export default function Conversations() {
     }
   };
 
+  const playNotificationSound = () => {
+    // Create notification sound using Web Audio API
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const now = audioContext.currentTime;
+      const duration = 0.5;
+
+      // Create multiple tones for a pleasant notification sound
+      const notes = [
+        { frequency: 800, start: now, duration: 0.15 },
+        { frequency: 1000, start: now + 0.15, duration: 0.15 },
+        { frequency: 1200, start: now + 0.3, duration: 0.2 },
+      ];
+
+      notes.forEach(({ frequency, start, duration: noteDuration }) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = "sine";
+
+        gainNode.gain.setValueAtTime(0.3, start);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, start + noteDuration);
+
+        oscillator.start(start);
+        oscillator.stop(start + noteDuration);
+      });
+    } catch (error) {
+      console.warn("Could not play notification sound:", error);
+    }
+  };
+
   const showNotification = (title: string, body: string) => {
     if (notifications && Notification.permission === "granted") {
       const notification = new Notification(title, {
