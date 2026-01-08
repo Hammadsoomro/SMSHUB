@@ -868,13 +868,28 @@ export default function Conversations() {
     return format(date, "MMM d, yyyy 'at' h:mm a");
   };
 
-  // Filter contacts based on search term
-  const filteredContacts = contacts.filter(
-    (contact) =>
-      (contact.name &&
-        contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      contact.phoneNumber.includes(searchTerm),
-  );
+  // Filter contacts based on search term and active tab
+  const filteredContacts = contacts
+    .filter(
+      (contact) => {
+        // Filter by category
+        const contactCategory = contact.category || "general";
+        if (contactCategory !== activeTab) return false;
+
+        // Filter by search term
+        return (
+          (contact.name &&
+            contact.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          contact.phoneNumber.includes(searchTerm)
+        );
+      },
+    )
+    .sort((a, b) => {
+      // Sort pinned contacts to the top
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0;
+    });
 
   const selectedContact = contacts.find((c) => c.id === selectedContactId);
   const totalUnreadCount = contacts.reduce(
