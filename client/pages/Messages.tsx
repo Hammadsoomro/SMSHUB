@@ -53,6 +53,8 @@ export default function Messages() {
   const [activePhoneNumberId, setActivePhoneNumberId] = useState<string | null>(
     null,
   );
+  const messagesCacheRef = useRef<MessageCache>({});
+  const contactsCacheRef = useRef<Contact[]>([]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
