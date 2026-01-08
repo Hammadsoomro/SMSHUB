@@ -1015,7 +1015,7 @@ export default function Conversations() {
                                 <span className="text-xs opacity-70">
                                   {format(
                                     new Date(message.timestamp),
-                                    "HH:mm",
+                                    "h:mm a",
                                   )}
                                 </span>
                               </div>
