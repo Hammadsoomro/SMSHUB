@@ -160,40 +160,33 @@ export default function Conversations() {
 
       if (userId) {
         console.log(
-          `[Conversations] Subscribing to messages for contact: ${selectedContactId}`,
+          `[Conversations] 🔌 Ably real-time connection: Subscribing to contact ${selectedContactId}`,
         );
         const unsubscribe = ablyService.subscribeToConversation(
           selectedContactId,
           userId,
           (message: any) => {
-            console.log("📱 Real-time message received:", message);
+            console.log("📱 Real-time SMS received via Ably (NOT polling):", message);
 
-            // Update messages immediately
+            // Only reload messages if this is for the currently selected contact
             if (message.contactId === selectedContactId) {
+              console.log(`📨 Loading new messages for selected contact...`);
               loadMessages(selectedContactId);
+
+              // Update the page title to show unread count
+              updatePageTitle();
             }
 
-            // Reload contacts to update UI
-            const currentActivePhone = activePhoneNumberRef.current;
-            if (currentActivePhone) {
-              const phoneNum = phoneNumbersRef.current.find(
-                (p) => p.phoneNumber === currentActivePhone,
-              );
-              if (phoneNum) {
-                loadContactsForPhoneNumber(phoneNum.id);
-              }
-            }
-
-            // Show notification
+            // Show notification and play sound for inbound messages
             const currentNotifications = notificationsRef.current;
             if (currentNotifications && message.direction === "inbound") {
+              console.log("🔔 Playing notification sound...");
+              playNotificationSound();
               showNotification(
-                "New Message",
+                "نیا SMS پیغام 📱",
                 `${message.from}: ${message.message.substring(0, 50)}`,
               );
             }
-
-            updatePageTitle();
           },
         );
 
