@@ -230,6 +230,7 @@ export default function Messages() {
       return;
 
     const messageToSend = messageText;
+    const contactId = conversation.contact.id;
     setMessageText("");
     setError("");
     setIsSending(true);
@@ -273,12 +274,17 @@ export default function Messages() {
         throw new Error(errorData.error || "Failed to send message");
       }
 
+      // Clear message cache to force refresh
+      messagesCacheRef.current[contactId] = [];
+
       // Refresh messages after sending
-      await fetchMessages(conversation.contact.id);
+      await fetchMessages(contactId);
 
       // If this was a new conversation, refresh contacts
-      if (conversation.contact.id.startsWith("temp-")) {
+      if (contactId.startsWith("temp-")) {
         await fetchContacts(activePhoneNumberId);
+        // Clear contacts cache to force refresh
+        contactsCacheRef.current = [];
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send message");
