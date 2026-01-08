@@ -427,18 +427,33 @@ export default function Conversations() {
 
   const markMessagesAsRead = async (contactId: string) => {
     try {
-      await ApiService.markAsRead(contactId);
+      console.log(
+        `[markMessagesAsRead] Marking contact ${contactId} as read`,
+      );
 
-      // Update contact unread count in UI
-      setContacts((prev) =>
-        prev.map((contact) =>
+      // Update UI immediately (optimistic update)
+      setContacts((prev) => {
+        const updated = prev.map((contact) =>
           contact.id === contactId ? { ...contact, unreadCount: 0 } : contact,
-        ),
+        );
+        console.log(
+          `[markMessagesAsRead] UI updated, new state:`,
+          updated.find((c) => c.id === contactId),
+        );
+        return updated;
+      });
+
+      // Then call server
+      await ApiService.markAsRead(contactId);
+      console.log(
+        `[markMessagesAsRead] Server confirmed contact ${contactId} as read`,
       );
 
       updatePageTitle();
     } catch (error) {
       console.error("Error marking messages as read:", error);
+      // Show error toast but don't update UI (keep optimistic update)
+      toast.error("Failed to update read status, but continuing...");
     }
   };
 
