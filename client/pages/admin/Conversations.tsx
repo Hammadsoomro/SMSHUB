@@ -132,12 +132,14 @@ export default function Conversations() {
 
   // Initialize everything
   useEffect(() => {
+    console.log("[Conversations] Initializing component...");
     loadInitialData();
     requestNotificationPermission();
 
-    // Set theme
+    // Set theme on document root
     document.documentElement.classList.toggle("dark", isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+    console.log(`[Conversations] Theme initialized: ${isDarkMode ? "dark" : "light"}`);
 
     return () => {
       try {
@@ -147,6 +149,11 @@ export default function Conversations() {
       }
     };
   }, []);
+
+  // Update document theme when isDarkMode changes
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
 
   // Initialize Ably separately with better lifecycle management
   useEffect(() => {
