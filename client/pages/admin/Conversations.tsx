@@ -1002,10 +1002,10 @@ export default function Conversations() {
                             }`}
                           >
                             <div
-                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-sm ${
+                              className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 ${
                                 message.direction === "outbound"
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted"
+                                  ? "bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-md"
+                                  : "bg-muted/70 backdrop-blur-sm border border-border/40"
                               }`}
                             >
                               <p className="text-sm whitespace-pre-wrap break-words">
