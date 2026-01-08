@@ -30,6 +30,7 @@ import {
   handleGetDashboardStats,
   handleGetInsights,
   handleDeleteAccount,
+  handleGetUserById,
 } from "./routes/admin";
 
 // Phone purchase routes
