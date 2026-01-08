@@ -748,6 +748,43 @@ export default function Conversations() {
     0,
   );
 
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-destructive" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-2">
+              Failed to Load Connectlify
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">{loadError}</p>
+          </div>
+          <div className="space-y-2">
+            <Button
+              onClick={() => {
+                setLoadError(null);
+                setIsLoading(true);
+                loadInitialData();
+              }}
+              className="w-full"
+            >
+              Retry
+            </Button>
+            <Button
+              onClick={() => navigate("/login")}
+              variant="outline"
+              className="w-full"
+            >
+              Back to Login
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
