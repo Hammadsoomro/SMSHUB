@@ -101,7 +101,14 @@ class AblyService {
     callback: (message: AblyMessage) => void,
   ): () => void {
     if (!this.client) {
-      console.error("[AblyService] Not connected to Ably");
+      console.error("[AblyService] ❌ Not connected to Ably - cannot subscribe");
+      return () => {};
+    }
+
+    if (!contactId || !userId) {
+      console.error(
+        `[AblyService] ❌ Invalid parameters for subscription - contactId: ${contactId}, userId: ${userId}`,
+      );
       return () => {};
     }
 
@@ -109,19 +116,30 @@ class AblyService {
     const channelName = `sms:${userId}:${contactId}`;
 
     try {
+      // Check connection state
+      const connectionState = this.client.connection.state;
+      console.log(
+        `[AblyService] 📡 Subscribing to channel: ${channelName} (connection state: ${connectionState})`,
+      );
+
       // Get or create channel
       let channel = this.channels.get(channelName);
       if (!channel) {
         channel = this.client.channels.get(channelName);
         this.channels.set(channelName, channel);
-        console.log(`[AblyService] Subscribing to channel: ${channelName}`);
+        console.log(
+          `[AblyService] ✅ Channel created/retrieved: ${channelName}`,
+        );
       }
 
       // Subscribe to messages
       const handleMessage = (message: Types.Message) => {
         try {
           const data = message.data as AblyMessage;
-          console.log("[AblyService] Received message:", data);
+          console.log(
+            `[AblyService] 📨 Received message on ${channelName}:`,
+            data,
+          );
           callback(data);
         } catch (error) {
           console.error("[AblyService] Error processing message:", error);
@@ -129,14 +147,22 @@ class AblyService {
       };
 
       channel.subscribe("message", handleMessage);
+      console.log(`[AblyService] ✅ Subscribed to "message" event on ${channelName}`);
 
       // Return unsubscribe function
       return () => {
-        channel!.unsubscribe("message", handleMessage);
-        console.log(`[AblyService] Unsubscribed from channel: ${channelName}`);
+        try {
+          channel!.unsubscribe("message", handleMessage);
+          console.log(`[AblyService] ✅ Unsubscribed from channel: ${channelName}`);
+        } catch (error) {
+          console.error(`[AblyService] Error unsubscribing from ${channelName}:`, error);
+        }
       };
     } catch (error) {
-      console.error("[AblyService] Error subscribing to channel:", error);
+      console.error(
+        `[AblyService] ❌ Error subscribing to channel ${channelName}:`,
+        error,
+      );
       return () => {};
     }
   }
