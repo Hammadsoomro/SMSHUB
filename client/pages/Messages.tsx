@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Message, Contact } from "@shared/api";
+import ablyService from "@/services/ablyService";
 
 interface ConversationState {
   contact: Contact | null;
@@ -43,6 +44,9 @@ export default function Messages() {
   const [assignedPhoneNumbers, setAssignedPhoneNumbers] = useState<
     PhoneNumber[]
   >([]);
+  const [activePhoneNumberId, setActivePhoneNumberId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -50,11 +54,20 @@ export default function Messages() {
       navigate("/login");
       return;
     }
-    fetchContacts();
-    fetchAssignedPhoneNumber();
+    initializeMessages();
   }, [navigate]);
 
-  const fetchAssignedPhoneNumber = async () => {
+  const initializeMessages = async () => {
+    try {
+      setIsLoading(true);
+      // First load assigned phone numbers
+      await fetchAssignedPhoneNumbers();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAssignedPhoneNumbers = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/assigned-phone-number", {
@@ -63,28 +76,39 @@ export default function Messages() {
 
       if (response.ok) {
         const data = await response.json();
-        setAssignedPhoneNumbers(data.phoneNumbers || []);
+        const phoneNumbers = data.phoneNumbers || [];
+        setAssignedPhoneNumbers(phoneNumbers);
+
+        // Set first phone number as active and load its contacts
+        if (phoneNumbers.length > 0) {
+          const firstPhone = phoneNumbers[0];
+          setActivePhoneNumberId(firstPhone.id);
+          await fetchContacts(firstPhone.id);
+        }
       }
-    } catch {
-      // Error handled silently
+    } catch (err) {
+      console.error("Error fetching phone numbers:", err);
+      setError("Failed to load phone numbers");
     }
   };
 
-  const fetchContacts = async () => {
+  const fetchContacts = async (phoneNumberId: string) => {
+    if (!phoneNumberId) return;
     try {
-      setIsLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/messages/contacts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `/api/messages/contacts?phoneNumberId=${encodeURIComponent(phoneNumberId)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (!response.ok) throw new Error("Failed to fetch contacts");
       const data = await response.json();
       setContacts(data.contacts || []);
-    } catch {
-      // Error handled silently
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+      setError("Failed to load contacts");
     }
   };
 
