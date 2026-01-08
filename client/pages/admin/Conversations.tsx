@@ -898,8 +898,8 @@ export default function Conversations() {
         <div className="flex-1 flex flex-col bg-background/80 backdrop-blur-xl">
           {selectedContact ? (
             <>
-              {/* Chat Header */}
-              <div className="p-4 border-b border-border bg-card">
+              {/* Chat Header - STICKY */}
+              <div className="sticky top-0 z-10 p-4 border-b border-border bg-card/95 backdrop-blur-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
