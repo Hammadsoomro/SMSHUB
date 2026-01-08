@@ -128,6 +128,15 @@ export default function Messages() {
   };
 
   const fetchMessages = async (contactId: string) => {
+    // Check if messages are cached
+    if (messagesCacheRef.current[contactId]) {
+      setConversation((prev) => ({
+        ...prev,
+        messages: messagesCacheRef.current[contactId],
+      }));
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`/api/messages/conversation/${contactId}`, {
@@ -136,9 +145,11 @@ export default function Messages() {
 
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
+      const messages = data.messages || [];
+      messagesCacheRef.current[contactId] = messages;
       setConversation((prev) => ({
         ...prev,
-        messages: data.messages || [],
+        messages,
       }));
     } catch (err) {
       console.error("Error fetching messages:", err);
