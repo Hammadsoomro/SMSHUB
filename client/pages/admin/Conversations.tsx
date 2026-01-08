@@ -43,6 +43,7 @@ import AdBanner from "@/components/AdBanner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
 import ConversationsTopBar from "@/components/ConversationsTopBar";
+import ContactCard from "@/components/ContactCard";
 import { Message, Contact, PhoneNumber, User as UserType } from "@shared/api";
 
 interface ConversationContact extends Contact {
