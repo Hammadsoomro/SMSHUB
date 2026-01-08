@@ -259,6 +259,7 @@ export async function createServer() {
     authMiddleware,
     handleGetAssignedPhoneNumber,
   );
+  app.get("/api/messages/insights", authMiddleware, handleGetMessageInsights);
 
   // Twilio balance route (requires authentication)
   app.get(
