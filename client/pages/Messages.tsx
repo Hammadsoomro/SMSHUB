@@ -395,25 +395,28 @@ export default function Messages() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {conversation.messages.length > 0 ? (
-                conversation.messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.direction === "outbound" ? "justify-end" : "justify-start"}`}
-                  >
+                <>
+                  {conversation.messages.map((msg) => (
                     <div
-                      className={`max-w-xs px-4 py-2 rounded-lg ${
-                        msg.direction === "outbound"
-                          ? "bg-primary text-white"
-                          : "bg-muted text-foreground"
-                      }`}
+                      key={msg.id}
+                      className={`flex ${msg.direction === "outbound" ? "justify-end" : "justify-start"}`}
                     >
-                      <p className="text-sm break-words">{msg.body}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {new Date(msg.timestamp).toLocaleTimeString()}
-                      </p>
+                      <div
+                        className={`max-w-xs px-4 py-2 rounded-lg ${
+                          msg.direction === "outbound"
+                            ? "bg-primary text-white"
+                            : "bg-muted text-foreground"
+                        }`}
+                      >
+                        <p className="text-sm break-words">{msg.body}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
