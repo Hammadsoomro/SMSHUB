@@ -118,7 +118,9 @@ export default function Messages() {
 
       if (!response.ok) throw new Error("Failed to fetch contacts");
       const data = await response.json();
-      setContacts(data.contacts || []);
+      const contacts = data.contacts || [];
+      setContacts(contacts);
+      contactsCacheRef.current = contacts;
     } catch (err) {
       console.error("Error fetching contacts:", err);
       setError("Failed to load contacts");
