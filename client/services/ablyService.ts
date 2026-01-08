@@ -101,7 +101,9 @@ class AblyService {
     callback: (message: AblyMessage) => void,
   ): () => void {
     if (!this.client) {
-      console.error("[AblyService] ❌ Not connected to Ably - cannot subscribe");
+      console.error(
+        "[AblyService] ❌ Not connected to Ably - cannot subscribe",
+      );
       return () => {};
     }
 
@@ -147,15 +149,22 @@ class AblyService {
       };
 
       channel.subscribe("message", handleMessage);
-      console.log(`[AblyService] ✅ Subscribed to "message" event on ${channelName}`);
+      console.log(
+        `[AblyService] ✅ Subscribed to "message" event on ${channelName}`,
+      );
 
       // Return unsubscribe function
       return () => {
         try {
           channel!.unsubscribe("message", handleMessage);
-          console.log(`[AblyService] ✅ Unsubscribed from channel: ${channelName}`);
+          console.log(
+            `[AblyService] ✅ Unsubscribed from channel: ${channelName}`,
+          );
         } catch (error) {
-          console.error(`[AblyService] Error unsubscribing from ${channelName}:`, error);
+          console.error(
+            `[AblyService] Error unsubscribing from ${channelName}:`,
+            error,
+          );
         }
       };
     } catch (error) {

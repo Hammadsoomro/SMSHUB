@@ -20,7 +20,9 @@ class AblyServer {
 
     const apiKey = process.env.ABLY_API_KEY;
     if (!apiKey) {
-      console.error("[AblyServer] ABLY_API_KEY environment variable is not set");
+      console.error(
+        "[AblyServer] ABLY_API_KEY environment variable is not set",
+      );
       this.isConnected = false;
       return; // Don't throw - Ably is optional
     }
@@ -111,7 +113,9 @@ class AblyServer {
     },
   ): Promise<void> {
     if (!this.isConnected || !this.client) {
-      console.warn("[AblyServer] Not connected to Ably - message queued for next connection");
+      console.warn(
+        "[AblyServer] Not connected to Ably - message queued for next connection",
+      );
       // Queue for retry or skip gracefully
       return;
     }
@@ -139,7 +143,9 @@ class AblyServer {
     },
   ): Promise<void> {
     if (!this.isConnected || !this.client) {
-      console.warn("[AblyServer] Not connected to Ably - contact update skipped");
+      console.warn(
+        "[AblyServer] Not connected to Ably - contact update skipped",
+      );
       return;
     }
 
@@ -169,7 +175,9 @@ class AblyServer {
     },
   ): Promise<void> {
     if (!this.isConnected || !this.client) {
-      console.warn("[AblyServer] Not connected to Ably - SMS notification skipped");
+      console.warn(
+        "[AblyServer] Not connected to Ably - SMS notification skipped",
+      );
       return;
     }
 
@@ -201,7 +209,9 @@ class AblyServer {
     },
   ): Promise<void> {
     if (!this.isConnected || !this.client) {
-      console.warn("[AblyServer] Not connected to Ably - message status skipped");
+      console.warn(
+        "[AblyServer] Not connected to Ably - message status skipped",
+      );
       return;
     }
 
@@ -229,7 +239,9 @@ class AblyServer {
     },
   ): Promise<void> {
     if (!this.isConnected || !this.client) {
-      console.warn("[AblyServer] Not connected to Ably - phone assignment skipped");
+      console.warn(
+        "[AblyServer] Not connected to Ably - phone assignment skipped",
+      );
       return;
     }
 

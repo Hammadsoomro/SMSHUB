@@ -144,17 +144,28 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
             ...publishData,
             userId: phoneNumber.adminId,
           });
-          await ablyServer.broadcastContactUpdate(phoneNumber.adminId, contactUpdate);
+          await ablyServer.broadcastContactUpdate(
+            phoneNumber.adminId,
+            contactUpdate,
+          );
         }
 
         // Also publish to assigned team member if assigned
-        if (phoneNumber.assignedTo && phoneNumber.assignedTo !== phoneNumber.adminId) {
-          console.log(`[Webhooks] Publishing to team member: ${phoneNumber.assignedTo}`);
+        if (
+          phoneNumber.assignedTo &&
+          phoneNumber.assignedTo !== phoneNumber.adminId
+        ) {
+          console.log(
+            `[Webhooks] Publishing to team member: ${phoneNumber.assignedTo}`,
+          );
           await ablyServer.publishMessage(phoneNumber.assignedTo, contactId, {
             ...publishData,
             userId: phoneNumber.assignedTo,
           });
-          await ablyServer.broadcastContactUpdate(phoneNumber.assignedTo, contactUpdate);
+          await ablyServer.broadcastContactUpdate(
+            phoneNumber.assignedTo,
+            contactUpdate,
+          );
         }
       } catch (error) {
         console.error("[Webhooks] Error publishing Ably events:", error);

@@ -368,35 +368,30 @@ export async function createServer() {
   );
 
   // Debug endpoint for Ably connection status
-  app.get(
-    "/api/admin/ably-debug",
-    authMiddleware,
-    adminOnly,
-    (req, res) => {
-      const apiKey = process.env.ABLY_API_KEY;
-      const isInitialized = ablyServer.isInitialized;
-      const connectionStatus = ablyServer.getConnectionStatus();
+  app.get("/api/admin/ably-debug", authMiddleware, adminOnly, (req, res) => {
+    const apiKey = process.env.ABLY_API_KEY;
+    const isInitialized = ablyServer.isInitialized;
+    const connectionStatus = ablyServer.getConnectionStatus();
 
-      res.json({
-        ably: {
-          initialized: isInitialized,
-          connectionStatus: connectionStatus,
-          hasApiKey: !!apiKey,
-          apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + "..." : "not set",
-        },
-        status: isInitialized ? "CONNECTED" : "DISCONNECTED",
-        troubleshooting: !isInitialized
-          ? [
-              "1. Check ABLY_API_KEY environment variable is set",
-              "2. Verify API key format: should start with 'eVc' or similar",
-              "3. Check Ably service status at ably.io",
-              "4. Ensure internet connectivity from server",
-              "5. Real-time features will work with fallback polling",
-            ]
-          : [],
-      });
-    },
-  );
+    res.json({
+      ably: {
+        initialized: isInitialized,
+        connectionStatus: connectionStatus,
+        hasApiKey: !!apiKey,
+        apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + "..." : "not set",
+      },
+      status: isInitialized ? "CONNECTED" : "DISCONNECTED",
+      troubleshooting: !isInitialized
+        ? [
+            "1. Check ABLY_API_KEY environment variable is set",
+            "2. Verify API key format: should start with 'eVc' or similar",
+            "3. Check Ably service status at ably.io",
+            "4. Ensure internet connectivity from server",
+            "5. Real-time features will work with fallback polling",
+          ]
+        : [],
+    });
+  });
 
   return app;
 }
