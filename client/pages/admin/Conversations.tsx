@@ -364,13 +364,10 @@ export default function Conversations() {
       }
 
       setIsConnecting(true);
-      console.log("🔌 Initializing Ably for real-time messaging...");
-
       // Connect to Ably service with timeout
       const connectionPromise = ablyService.connect(token);
       const timeoutPromise = new Promise<boolean>((resolve) => {
         setTimeout(() => {
-          console.warn("Ably connection timeout");
           resolve(false);
         }, 15000); // 15 second timeout
       });
@@ -380,13 +377,9 @@ export default function Conversations() {
       setIsConnecting(false);
 
       if (!connected) {
-        console.warn("Ably connection failed or timed out");
-        // Don't show error toast - just silently continue
-        // Real-time updates are optional
+        // Ably failed but app continues with fallback mode
         return;
       }
-
-      console.log("✅ Ably connected successfully");
 
       // Subscribe to contact updates once connected
       try {
