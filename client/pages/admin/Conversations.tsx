@@ -411,8 +411,7 @@ export default function Conversations() {
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
-          console.log("👥 Contact list updated via Ably:", data);
-          const currentActivePhone = activePhoneNumberRef.current;
+            const currentActivePhone = activePhoneNumberRef.current;
           if (currentActivePhone) {
             const phoneNum = phoneNumbersRef.current.find(
               (p) => p.phoneNumber === currentActivePhone,
@@ -503,9 +502,6 @@ export default function Conversations() {
 
       // Then call server
       await ApiService.markAsRead(contactId);
-      console.log(
-        `[markMessagesAsRead] Server confirmed contact ${contactId} as read`,
-      );
 
       updatePageTitle();
     } catch (error) {
@@ -613,9 +609,6 @@ export default function Conversations() {
       // Auto-select the newly added contact
       if (newContact?.id) {
         setSelectedContactId(newContact.id);
-        console.log(
-          `[addContactFromDialog] Auto-opening chat for new contact: ${newContact.id}`,
-        );
         toast.success(`Contact "${name}" added and chat opened!`);
       }
     } catch (error: any) {
