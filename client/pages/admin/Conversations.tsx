@@ -142,16 +142,12 @@ export default function Conversations() {
 
   // Initialize everything
   useEffect(() => {
-    console.log("[Conversations] Initializing component...");
     loadInitialData();
     requestNotificationPermission();
 
     // Set theme on document root
     document.documentElement.classList.toggle("dark", isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-    console.log(
-      `[Conversations] Theme initialized: ${isDarkMode ? "dark" : "light"}`,
-    );
 
     return () => {
       try {
@@ -298,7 +294,6 @@ export default function Conversations() {
 
       if (!token) {
         // No token found, redirect to login
-        console.warn("No authentication token found. Redirecting to login...");
         navigate("/login");
         return;
       }
@@ -365,7 +360,6 @@ export default function Conversations() {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.warn("No auth token found for Ably connection");
         return;
       }
 
