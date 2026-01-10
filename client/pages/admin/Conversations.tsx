@@ -411,7 +411,7 @@ export default function Conversations() {
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
-            const currentActivePhone = activePhoneNumberRef.current;
+          const currentActivePhone = activePhoneNumberRef.current;
           if (currentActivePhone) {
             const phoneNum = phoneNumbersRef.current.find(
               (p) => p.phoneNumber === currentActivePhone,
