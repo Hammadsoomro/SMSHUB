@@ -3,7 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { MessageSquare, Loader2, AlertCircle, Sun, Moon } from "lucide-react";
+import {
+  MessageSquare,
+  Loader2,
+  AlertCircle,
+  Sun,
+  Moon,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { LoginRequest } from "@shared/api";
 
 interface LoginFormData {
@@ -15,6 +23,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
     return stored === "dark";
@@ -141,14 +150,28 @@ export default function Login() {
 
             <div>
               <label className="text-sm font-medium mb-2 block">Password</label>
-              <Input
-                {...register("password", {
-                  required: "Password is required",
-                })}
-                type="password"
-                placeholder="••••••••"
-                className="h-10"
-              />
+              <div className="relative">
+                <Input
+                  {...register("password", {
+                    required: "Password is required",
+                  })}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="h-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-xs text-destructive mt-1">
                   {errors.password.message}

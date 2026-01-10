@@ -142,16 +142,12 @@ export default function Conversations() {
 
   // Initialize everything
   useEffect(() => {
-    console.log("[Conversations] Initializing component...");
     loadInitialData();
     requestNotificationPermission();
 
     // Set theme on document root
     document.documentElement.classList.toggle("dark", isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
-    console.log(
-      `[Conversations] Theme initialized: ${isDarkMode ? "dark" : "light"}`,
-    );
 
     return () => {
       try {
@@ -298,7 +294,6 @@ export default function Conversations() {
 
       if (!token) {
         // No token found, redirect to login
-        console.warn("No authentication token found. Redirecting to login...");
         navigate("/login");
         return;
       }
@@ -365,18 +360,14 @@ export default function Conversations() {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.warn("No auth token found for Ably connection");
         return;
       }
 
       setIsConnecting(true);
-      console.log("🔌 Initializing Ably for real-time messaging...");
-
       // Connect to Ably service with timeout
       const connectionPromise = ablyService.connect(token);
       const timeoutPromise = new Promise<boolean>((resolve) => {
         setTimeout(() => {
-          console.warn("Ably connection timeout");
           resolve(false);
         }, 15000); // 15 second timeout
       });
@@ -386,13 +377,9 @@ export default function Conversations() {
       setIsConnecting(false);
 
       if (!connected) {
-        console.warn("Ably connection failed or timed out");
-        // Don't show error toast - just silently continue
-        // Real-time updates are optional
+        // Ably failed but app continues with fallback mode
         return;
       }
-
-      console.log("✅ Ably connected successfully");
 
       // Subscribe to contact updates once connected
       try {
@@ -424,7 +411,6 @@ export default function Conversations() {
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
-          console.log("👥 Contact list updated via Ably:", data);
           const currentActivePhone = activePhoneNumberRef.current;
           if (currentActivePhone) {
             const phoneNum = phoneNumbersRef.current.find(
@@ -452,12 +438,13 @@ export default function Conversations() {
     try {
       const contactsData = await ApiService.getContacts(phoneNumberId);
       setContacts((prevContacts) => {
-        // Merge with existing data to preserve any optimistic updates
+        // Merge with existing data to preserve only optimistic read state
         const updatedContacts = (contactsData || []).map((freshContact) => {
           const existingContact = prevContacts.find(
             (c) => c.id === freshContact.id,
           );
-          // Preserve local state properties (isPinned, category, name edits, etc.)
+          // Only preserve unreadCount if we marked as read optimistically
+          // Use fresh data from server for all other fields (category, isPinned, name)
           if (existingContact) {
             // Keep unreadCount from local state if it's lower (we marked as read)
             const unreadCount =
@@ -465,12 +452,9 @@ export default function Conversations() {
                 ? existingContact.unreadCount
                 : freshContact.unreadCount;
 
-            // Preserve pinned and category status from local edits
+            // Use fresh data from server, only override unreadCount if we marked as read
             return {
               ...freshContact,
-              isPinned: existingContact.isPinned ?? freshContact.isPinned,
-              category: existingContact.category ?? freshContact.category,
-              name: existingContact.name ?? freshContact.name,
               unreadCount,
             };
           }
@@ -518,9 +502,6 @@ export default function Conversations() {
 
       // Then call server
       await ApiService.markAsRead(contactId);
-      console.log(
-        `[markMessagesAsRead] Server confirmed contact ${contactId} as read`,
-      );
 
       updatePageTitle();
     } catch (error) {
@@ -628,9 +609,6 @@ export default function Conversations() {
       // Auto-select the newly added contact
       if (newContact?.id) {
         setSelectedContactId(newContact.id);
-        console.log(
-          `[addContactFromDialog] Auto-opening chat for new contact: ${newContact.id}`,
-        );
         toast.success(`Contact "${name}" added and chat opened!`);
       }
     } catch (error: any) {
@@ -733,6 +711,14 @@ export default function Conversations() {
           ? `${contact.name || contact.phoneNumber} pinned`
           : "Unpinned",
       );
+
+      // Reload fresh data from server to ensure consistency
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
     } catch (error: any) {
       console.error("Error toggling pin:", error);
       toast.error(error.message || "Failed to toggle pin");
@@ -769,10 +755,18 @@ export default function Conversations() {
       );
       setMovingContact(null);
       setMoveToCategory("sales");
+
+      // Reload fresh data from server to ensure consistency
+      const phoneNum = phoneNumbers.find(
+        (p) => p.phoneNumber === activePhoneNumber,
+      );
+      if (phoneNum) {
+        await loadContactsForPhoneNumber(phoneNum.id);
+      }
     } catch (error: any) {
       console.error("Error moving contact:", error);
       toast.error(error.message || "Failed to move contact");
-      // Revert optimistic update
+      // Revert optimistic update on error
       const phoneNum = phoneNumbers.find(
         (p) => p.phoneNumber === activePhoneNumber,
       );

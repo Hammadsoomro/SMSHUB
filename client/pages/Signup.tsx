@@ -3,7 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { MessageSquare, Loader2, AlertCircle, Sun, Moon } from "lucide-react";
+import {
+  MessageSquare,
+  Loader2,
+  AlertCircle,
+  Sun,
+  Moon,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { SignupRequest } from "@shared/api";
 
 interface SignupFormData {
@@ -17,6 +25,8 @@ export default function Signup() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem("theme");
     return stored === "dark";
@@ -162,18 +172,32 @@ export default function Signup() {
 
             <div>
               <label className="text-sm font-medium mb-2 block">Password</label>
-              <Input
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 8,
-                    message: "Password must be at least 8 characters",
-                  },
-                })}
-                type="password"
-                placeholder="••••••••"
-                className="h-10"
-              />
+              <div className="relative">
+                <Input
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 8,
+                      message: "Password must be at least 8 characters",
+                    },
+                  })}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="h-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-xs text-destructive mt-1">
                   {errors.password.message}
@@ -185,14 +209,28 @@ export default function Signup() {
               <label className="text-sm font-medium mb-2 block">
                 Confirm Password
               </label>
-              <Input
-                {...register("confirmPassword", {
-                  required: "Please confirm your password",
-                })}
-                type="password"
-                placeholder="••••••••"
-                className="h-10"
-              />
+              <div className="relative">
+                <Input
+                  {...register("confirmPassword", {
+                    required: "Please confirm your password",
+                  })}
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="h-10 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="text-xs text-destructive mt-1">
                   {errors.confirmPassword.message}

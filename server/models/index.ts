@@ -128,6 +128,8 @@ const contactSchema = new Schema<IContact>(
     lastMessage: { type: String, sparse: true },
     lastMessageTime: { type: String, sparse: true },
     unreadCount: { type: Number, default: 0 },
+    isPinned: { type: Boolean, default: false },
+    category: { type: String, enum: ["general", "sales"], default: "general" },
   },
   { collection: "contacts" },
 );

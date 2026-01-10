@@ -331,7 +331,7 @@ export const handleAddContact: RequestHandler = async (req, res) => {
 export const handleUpdateContact: RequestHandler = async (req, res) => {
   try {
     const { contactId } = req.params;
-    const { name } = req.body;
+    const { name, isPinned, category } = req.body;
 
     const contact = await storage.getContactById(contactId);
     if (!contact) {
@@ -341,6 +341,8 @@ export const handleUpdateContact: RequestHandler = async (req, res) => {
     const updatedContact: Contact = {
       ...contact,
       ...(name && { name }),
+      ...(isPinned !== undefined && { isPinned }),
+      ...(category && { category }),
     };
 
     await storage.updateContact(updatedContact);
