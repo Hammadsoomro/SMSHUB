@@ -17,7 +17,10 @@ const COUNTRY_CODES: Record<string, { code: string; name: string }> = {
 export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const { countryCode } = req.query as { countryCode: string };
+    const { countryCode, state } = req.query as {
+      countryCode: string;
+      state?: string;
+    };
 
     if (!countryCode || !COUNTRY_CODES[countryCode]) {
       return res.status(400).json({ error: "Invalid country code" });
@@ -32,25 +35,43 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
     }
 
     // Fetch available numbers from Twilio
-    const twilioClient = new TwilioClient(
-      credentials.accountSid,
-      credentials.authToken,
-    );
-    let availableNumbers = await twilioClient.getAvailableNumbers(countryCode);
+    // Try multiple area codes if the first attempt doesn't return any numbers
+    let availableNumbers: any = null;
+    let areaCodeIndex = 0;
+    const maxRetries = 5; // Try up to 5 different area codes
 
-    // If no numbers found and it's US/CA, try alternative area codes
-    if (
-      (!availableNumbers.available_phone_numbers ||
-        availableNumbers.available_phone_numbers.length === 0) &&
-      (countryCode === "US" || countryCode === "CA")
-    ) {
-      const fallbackClient = new TwilioClient(
+    for (areaCodeIndex = 0; areaCodeIndex < maxRetries; areaCodeIndex++) {
+      const twilioClient = new TwilioClient(
         credentials.accountSid,
         credentials.authToken,
       );
-      availableNumbers = await fallbackClient.getAvailableNumbers(
+      availableNumbers = await twilioClient.getAvailableNumbers(
         countryCode,
-        true,
+        areaCodeIndex,
+        state,
+      );
+
+      // If we got numbers or got an actual error, stop retrying
+      if (
+        availableNumbers.available_phone_numbers &&
+        availableNumbers.available_phone_numbers.length > 0
+      ) {
+        console.log(
+          `Found ${availableNumbers.available_phone_numbers.length} numbers for ${countryCode}/${state} using area code index ${areaCodeIndex}`,
+        );
+        break;
+      }
+
+      // If we got an API error, don't retry
+      if (availableNumbers.error || availableNumbers.error_message) {
+        console.warn(
+          `API error on retry ${areaCodeIndex}: ${availableNumbers.error_message}`,
+        );
+        break;
+      }
+
+      console.log(
+        `No numbers found for ${countryCode}/${state} with area code index ${areaCodeIndex}, retrying...`,
       );
     }
 
@@ -150,7 +171,92 @@ export const handleGetAvailableNumbers: RequestHandler = async (req, res) => {
       console.warn("No phone numbers found for country:", countryCode);
     }
 
-    res.json({ numbers: allNumbers });
+    // Filter numbers by state/province if specified
+    let filteredNumbers = allNumbers;
+    if (state) {
+      // Create a mapping of state codes to their region abbreviations
+      const STATE_REGION_MAP: Record<string, string[]> = {
+        // US states - use state abbreviation
+        AL: ["AL"],
+        AK: ["AK"],
+        AZ: ["AZ"],
+        AR: ["AR"],
+        CA: ["CA"],
+        CO: ["CO"],
+        CT: ["CT"],
+        DE: ["DE"],
+        FL: ["FL"],
+        GA: ["GA"],
+        HI: ["HI"],
+        ID: ["ID"],
+        IL: ["IL"],
+        IN: ["IN"],
+        IA: ["IA"],
+        KS: ["KS"],
+        KY: ["KY"],
+        LA: ["LA"],
+        ME: ["ME"],
+        MD: ["MD"],
+        MA: ["MA"],
+        MI: ["MI"],
+        MN: ["MN"],
+        MS: ["MS"],
+        MO: ["MO"],
+        MT: ["MT"],
+        NE: ["NE"],
+        NV: ["NV"],
+        NH: ["NH"],
+        NJ: ["NJ"],
+        NM: ["NM"],
+        NY: ["NY"],
+        NC: ["NC"],
+        ND: ["ND"],
+        OH: ["OH"],
+        OK: ["OK"],
+        OR: ["OR"],
+        PA: ["PA"],
+        RI: ["RI"],
+        SC: ["SC"],
+        SD: ["SD"],
+        TN: ["TN"],
+        TX: ["TX"],
+        UT: ["UT"],
+        VT: ["VT"],
+        VA: ["VA"],
+        WA: ["WA"],
+        WV: ["WV"],
+        WI: ["WI"],
+        WY: ["WY"],
+        // Canadian provinces
+        AB: ["AB", "Alberta"],
+        BC: ["BC", "British Columbia"],
+        MB: ["MB", "Manitoba"],
+        NB: ["NB", "New Brunswick"],
+        NL: ["NL", "Newfoundland and Labrador"],
+        NS: ["NS", "Nova Scotia"],
+        ON: ["ON", "Ontario"],
+        PE: ["PE", "Prince Edward Island"],
+        QC: ["QC", "Quebec"],
+        SK: ["SK", "Saskatchewan"],
+      };
+
+      const regionCodes = STATE_REGION_MAP[state] || [state];
+      filteredNumbers = allNumbers.filter((num) => {
+        // For countries that use state codes, filter strictly
+        if (countryCode === "US" || countryCode === "CA") {
+          const numberRegion = num.region?.toUpperCase() || "";
+          return regionCodes.some((code) => numberRegion.includes(code));
+        }
+        // For other countries (AU, GB, etc), return all numbers since they're already filtered by location
+        return true;
+      });
+
+      console.log(
+        `Filtered ${allNumbers.length} numbers to ${filteredNumbers.length} for state ${state}`,
+      );
+    }
+
+    res.json({ numbers: filteredNumbers });
   } catch (error) {
     console.error("Get available numbers error:", error);
     const errorMessage =

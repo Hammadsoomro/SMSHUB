@@ -35,6 +35,95 @@ const COUNTRIES = [
   { code: "FR", name: "France" },
 ];
 
+const STATES_BY_COUNTRY: Record<
+  string,
+  Array<{ code: string; name: string }>
+> = {
+  US: [
+    { code: "AL", name: "Alabama" },
+    { code: "AK", name: "Alaska" },
+    { code: "AZ", name: "Arizona" },
+    { code: "AR", name: "Arkansas" },
+    { code: "CA", name: "California" },
+    { code: "CO", name: "Colorado" },
+    { code: "CT", name: "Connecticut" },
+    { code: "DE", name: "Delaware" },
+    { code: "FL", name: "Florida" },
+    { code: "GA", name: "Georgia" },
+    { code: "HI", name: "Hawaii" },
+    { code: "ID", name: "Idaho" },
+    { code: "IL", name: "Illinois" },
+    { code: "IN", name: "Indiana" },
+    { code: "IA", name: "Iowa" },
+    { code: "KS", name: "Kansas" },
+    { code: "KY", name: "Kentucky" },
+    { code: "LA", name: "Louisiana" },
+    { code: "ME", name: "Maine" },
+    { code: "MD", name: "Maryland" },
+    { code: "MA", name: "Massachusetts" },
+    { code: "MI", name: "Michigan" },
+    { code: "MN", name: "Minnesota" },
+    { code: "MS", name: "Mississippi" },
+    { code: "MO", name: "Missouri" },
+    { code: "MT", name: "Montana" },
+    { code: "NE", name: "Nebraska" },
+    { code: "NV", name: "Nevada" },
+    { code: "NH", name: "New Hampshire" },
+    { code: "NJ", name: "New Jersey" },
+    { code: "NM", name: "New Mexico" },
+    { code: "NY", name: "New York" },
+    { code: "NC", name: "North Carolina" },
+    { code: "ND", name: "North Dakota" },
+    { code: "OH", name: "Ohio" },
+    { code: "OK", name: "Oklahoma" },
+    { code: "OR", name: "Oregon" },
+    { code: "PA", name: "Pennsylvania" },
+    { code: "RI", name: "Rhode Island" },
+    { code: "SC", name: "South Carolina" },
+    { code: "SD", name: "South Dakota" },
+    { code: "TN", name: "Tennessee" },
+    { code: "TX", name: "Texas" },
+    { code: "UT", name: "Utah" },
+    { code: "VT", name: "Vermont" },
+    { code: "VA", name: "Virginia" },
+    { code: "WA", name: "Washington" },
+    { code: "WV", name: "West Virginia" },
+    { code: "WI", name: "Wisconsin" },
+    { code: "WY", name: "Wyoming" },
+  ],
+  CA: [
+    { code: "AB", name: "Alberta" },
+    { code: "BC", name: "British Columbia" },
+    { code: "MB", name: "Manitoba" },
+    { code: "NB", name: "New Brunswick" },
+    { code: "NL", name: "Newfoundland and Labrador" },
+    { code: "NS", name: "Nova Scotia" },
+    { code: "ON", name: "Ontario" },
+    { code: "PE", name: "Prince Edward Island" },
+    { code: "QC", name: "Quebec" },
+    { code: "SK", name: "Saskatchewan" },
+  ],
+  GB: [
+    { code: "LONDON", name: "London" },
+    { code: "MANCHESTER", name: "Manchester" },
+    { code: "LIVERPOOL", name: "Liverpool" },
+    { code: "BIRMINGHAM", name: "Birmingham" },
+  ],
+  AU: [
+    { code: "NSW", name: "New South Wales" },
+    { code: "VIC", name: "Victoria" },
+    { code: "QLD", name: "Queensland" },
+    { code: "SA", name: "South Australia" },
+    { code: "WA", name: "Western Australia" },
+    { code: "TAS", name: "Tasmania" },
+    { code: "ACT", name: "Australian Capital Territory" },
+    { code: "NT", name: "Northern Territory" },
+  ],
+  DE: [],
+  ES: [],
+  FR: [],
+};
+
 interface CapabilityFilters {
   voice: boolean;
   sms: boolean;
@@ -45,6 +134,7 @@ interface CapabilityFilters {
 export default function BuyNumbers() {
   const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState<string>("");
+  const [selectedState, setSelectedState] = useState<string>("");
   const [availableNumbers, setAvailableNumbers] = useState<
     AvailablePhoneNumber[]
   >([]);
@@ -101,7 +191,7 @@ export default function BuyNumbers() {
     }
   };
 
-  const fetchAvailableNumbers = async (countryCode: string) => {
+  const fetchAvailableNumbers = async (countryCode: string, state?: string) => {
     if (!countryCode) return;
 
     setIsLoadingNumbers(true);
@@ -116,7 +206,12 @@ export default function BuyNumbers() {
         return;
       }
 
-      const url = `/api/admin/available-numbers?countryCode=${countryCode}`;
+      const params = new URLSearchParams({ countryCode });
+      if (state) {
+        params.append("state", state);
+      }
+
+      const url = `/api/admin/available-numbers?${params.toString()}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -169,9 +264,17 @@ export default function BuyNumbers() {
 
   const handleCountryChange = (value: string) => {
     setSelectedCountry(value);
+    setSelectedState(""); // Reset state when country changes
     setAvailableNumbers([]);
     setSearchTerm("");
     fetchAvailableNumbers(value);
+  };
+
+  const handleStateChange = (value: string) => {
+    setSelectedState(value);
+    setAvailableNumbers([]);
+    setSearchTerm("");
+    fetchAvailableNumbers(selectedCountry, value);
   };
 
   const handlePurchaseNumber = async (number: AvailablePhoneNumber) => {
@@ -348,19 +451,60 @@ export default function BuyNumbers() {
 
         {/* Country Selection */}
         <Card className="p-8 mb-8 border-2">
-          <h2 className="text-lg font-semibold mb-4">Select Country</h2>
-          <Select value={selectedCountry} onValueChange={handleCountryChange}>
-            <SelectTrigger className="w-full max-w-sm">
-              <SelectValue placeholder="Choose a country..." />
-            </SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map((country) => (
-                <SelectItem key={country.code} value={country.code}>
-                  {country.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <h2 className="text-lg font-semibold mb-6">Select Location</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                Country
+              </label>
+              <Select
+                value={selectedCountry}
+                onValueChange={handleCountryChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a country..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map((country) => (
+                    <SelectItem key={country.code} value={country.code}>
+                      {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* State Selection - Show only if country is selected and has states */}
+            {selectedCountry &&
+              STATES_BY_COUNTRY[selectedCountry]?.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                    {selectedCountry === "US"
+                      ? "State"
+                      : selectedCountry === "CA"
+                        ? "Province"
+                        : "Region"}
+                  </label>
+                  <Select
+                    value={selectedState}
+                    onValueChange={handleStateChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue
+                        placeholder={`Choose a ${selectedCountry === "US" ? "state" : selectedCountry === "CA" ? "province" : "region"}...`}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATES_BY_COUNTRY[selectedCountry].map((state) => (
+                        <SelectItem key={state.code} value={state.code}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+          </div>
         </Card>
 
         {/* Search */}
