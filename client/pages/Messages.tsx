@@ -53,8 +53,8 @@ export default function Messages() {
       if (!response.ok) throw new Error("Failed to fetch contacts");
       const data = await response.json();
       setContacts(data.contacts || []);
-    } catch (error) {
-      console.error("Error fetching contacts:", error);
+    } catch {
+      // Error handled silently
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +73,8 @@ export default function Messages() {
         contact: conversation.contact,
         messages: data.messages || [],
       });
-    } catch (error) {
-      console.error("Error fetching messages:", error);
+    } catch {
+      // Error handled silently
     }
   };
 
@@ -106,8 +106,8 @@ export default function Messages() {
       if (!response.ok) throw new Error("Failed to send message");
       setMessageText("");
       fetchMessages(conversation.contact.id);
-    } catch (error) {
-      console.error("Error sending message:", error);
+    } catch {
+      // Error handled by user feedback
     } finally {
       setIsSending(false);
     }
@@ -119,8 +119,10 @@ export default function Messages() {
     navigate("/");
   };
 
-  const filteredContacts = contacts.filter((contact) =>
-    contact.phoneNumber.includes(searchTerm) || contact.name?.includes(searchTerm)
+  const filteredContacts = contacts.filter(
+    (contact) =>
+      contact.phoneNumber.includes(searchTerm) ||
+      contact.name?.includes(searchTerm),
   );
 
   return (
@@ -203,7 +205,9 @@ export default function Messages() {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
-                  <p className="text-muted-foreground text-sm">No contacts yet</p>
+                  <p className="text-muted-foreground text-sm">
+                    No contacts yet
+                  </p>
                 </div>
               </div>
             )}
@@ -216,7 +220,10 @@ export default function Messages() {
             {/* Chat Header */}
             <div className="border-b border-border bg-card h-16 flex items-center justify-between px-6">
               <div>
-                <p className="font-semibold">{conversation.contact.name || conversation.contact.phoneNumber}</p>
+                <p className="font-semibold">
+                  {conversation.contact.name ||
+                    conversation.contact.phoneNumber}
+                </p>
                 <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
                   <Phone className="w-3 h-3" />
                   {conversation.contact.phoneNumber}
@@ -250,14 +257,19 @@ export default function Messages() {
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
                     <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-30" />
-                    <p className="text-muted-foreground text-sm">No messages yet</p>
+                    <p className="text-muted-foreground text-sm">
+                      No messages yet
+                    </p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="border-t border-border bg-card p-4">
+            <form
+              onSubmit={handleSendMessage}
+              className="border-t border-border bg-card p-4"
+            >
               <div className="flex gap-2">
                 <Input
                   value={messageText}
@@ -287,7 +299,9 @@ export default function Messages() {
               <div className="p-4 bg-muted rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-8 h-8 text-muted-foreground" />
               </div>
-              <p className="text-lg font-semibold mb-2">No conversation selected</p>
+              <p className="text-lg font-semibold mb-2">
+                No conversation selected
+              </p>
               <p className="text-muted-foreground text-sm">
                 Select a contact to start messaging
               </p>

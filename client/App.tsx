@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
+import Conversations from "./pages/admin/Conversations";
 import Credentials from "./pages/admin/Credentials";
 import Numbers from "./pages/admin/Numbers";
 import BuyNumbers from "./pages/admin/BuyNumbers";
@@ -41,6 +42,7 @@ const App = () => (
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/conversations" element={<Conversations />} />
           <Route path="/admin/credentials" element={<Credentials />} />
           <Route path="/admin/numbers" element={<Numbers />} />
           <Route path="/admin/buy-numbers" element={<BuyNumbers />} />

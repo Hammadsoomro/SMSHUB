@@ -191,7 +191,7 @@ export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   }
 };
 
-export const handleInviteTeamMember: RequestHandler = (req, res) => {
+export const handleInviteTeamMember: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
     const { email, name, password } = req.body;
@@ -200,10 +200,16 @@ export const handleInviteTeamMember: RequestHandler = (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if email already exists
-    const existingUser = storage.getUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
+    // Check if this admin already has a team member with this email
+    const existingTeamMembers = await storage.getTeamMembersByAdminId(adminId);
+    if (
+      existingTeamMembers.some(
+        (member) => member.email.toLowerCase() === email.toLowerCase(),
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ error: "This team member already exists in your team" });
     }
 
     const userId = storage.generateId();
@@ -220,7 +226,7 @@ export const handleInviteTeamMember: RequestHandler = (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    storage.createUser(user);
+    await storage.createUser(user);
 
     // Create team member record
     const teamMember: TeamMember & { password: string } = {
@@ -233,7 +239,7 @@ export const handleInviteTeamMember: RequestHandler = (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    storage.addTeamMember(teamMember);
+    await storage.addTeamMember(teamMember);
 
     const userResponse: User = {
       id: userId,
@@ -251,9 +257,24 @@ export const handleInviteTeamMember: RequestHandler = (req, res) => {
   }
 };
 
-export const handleRemoveTeamMember: RequestHandler = (req, res) => {
+export const handleRemoveTeamMember: RequestHandler = async (req, res) => {
   try {
-    // TODO: Implement team member removal
+    const adminId = req.userId!;
+    const { memberId } = req.params;
+
+    if (!memberId) {
+      return res.status(400).json({ error: "Member ID is required" });
+    }
+
+    // Verify the member belongs to this admin
+    const member = await storage.getTeamMemberById(memberId);
+    if (!member || member.adminId !== adminId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Remove from both UserModel and TeamMemberModel
+    await storage.removeTeamMember(memberId);
+
     res.json({ success: true });
   } catch (error) {
     console.error("Remove team member error:", error);
@@ -301,6 +322,86 @@ export const handleAddExistingNumber: RequestHandler = async (req, res) => {
     res.json({ phoneNumber: newPhoneNumber });
   } catch (error) {
     console.error("Add existing number error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Assign phone number to team member
+export const handleAssignNumber: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumberId, teamMemberId } = req.body;
+
+    if (!phoneNumberId) {
+      return res.status(400).json({ error: "Phone number ID is required" });
+    }
+
+    // Get the phone number and verify it belongs to this admin
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const phoneNumber = numbers.find((n) => n.id === phoneNumberId);
+
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    // If assigning to a team member, verify they exist and belong to this admin
+    if (teamMemberId) {
+      const members = await storage.getTeamMembersByAdminId(adminId);
+      const member = members.find((m) => m.id === teamMemberId);
+
+      if (!member) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+    }
+
+    // Update the phone number with assignment
+    const updatedNumber: PhoneNumber = {
+      ...phoneNumber,
+      assignedTo: teamMemberId,
+    };
+
+    await storage.updatePhoneNumber(updatedNumber);
+
+    res.json({ phoneNumber: updatedNumber });
+  } catch (error) {
+    console.error("Assign number error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Update phone number settings (active/inactive)
+export const handleUpdateNumberSettings: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumberId, active } = req.body;
+
+    if (!phoneNumberId) {
+      return res.status(400).json({ error: "Phone number ID is required" });
+    }
+
+    if (typeof active !== "boolean") {
+      return res.status(400).json({ error: "Active status is required" });
+    }
+
+    // Get the phone number and verify it belongs to this admin
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const phoneNumber = numbers.find((n) => n.id === phoneNumberId);
+
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    // Update the phone number settings
+    const updatedNumber: PhoneNumber = {
+      ...phoneNumber,
+      active,
+    };
+
+    await storage.updatePhoneNumber(updatedNumber);
+
+    res.json({ phoneNumber: updatedNumber });
+  } catch (error) {
+    console.error("Update number settings error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

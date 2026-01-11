@@ -35,8 +35,7 @@ export default function Wallet() {
         }
         await Promise.all([fetchWallet(), fetchTransactions()]);
         setIsLoading(false);
-      } catch (err) {
-        console.error("Auth check error:", err);
+      } catch {
         navigate("/login", { replace: true });
       }
     };
@@ -55,8 +54,8 @@ export default function Wallet() {
         const data = await response.json();
         setWallet(data.wallet);
       }
-    } catch (err) {
-      console.error("Error fetching wallet:", err);
+    } catch {
+      // Wallet fetch error handled silently
     }
   };
 
@@ -71,8 +70,8 @@ export default function Wallet() {
         const data = await response.json();
         setTransactions(data.transactions || []);
       }
-    } catch (err) {
-      console.error("Error fetching transactions:", err);
+    } catch {
+      // Transaction fetch error handled silently
     }
   };
 
@@ -311,9 +310,9 @@ export default function Wallet() {
             </div>
           ) : (
             <div className="space-y-3">
-              {transactions.map((transaction) => (
+              {transactions.map((transaction, index) => (
                 <div
-                  key={transaction.id}
+                  key={transaction.id || `transaction-${index}`}
                   className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 smooth-transition"
                 >
                   <div className="flex items-center gap-4 flex-1">

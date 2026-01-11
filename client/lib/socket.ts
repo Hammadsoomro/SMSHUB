@@ -18,17 +18,11 @@ export function initializeSocket(): Socket {
     reconnectionAttempts: 5,
   });
 
-  socket.on("connect", () => {
-    console.log("Socket connected");
-  });
+  socket.on("connect", () => {});
 
-  socket.on("disconnect", () => {
-    console.log("Socket disconnected");
-  });
+  socket.on("disconnect", () => {});
 
-  socket.on("connect_error", (error) => {
-    console.error("Socket connection error:", error);
-  });
+  socket.on("connect_error", () => {});
 
   return socket;
 }

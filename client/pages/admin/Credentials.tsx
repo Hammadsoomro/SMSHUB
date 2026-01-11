@@ -51,8 +51,7 @@ export default function Credentials() {
         }
 
         setIsAuthLoading(false);
-      } catch (err) {
-        console.error("Auth check error:", err);
+      } catch {
         navigate("/login", { replace: true });
       }
     };
