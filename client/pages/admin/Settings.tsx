@@ -587,7 +587,12 @@ export default function Settings() {
                         Twilio account is connected and active. Team members can
                         send and receive SMS.
                       </p>
-                      <p className="text-xs text-green-600">
+                      {connectedCredentials.messagingServiceSid && (
+                        <div className="mt-2 p-2 bg-green-100 rounded text-xs text-green-800">
+                          <strong>Messaging Service SID:</strong> {connectedCredentials.messagingServiceSid}
+                        </div>
+                      )}
+                      <p className="text-xs text-green-600 mt-2">
                         Connected:{" "}
                         {new Date(
                           connectedCredentials.connectedAt,
