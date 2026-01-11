@@ -188,6 +188,53 @@ export const handleRemoveCredentials: RequestHandler = async (req, res) => {
   }
 };
 
+export const handleUpdateMessagingServiceSid: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { messagingServiceSid } = req.body as { messagingServiceSid: string };
+
+    if (!messagingServiceSid) {
+      return res.status(400).json({ error: "Messaging Service SID is required" });
+    }
+
+    // Validate Messaging Service SID format (should start with MG)
+    if (!messagingServiceSid.startsWith("MG")) {
+      return res.status(400).json({
+        error: "Invalid Messaging Service SID format (should start with MG)"
+      });
+    }
+
+    // Get existing credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res.status(400).json({
+        error: "Twilio credentials not found. Please connect your credentials first."
+      });
+    }
+
+    // Update with new Messaging Service SID
+    const updatedCredentials: TwilioCredentials = {
+      ...credentials,
+      messagingServiceSid,
+    };
+
+    storage.setTwilioCredentials(updatedCredentials);
+
+    // Decrypt token for response
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
+    res.json({
+      credentials: {
+        ...updatedCredentials,
+        authToken: decryptedAuthToken,
+      },
+    });
+  } catch (error) {
+    console.error("Update Messaging Service SID error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // Phone Numbers
 export const handleGetNumbers: RequestHandler = async (req, res) => {
   try {
