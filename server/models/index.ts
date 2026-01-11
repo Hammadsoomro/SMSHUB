@@ -1,5 +1,14 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { User, TwilioCredentials, PhoneNumber, TeamMember, Message, Contact } from "@shared/api";
+import {
+  User,
+  TwilioCredentials,
+  PhoneNumber,
+  TeamMember,
+  Message,
+  Contact,
+  Wallet,
+  WalletTransaction,
+} from "@shared/api";
 
 // User Schema
 export interface IUser extends Document, User {
@@ -15,7 +24,7 @@ const userSchema = new Schema<IUser>(
     adminId: { type: String, sparse: true },
     createdAt: { type: String, required: true },
   },
-  { collection: "users" }
+  { collection: "users" },
 );
 
 export const UserModel = mongoose.model<IUser>("User", userSchema);
@@ -30,12 +39,12 @@ const twilioCredentialsSchema = new Schema<ITwilioCredentials>(
     authToken: { type: String, required: true },
     connectedAt: { type: String, required: true },
   },
-  { collection: "twilio_credentials" }
+  { collection: "twilio_credentials" },
 );
 
 export const TwilioCredentialsModel = mongoose.model<ITwilioCredentials>(
   "TwilioCredentials",
-  twilioCredentialsSchema
+  twilioCredentialsSchema,
 );
 
 // Phone Number Schema
@@ -49,12 +58,12 @@ const phoneNumberSchema = new Schema<IPhoneNumber>(
     purchasedAt: { type: String, required: true },
     active: { type: Boolean, default: true },
   },
-  { collection: "phone_numbers" }
+  { collection: "phone_numbers" },
 );
 
 export const PhoneNumberModel = mongoose.model<IPhoneNumber>(
   "PhoneNumber",
-  phoneNumberSchema
+  phoneNumberSchema,
 );
 
 // Team Member Schema
@@ -78,12 +87,12 @@ const teamMemberSchema = new Schema<ITeamMember>(
     status: { type: String, enum: ["pending", "active"], default: "active" },
     createdAt: { type: String, required: true },
   },
-  { collection: "team_members" }
+  { collection: "team_members" },
 );
 
 export const TeamMemberModel = mongoose.model<ITeamMember>(
   "TeamMember",
-  teamMemberSchema
+  teamMemberSchema,
 );
 
 // Message Schema
@@ -99,7 +108,7 @@ const messageSchema = new Schema<IMessage>(
     timestamp: { type: String, required: true },
     sid: { type: String, sparse: true },
   },
-  { collection: "messages" }
+  { collection: "messages" },
 );
 
 messageSchema.index({ phoneNumberId: 1, timestamp: -1 });
@@ -118,9 +127,47 @@ const contactSchema = new Schema<IContact>(
     lastMessageTime: { type: String, sparse: true },
     unreadCount: { type: Number, default: 0 },
   },
-  { collection: "contacts" }
+  { collection: "contacts" },
 );
 
 contactSchema.index({ phoneNumberId: 1 });
 
 export const ContactModel = mongoose.model<IContact>("Contact", contactSchema);
+
+// Wallet Schema
+export interface IWallet extends Document, Wallet {}
+
+const walletSchema = new Schema<IWallet>(
+  {
+    adminId: { type: String, required: true, unique: true },
+    balance: { type: Number, required: true, default: 0 },
+    currency: { type: String, required: true, default: "USD" },
+    createdAt: { type: String, required: true },
+    updatedAt: { type: String, required: true },
+  },
+  { collection: "wallets" },
+);
+
+export const WalletModel = mongoose.model<IWallet>("Wallet", walletSchema);
+
+// Wallet Transaction Schema
+export interface IWalletTransaction extends Document, WalletTransaction {}
+
+const walletTransactionSchema = new Schema<IWalletTransaction>(
+  {
+    adminId: { type: String, required: true },
+    type: { type: String, enum: ["credit", "debit"], required: true },
+    amount: { type: Number, required: true },
+    description: { type: String, required: true },
+    reference: { type: String, sparse: true },
+    createdAt: { type: String, required: true },
+  },
+  { collection: "wallet_transactions" },
+);
+
+walletTransactionSchema.index({ adminId: 1, createdAt: -1 });
+
+export const WalletTransactionModel = mongoose.model<IWalletTransaction>(
+  "WalletTransaction",
+  walletTransactionSchema,
+);

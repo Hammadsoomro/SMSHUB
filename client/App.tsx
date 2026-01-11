@@ -16,6 +16,8 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Credentials from "./pages/admin/Credentials";
 import Numbers from "./pages/admin/Numbers";
+import BuyNumbers from "./pages/admin/BuyNumbers";
+import Wallet from "./pages/admin/Wallet";
 import TeamManagement from "./pages/admin/TeamManagement";
 import AccountInfo from "./pages/admin/AccountInfo";
 import Insights from "./pages/admin/Insights";
@@ -41,6 +43,8 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/credentials" element={<Credentials />} />
           <Route path="/admin/numbers" element={<Numbers />} />
+          <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
+          <Route path="/admin/wallet" element={<Wallet />} />
           <Route path="/admin/team" element={<TeamManagement />} />
           <Route path="/admin/account" element={<AccountInfo />} />
           <Route path="/admin/insights" element={<Insights />} />

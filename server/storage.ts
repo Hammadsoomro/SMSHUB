@@ -9,8 +9,19 @@ import {
   TeamMemberModel,
   MessageModel,
   ContactModel,
+  WalletModel,
+  WalletTransactionModel,
 } from "./models";
-import { User, TwilioCredentials, PhoneNumber, TeamMember, Message, Contact } from "@shared/api";
+import {
+  User,
+  TwilioCredentials,
+  PhoneNumber,
+  TeamMember,
+  Message,
+  Contact,
+  Wallet,
+  WalletTransaction,
+} from "@shared/api";
 
 class Storage {
   // User operations
@@ -19,7 +30,9 @@ class Storage {
     await newUser.save();
   }
 
-  async getUserByEmail(email: string): Promise<(User & { password: string }) | undefined> {
+  async getUserByEmail(
+    email: string,
+  ): Promise<(User & { password: string }) | undefined> {
     return (await UserModel.findOne({ email: email.toLowerCase() })) as
       | (User & { password: string })
       | null;
@@ -37,12 +50,20 @@ class Storage {
     await TwilioCredentialsModel.updateOne(
       { adminId: credentials.adminId },
       credentials,
-      { upsert: true }
+      { upsert: true },
     );
   }
 
-  async getTwilioCredentialsByAdminId(adminId: string): Promise<TwilioCredentials | undefined> {
-    return (await TwilioCredentialsModel.findOne({ adminId })) as TwilioCredentials | null;
+  async getTwilioCredentialsByAdminId(
+    adminId: string,
+  ): Promise<TwilioCredentials | undefined> {
+    return (await TwilioCredentialsModel.findOne({
+      adminId,
+    })) as TwilioCredentials | null;
+  }
+
+  async removeTwilioCredentials(adminId: string): Promise<void> {
+    await TwilioCredentialsModel.deleteOne({ adminId });
   }
 
   // Phone Numbers
@@ -64,7 +85,9 @@ class Storage {
   }
 
   // Team Members
-  async addTeamMember(member: TeamMember & { password: string }): Promise<void> {
+  async addTeamMember(
+    member: TeamMember & { password: string },
+  ): Promise<void> {
     const newMember = new TeamMemberModel(member);
     await newMember.save();
   }
@@ -84,6 +107,13 @@ class Storage {
     return memberWithoutPassword as TeamMember;
   }
 
+  async getAdminIdByTeamMemberId(
+    teamMemberId: string,
+  ): Promise<string | undefined> {
+    const member = await TeamMemberModel.findOne({ id: teamMemberId });
+    return member?.adminId;
+  }
+
   // Messages
   async addMessage(message: Message): Promise<void> {
     const newMessage = new MessageModel(message);
@@ -91,7 +121,9 @@ class Storage {
   }
 
   async getMessagesByPhoneNumber(phoneNumberId: string): Promise<Message[]> {
-    return (await MessageModel.find({ phoneNumberId }).sort({ timestamp: -1 })) as Message[];
+    return (await MessageModel.find({ phoneNumberId }).sort({
+      timestamp: -1,
+    })) as Message[];
   }
 
   // Contacts
@@ -110,6 +142,54 @@ class Storage {
 
   async updateContact(contact: Contact): Promise<void> {
     await ContactModel.findByIdAndUpdate(contact.id, contact);
+  }
+
+  // Wallet operations
+  async getOrCreateWallet(adminId: string): Promise<Wallet> {
+    let wallet = (await WalletModel.findOne({ adminId })) as Wallet | null;
+    if (!wallet) {
+      const newWallet = new WalletModel({
+        adminId,
+        balance: 0,
+        currency: "USD",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      wallet = (await newWallet.save()) as Wallet;
+    }
+    return wallet;
+  }
+
+  async getWallet(adminId: string): Promise<Wallet | undefined> {
+    return (await WalletModel.findOne({ adminId })) as Wallet | null;
+  }
+
+  async updateWalletBalance(
+    adminId: string,
+    newBalance: number,
+  ): Promise<void> {
+    await WalletModel.updateOne(
+      { adminId },
+      {
+        balance: newBalance,
+        updatedAt: new Date().toISOString(),
+      },
+      { upsert: true },
+    );
+  }
+
+  async addWalletTransaction(transaction: WalletTransaction): Promise<void> {
+    const newTransaction = new WalletTransactionModel(transaction);
+    await newTransaction.save();
+  }
+
+  async getWalletTransactions(
+    adminId: string,
+    limit: number = 50,
+  ): Promise<WalletTransaction[]> {
+    return (await WalletTransactionModel.find({ adminId })
+      .sort({ createdAt: -1 })
+      .limit(limit)) as WalletTransaction[];
   }
 
   // Utility

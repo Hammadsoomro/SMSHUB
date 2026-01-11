@@ -140,10 +140,10 @@ export const handleSaveCredentials: RequestHandler = async (req, res) => {
   }
 };
 
-export const handleGetCredentials: RequestHandler = (req, res) => {
+export const handleGetCredentials: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const credentials = storage.getTwilioCredentialsByAdminId(adminId);
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
 
     if (!credentials) {
       return res.json({ credentials: null });
@@ -156,11 +156,22 @@ export const handleGetCredentials: RequestHandler = (req, res) => {
   }
 };
 
-// Phone Numbers
-export const handleGetNumbers: RequestHandler = (req, res) => {
+export const handleRemoveCredentials: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const numbers = storage.getPhoneNumbersByAdminId(adminId);
+    await storage.removeTwilioCredentials(adminId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Remove credentials error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Phone Numbers
+export const handleGetNumbers: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
     res.json({ numbers });
   } catch (error) {
     console.error("Get numbers error:", error);
@@ -169,10 +180,10 @@ export const handleGetNumbers: RequestHandler = (req, res) => {
 };
 
 // Team Management
-export const handleGetTeamMembers: RequestHandler = (req, res) => {
+export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const members = storage.getTeamMembersByAdminId(adminId);
+    const members = await storage.getTeamMembersByAdminId(adminId);
     res.json({ members });
   } catch (error) {
     console.error("Get team members error:", error);
