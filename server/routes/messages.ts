@@ -12,8 +12,13 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (
     const user = await storage.getUserById(userId);
 
     if (!user) {
+      console.error(`[DEBUG] User not found for ID: ${userId}`);
       return res.status(404).json({ error: "User not found" });
     }
+
+    console.log(
+      `[DEBUG] User found: ID=${user.id}, Role=${user.role}, AdminID=${user.adminId}`,
+    );
 
     // Determine the admin ID
     let adminId = userId;
@@ -21,10 +26,30 @@ export const handleGetAssignedPhoneNumber: RequestHandler = async (
       adminId = user.adminId;
     }
 
+    console.log(
+      `[DEBUG] Getting phone numbers for adminId: ${adminId}, userId: ${userId}`,
+    );
+
     // Get phone numbers assigned to this user
     const allPhoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    console.log(
+      `[DEBUG] Total phone numbers for admin: ${allPhoneNumbers.length}`,
+    );
+    console.log(
+      `[DEBUG] Phone numbers with assignedTo details:`,
+      allPhoneNumbers.map((pn) => ({
+        id: pn.id,
+        number: pn.phoneNumber,
+        assignedTo: pn.assignedTo,
+      })),
+    );
+
     const assignedPhoneNumbers = allPhoneNumbers.filter(
       (pn) => pn.assignedTo === userId,
+    );
+
+    console.log(
+      `[DEBUG] Assigned phone numbers for this user: ${assignedPhoneNumbers.length}`,
     );
 
     res.json({ phoneNumbers: assignedPhoneNumbers });

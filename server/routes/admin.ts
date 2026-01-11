@@ -365,6 +365,10 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     const adminId = req.userId!;
     const { phoneNumberId, teamMemberId } = req.body;
 
+    console.log(
+      `[DEBUG] handleAssignNumber called: adminId=${adminId}, phoneNumberId=${phoneNumberId}, teamMemberId=${teamMemberId}`,
+    );
+
     if (!phoneNumberId) {
       return res.status(400).json({ error: "Phone number ID is required" });
     }
@@ -374,6 +378,9 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
     const phoneNumber = numbers.find((n) => n.id === phoneNumberId);
 
     if (!phoneNumber) {
+      console.error(
+        `[DEBUG] Phone number ${phoneNumberId} not found for admin ${adminId}`,
+      );
       return res.status(404).json({ error: "Phone number not found" });
     }
 
@@ -382,7 +389,16 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
       const members = await storage.getTeamMembersByAdminId(adminId);
       const member = members.find((m) => m.id === teamMemberId);
 
+      console.log(`[DEBUG] Looking for team member: ${teamMemberId}`);
+      console.log(
+        `[DEBUG] Available team members:`,
+        members.map((m) => ({ id: m.id, name: m.name })),
+      );
+
       if (!member) {
+        console.error(
+          `[DEBUG] Team member ${teamMemberId} not found for admin ${adminId}`,
+        );
         return res.status(404).json({ error: "Team member not found" });
       }
     }
@@ -392,6 +408,10 @@ export const handleAssignNumber: RequestHandler = async (req, res) => {
       ...phoneNumber,
       assignedTo: teamMemberId || undefined,
     };
+
+    console.log(
+      `[DEBUG] Updating phone number: ${phoneNumberId} with assignedTo=${teamMemberId}`,
+    );
 
     await storage.updatePhoneNumberWithAssignment(phoneNumberId, teamMemberId);
 
