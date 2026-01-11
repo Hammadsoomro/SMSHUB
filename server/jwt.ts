@@ -1,6 +1,7 @@
 import crypto from "crypto";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 interface JWTPayload {
   userId: string;
@@ -20,10 +21,15 @@ function base64UrlEncode(str: string): string {
 
 function base64UrlDecode(str: string): string {
   str += new Array(5 - (str.length % 4)).join("=");
-  return Buffer.from(str.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString();
+  return Buffer.from(
+    str.replace(/-/g, "+").replace(/_/g, "/"),
+    "base64",
+  ).toString();
 }
 
-export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string {
+export function generateToken(
+  payload: Omit<JWTPayload, "iat" | "exp">,
+): string {
   const now = Math.floor(Date.now() / 1000);
   const jwtPayload: JWTPayload = {
     ...payload,
@@ -40,13 +46,18 @@ export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string 
     .digest();
   const signature64 = base64UrlEncode(signature.toString("base64"));
 
-  return `${header}.${payload64}.${signature64}`;
+  const token = `${header}.${payload64}.${signature64}`;
+  return token;
 }
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
     const parts = token.split(".");
-    if (parts.length !== 3) return null;
+
+    if (parts.length !== 3) {
+      console.warn("[JWT] Invalid token format: wrong number of parts");
+      return null;
+    }
 
     const [header64, payload64, signature64] = parts;
 
@@ -57,16 +68,25 @@ export function verifyToken(token: string): JWTPayload | null {
       .digest();
     const expectedSignature = base64UrlEncode(signature.toString("base64"));
 
-    if (signature64 !== expectedSignature) return null;
+    if (signature64 !== expectedSignature) {
+      console.warn("[JWT] Invalid token signature");
+      return null;
+    }
 
     // Parse payload
-    const payload = JSON.parse(base64UrlDecode(payload64)) as JWTPayload;
+    const decodedPayloadStr = base64UrlDecode(payload64);
+    const payload = JSON.parse(decodedPayloadStr) as any;
 
     // Check expiration
-    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp < now) {
+      console.warn("[JWT] Token expired:", { exp: payload.exp, now });
+      return null;
+    }
 
-    return payload;
-  } catch {
+    return payload as JWTPayload;
+  } catch (error) {
+    console.error("[JWT] Error verifying token:", error);
     return null;
   }
 }
