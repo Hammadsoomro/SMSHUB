@@ -111,7 +111,7 @@ async function validateTwilioCredentials(
 export const handleSaveCredentials: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const { accountSid, authToken } = req.body as TwilioCredentialsRequest;
+    const { accountSid, authToken, messagingServiceSid } = req.body as TwilioCredentialsRequest & { messagingServiceSid?: string };
 
     if (!accountSid || !authToken) {
       return res
@@ -134,6 +134,7 @@ export const handleSaveCredentials: RequestHandler = async (req, res) => {
       adminId,
       accountSid,
       authToken: encryptedAuthToken,
+      messagingServiceSid, // Store Messaging Service SID if provided
       connectedAt: new Date().toISOString(),
     };
 
