@@ -36,6 +36,7 @@ const twilioCredentialsSchema = new Schema<ITwilioCredentials>(
     adminId: { type: String, required: true, unique: true },
     accountSid: { type: String, required: true },
     authToken: { type: String, required: true },
+    messagingServiceSid: { type: String, sparse: true },
     connectedAt: { type: String, required: true },
   },
   { collection: "twilio_credentials" },
