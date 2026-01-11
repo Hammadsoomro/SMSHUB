@@ -46,7 +46,12 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
     }
 
     // Get phone numbers for this admin
-    const phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    let phoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+
+    // If user is a team member, only show numbers assigned to them
+    if (user?.role === "team_member") {
+      phoneNumbers = phoneNumbers.filter((pn) => pn.assignedTo === userId);
+    }
 
     let contacts: Contact[] = [];
     for (const phoneNumber of phoneNumbers) {
@@ -128,6 +133,13 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       return res
         .status(403)
         .json({ error: "Unauthorized to use this phone number" });
+    }
+
+    // If user is a team member, verify the phone number is assigned to them
+    if (user?.role === "team_member" && phoneNumber.assignedTo !== userId) {
+      return res.status(403).json({
+        error: "This phone number is not assigned to you",
+      });
     }
 
     // Get admin's Twilio credentials

@@ -88,7 +88,7 @@ export async function createServer() {
     adminOnly,
     handleRemoveCredentials,
   );
-  app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
+  app.get("/api/admin/numbers", authMiddleware, handleGetNumbers);
   app.post(
     "/api/admin/add-existing-number",
     authMiddleware,
