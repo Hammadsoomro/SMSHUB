@@ -33,6 +33,7 @@ import { User as UserType, TwilioCredentials } from "@shared/api";
 interface CredentialsForm {
   accountSid: string;
   authToken: string;
+  messagingServiceSid: string;
 }
 
 export default function Settings() {
