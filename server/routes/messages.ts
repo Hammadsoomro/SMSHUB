@@ -191,6 +191,7 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       to,
       phoneNumber.phoneNumber,
       body,
+      credentials.messagingServiceSid, // Pass Messaging Service SID if available
     );
 
     if (twilioResponse.error || twilioResponse.error_message) {
