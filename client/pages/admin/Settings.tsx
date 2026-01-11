@@ -215,6 +215,7 @@ export default function Settings() {
         body: JSON.stringify({
           accountSid: data.accountSid.trim(),
           authToken: data.authToken.trim(),
+          messagingServiceSid: data.messagingServiceSid.trim() || undefined,
         }),
       });
 
