@@ -693,6 +693,29 @@ export default function Settings() {
                   )}
                 </div>
 
+                <div>
+                  <label className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    Messaging Service SID
+                    <span className="text-xs font-normal text-muted-foreground">
+                      (Optional)
+                    </span>
+                  </label>
+                  <Input
+                    {...register("messagingServiceSid")}
+                    placeholder="MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    className="h-10 font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Format: Must start with "MG". Leave empty to use individual phone numbers.
+                  </p>
+                  {errors.messagingServiceSid && (
+                    <p className="text-xs text-destructive mt-1">
+                      {errors.messagingServiceSid.message}
+                    </p>
+                  )}
+                </div>
+
                 <Button
                   type="submit"
                   disabled={isCredentialsLoading}
