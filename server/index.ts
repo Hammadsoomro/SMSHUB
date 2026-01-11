@@ -19,6 +19,7 @@ import {
   handleSaveCredentials,
   handleGetCredentials,
   handleRemoveCredentials,
+  handleUpdateMessagingServiceSid,
   handleGetNumbers,
   handleSetActiveNumber,
   handleGetTeamMembers,
