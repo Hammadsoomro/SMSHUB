@@ -186,6 +186,12 @@ export async function createServer() {
     adminOnly,
     handleRemoveCredentials,
   );
+  app.patch(
+    "/api/admin/messaging-service-sid",
+    authMiddleware,
+    adminOnly,
+    handleUpdateMessagingServiceSid,
+  );
   app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
   app.post(
     "/api/admin/numbers/set-active",
