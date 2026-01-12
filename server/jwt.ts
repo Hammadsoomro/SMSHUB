@@ -78,6 +78,8 @@ export function generateToken(
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
+    ensureJWTSecret();
+
     if (!JWT_SECRET) {
       console.error("[JWT] JWT_SECRET is not configured");
       return null;
