@@ -1,16 +1,8 @@
 import { RequestHandler } from "express";
-import crypto from "crypto";
 import { storage } from "../storage";
 import { generateToken } from "../jwt";
 import { SignupRequest, LoginRequest, AuthResponse, User } from "@shared/api";
-
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
-
-function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash;
-}
+import { hashPassword, verifyPassword } from "../password";
 
 export const handleSignup: RequestHandler = async (req, res) => {
   try {
