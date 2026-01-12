@@ -59,6 +59,9 @@ import {
 // Webhooks
 import { handleInboundSMS, handleWebhookHealth } from "./routes/webhooks";
 
+// Ably token generation
+import { handleGetAblyToken } from "./routes/ably";
+
 // Middleware
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
 import { validateTwilioSignature } from "./middleware/twilio-signature";
