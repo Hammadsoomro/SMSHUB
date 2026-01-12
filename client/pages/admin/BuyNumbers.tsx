@@ -356,6 +356,58 @@ export default function BuyNumbers() {
     }
   };
 
+  const handleAddExistingNumber = async () => {
+    if (!existingPhoneNumber.trim()) {
+      setError("Please enter a phone number");
+      return;
+    }
+
+    setIsAddingExisting(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const response = await fetch("/api/admin/add-existing-number", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phoneNumber: existingPhoneNumber,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add phone number");
+      }
+
+      const result = await response.json();
+      setSuccess(
+        `✅ Successfully added ${result.phoneNumber.phoneNumber} to your account`,
+      );
+      setExistingPhoneNumber("");
+      setShowAddExistingDialog(false);
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred while adding";
+      setError(errorMessage);
+    } finally {
+      setIsAddingExisting(false);
+    }
+  };
+
   const isActiveFilter = (filter: keyof CapabilityFilters) =>
     capabilityFilters[filter];
 
