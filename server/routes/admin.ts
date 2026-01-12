@@ -1,10 +1,10 @@
 import { RequestHandler } from "express";
-import crypto from "crypto";
 import https from "https";
 import { storage } from "../storage";
 import { generateToken } from "../jwt";
 import ablyServer from "../ably";
 import { encrypt, decrypt } from "../crypto";
+import { hashPassword } from "../password";
 import {
   TwilioCredentialsRequest,
   TwilioCredentials,
@@ -12,10 +12,6 @@ import {
   TeamMember,
   User,
 } from "@shared/api";
-
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
 
 // Validate Twilio credentials by making a test API call
 async function validateTwilioCredentials(
