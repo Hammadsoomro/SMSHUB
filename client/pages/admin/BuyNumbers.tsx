@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   AlertCircle,
   Phone,
   Loader2,
@@ -21,6 +28,7 @@ import {
   MessageSquare,
   Image,
   PhoneCall,
+  Plus,
 } from "lucide-react";
 import { AvailablePhoneNumber } from "@shared/api";
 
