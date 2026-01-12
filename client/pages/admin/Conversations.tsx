@@ -369,7 +369,7 @@ export default function Conversations() {
       const timeoutPromise = new Promise<boolean>((resolve) => {
         setTimeout(() => {
           resolve(false);
-        }, 15000); // 15 second timeout
+        }, 30000); // 15 second timeout
       });
 
       const connected = await Promise.race([connectionPromise, timeoutPromise]);
