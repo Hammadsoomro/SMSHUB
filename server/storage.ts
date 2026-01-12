@@ -167,7 +167,19 @@ class Storage {
   }
 
   async getPhoneNumberById(id: string): Promise<PhoneNumber | undefined> {
-    const doc = await PhoneNumberModel.findOne({ $or: [{ id }, { _id: id }] });
+    // First try to find by custom id field
+    let doc = await PhoneNumberModel.findOne({ id });
+
+    // If not found and id is a valid MongoDB ObjectId, try _id
+    if (!doc && /^[0-9a-f]{24}$/i.test(id)) {
+      try {
+        doc = await PhoneNumberModel.findById(id);
+      } catch (error) {
+        // findById may fail if id is not a valid ObjectId
+        return undefined;
+      }
+    }
+
     if (!doc) return undefined;
     const data = doc.toObject() as any;
     if (!data.id && data._id) {
