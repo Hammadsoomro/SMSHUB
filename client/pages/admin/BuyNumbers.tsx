@@ -821,6 +821,45 @@ export default function BuyNumbers() {
             </p>
           </Card>
         )}
+
+        {/* Add Existing Number Dialog */}
+        <Dialog open={showAddExistingDialog} onOpenChange={setShowAddExistingDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add Existing Phone Number</DialogTitle>
+              <DialogDescription>
+                Add a phone number that you've already purchased or own
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Phone Number
+                </label>
+                <Input
+                  placeholder="e.g., (825) 435-1943 or +18254351943"
+                  value={existingPhoneNumber}
+                  onChange={(e) => setExistingPhoneNumber(e.target.value)}
+                  className="h-10"
+                />
+              </div>
+              <Button
+                onClick={handleAddExistingNumber}
+                disabled={isAddingExisting || !existingPhoneNumber.trim()}
+                className="w-full bg-gradient-to-r from-primary to-secondary"
+              >
+                {isAddingExisting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Number"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
