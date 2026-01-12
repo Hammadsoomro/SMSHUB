@@ -31,32 +31,34 @@ export const authMiddleware: RequestHandler = async (req, res, next) => {
       });
     }
 
-    // Get user from storage, but use token payload as fallback
+    // Verify user exists in database
     let user;
     try {
       user = await storage.getUserById(payload.userId);
     } catch (dbError) {
-      console.warn(
-        `Database lookup failed for user ${payload.userId}, using token data:`,
+      console.error(
+        `[AUTH] Database error checking user ${payload.userId}:`,
         dbError,
       );
-      // Fall through to use token data as fallback
+      return res.status(401).json({
+        error: "Authentication service unavailable. Please try again.",
+        code: "DB_ERROR",
+      });
     }
 
+    // User must exist in database - no fallback
     if (!user) {
-      // If user not found in storage, create a minimal user object from token
-      // This handles the case where server restarted but token is still valid
-      user = {
-        id: payload.userId,
-        email: payload.email,
-        name: payload.email.split("@")[0],
-        role: payload.role,
-        createdAt: new Date().toISOString(),
-      } as any;
+      console.warn(
+        `[AUTH] User ${payload.userId} not found in database (possibly deleted or revoked)`,
+      );
+      return res.status(401).json({
+        error: "User account not found. Please login again.",
+        code: "USER_NOT_FOUND",
+      });
     }
 
     req.userId = payload.userId;
-    req.userRole = payload.role;
+    req.userRole = user.role;
     req.user = user;
 
     next();
