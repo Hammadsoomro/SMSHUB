@@ -63,12 +63,12 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     console.log("[handleInboundSMS] Assigned to:", phoneNumber.assignedTo);
     console.log("[handleInboundSMS] Admin ID:", phoneNumber.adminId);
 
-    // Store the message
+    // Store the message - normalize phone numbers for consistency
     const message: Message = {
       id: MessageSid || Math.random().toString(36).substr(2, 9),
       phoneNumberId: phoneNumber.id,
-      from: From,
-      to: To,
+      from: normalizePhoneNumber(From),
+      to: normalizePhoneNumber(To),
       body: Body,
       direction: "inbound",
       timestamp: new Date().toISOString(),
