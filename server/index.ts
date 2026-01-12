@@ -152,6 +152,56 @@ export async function createServer() {
 
   app.get("/api/demo", handleDemo);
 
+  // Initialize first admin user (only works if no admin exists)
+  app.post("/api/init-admin", async (req, res) => {
+    try {
+      const { email, password, name } = req.body;
+
+      if (!email || !password || !name) {
+        return res
+          .status(400)
+          .json({ error: "Email, password, and name are required" });
+      }
+
+      // Check if any admin user already exists
+      const existingAdmins = await storage.getUserByEmail(email);
+      if (existingAdmins) {
+        return res.status(400).json({ error: "User already exists" });
+      }
+
+      const { hashPassword } = await import("./password");
+      const userId = storage.generateId();
+      const hashedPassword = hashPassword(password);
+
+      const user = {
+        id: userId,
+        email,
+        name,
+        password: hashedPassword,
+        role: "admin" as const,
+        createdAt: new Date().toISOString(),
+      };
+
+      await storage.createUser(user);
+
+      const { generateToken } = await import("./jwt");
+      const token = generateToken({
+        userId,
+        email,
+        role: "admin",
+      });
+
+      res.json({
+        message: "Admin user created successfully",
+        user: { id: userId, email, name, role: "admin" },
+        token,
+      });
+    } catch (error) {
+      console.error("Init admin error:", error);
+      res.status(500).json({ error: "Failed to create admin user" });
+    }
+  });
+
   // Auth routes (public)
   app.post("/api/auth/signup", handleSignup);
   app.post("/api/auth/login", handleLogin);
