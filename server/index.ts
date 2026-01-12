@@ -71,6 +71,8 @@ import { handleDemo } from "./routes/demo";
 import { storage } from "./storage";
 import { TwilioClient } from "./twilio";
 import ablyServer from "./ably";
+import { hashPassword } from "./password";
+import { generateToken } from "./jwt";
 
 // Global socket.io instance for webhook access
 let globalIO: IOServer | null = null;
