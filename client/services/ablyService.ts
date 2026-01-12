@@ -52,10 +52,24 @@ class AblyService {
         throw new Error("No Ably token received from server");
       }
 
+      // Parse the token request if it's a string (serialized JSON)
+      let parsedToken = ablyToken;
+      if (typeof ablyToken === "string") {
+        try {
+          parsedToken = JSON.parse(ablyToken);
+        } catch {
+          // If parsing fails, use as-is (it might already be a token string)
+          parsedToken = ablyToken;
+        }
+      }
+
       // Initialize Ably client with server-issued token (Token authentication)
       // This is more secure than exposing the API key to the client
       this.client = new Realtime({
-        token: ablyToken,
+        authUrl: "/api/ably/token",
+        authHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
         clientId: this.generateClientId(),
         disconnectedRetryTimeout: 15000, // 15 seconds
         realtimeRequestTimeout: 10000,
