@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { storage } from "../storage";
 import { Message, Contact } from "@shared/api";
 import ablyServer from "../ably";
+import { normalizePhoneNumber, phoneNumbersMatch } from "../utils/phone-normalizer";
 
 /**
  * Health check endpoint - verify webhook is reachable
