@@ -18,7 +18,8 @@ class AblyService {
   private connectionTimeout: NodeJS.Timeout | null = null;
 
   /**
-   * Initialize Ably connection with API key
+   * Initialize Ably connection with server-issued token
+   * This is more secure than exposing the API key to the client
    */
   async connect(token: string): Promise<boolean> {
     if (this.client && this.client.connection.state === "connected") {
@@ -35,15 +36,26 @@ class AblyService {
       this.isConnecting = true;
       console.log("[AblyService] Connecting to Ably...");
 
-      const apiKey = import.meta.env.VITE_ABLY_API_KEY;
-      if (!apiKey) {
-        throw new Error("VITE_ABLY_API_KEY environment variable is not set");
+      // Fetch token from server instead of using client-side API key
+      const tokenResponse = await fetch("/api/ably/token", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error("Failed to get Ably token from server");
       }
 
-      // Initialize Ably client with API key (SAS authentication)
-      // Note: Using API key directly for client-side. In production, consider token auth for security.
+      const { token: ablyToken } = await tokenResponse.json();
+      if (!ablyToken) {
+        throw new Error("No Ably token received from server");
+      }
+
+      // Initialize Ably client with server-issued token (Token authentication)
+      // This is more secure than exposing the API key to the client
       this.client = new Realtime({
-        key: apiKey,
+        token: ablyToken,
         clientId: this.generateClientId(),
         disconnectedRetryTimeout: 15000, // 15 seconds
         realtimeRequestTimeout: 10000,

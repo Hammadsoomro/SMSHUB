@@ -33,6 +33,7 @@ import { User as UserType, TwilioCredentials } from "@shared/api";
 interface CredentialsForm {
   accountSid: string;
   authToken: string;
+  messagingServiceSid: string;
 }
 
 export default function Settings() {
@@ -214,6 +215,7 @@ export default function Settings() {
         body: JSON.stringify({
           accountSid: data.accountSid.trim(),
           authToken: data.authToken.trim(),
+          messagingServiceSid: data.messagingServiceSid.trim() || undefined,
         }),
       });
 
@@ -585,7 +587,12 @@ export default function Settings() {
                         Twilio account is connected and active. Team members can
                         send and receive SMS.
                       </p>
-                      <p className="text-xs text-green-600">
+                      {connectedCredentials.messagingServiceSid && (
+                        <div className="mt-2 p-2 bg-green-100 rounded text-xs text-green-800">
+                          <strong>Messaging Service SID:</strong> {connectedCredentials.messagingServiceSid}
+                        </div>
+                      )}
+                      <p className="text-xs text-green-600 mt-2">
                         Connected:{" "}
                         {new Date(
                           connectedCredentials.connectedAt,
@@ -691,6 +698,29 @@ export default function Settings() {
                   )}
                 </div>
 
+                <div>
+                  <label className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    Messaging Service SID
+                    <span className="text-xs font-normal text-muted-foreground">
+                      (Optional)
+                    </span>
+                  </label>
+                  <Input
+                    {...register("messagingServiceSid")}
+                    placeholder="MGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    className="h-10 font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Format: Must start with "MG". Leave empty to use individual phone numbers.
+                  </p>
+                  {errors.messagingServiceSid && (
+                    <p className="text-xs text-destructive mt-1">
+                      {errors.messagingServiceSid.message}
+                    </p>
+                  )}
+                </div>
+
                 <Button
                   type="submit"
                   disabled={isCredentialsLoading}
@@ -711,58 +741,129 @@ export default function Settings() {
                 <h3 className="text-lg font-semibold mb-6">
                   How to find your Twilio Credentials
                 </h3>
-                <ol className="space-y-3 text-sm">
-                  <li className="flex gap-3">
-                    <span className="font-bold text-primary flex-shrink-0">
-                      1.
-                    </span>
-                    <span>
-                      Go to{" "}
-                      <a
-                        href="https://www.twilio.com/console"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary font-medium hover:underline"
-                      >
-                        Twilio Console
-                      </a>
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="font-bold text-primary flex-shrink-0">
-                      2.
-                    </span>
-                    <span>
-                      In the left sidebar, click on <strong>Account</strong>{" "}
-                      &gt; <strong>API Keys & Tokens</strong>
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="font-bold text-primary flex-shrink-0">
-                      3.
-                    </span>
-                    <span>
-                      Copy your <strong>Account SID</strong> (starts with "AC")
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="font-bold text-primary flex-shrink-0">
-                      4.
-                    </span>
-                    <span>
-                      Copy your <strong>Auth Token</strong> (the long string of
-                      characters)
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="font-bold text-primary flex-shrink-0">
-                      5.
-                    </span>
-                    <span>
-                      Paste both into the form above and click Connect
-                    </span>
-                  </li>
-                </ol>
+                <div className="space-y-8">
+                  <div>
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <span className="text-primary font-bold">Account SID & Auth Token</span>
+                    </h4>
+                    <ol className="space-y-3 text-sm">
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          1.
+                        </span>
+                        <span>
+                          Go to{" "}
+                          <a
+                            href="https://www.twilio.com/console"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary font-medium hover:underline"
+                          >
+                            Twilio Console
+                          </a>
+                        </span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          2.
+                        </span>
+                        <span>
+                          In the left sidebar, click on <strong>Account</strong>{" "}
+                          &gt; <strong>API Keys & Tokens</strong>
+                        </span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          3.
+                        </span>
+                        <span>
+                          Copy your <strong>Account SID</strong> (starts with "AC")
+                        </span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          4.
+                        </span>
+                        <span>
+                          Copy your <strong>Auth Token</strong> (the long string of
+                          characters)
+                        </span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          5.
+                        </span>
+                        <span>
+                          Paste both into the form above and click Connect
+                        </span>
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-blue-600" />
+                      <span className="text-primary">Messaging Service SID</span>
+                      <span className="text-xs font-normal text-muted-foreground ml-auto">
+                        Optional but Recommended
+                      </span>
+                    </h4>
+                    <ol className="space-y-3 text-sm">
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          1.
+                        </span>
+                        <span>
+                          In{" "}
+                          <a
+                            href="https://www.twilio.com/console"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary font-medium hover:underline"
+                          >
+                            Twilio Console
+                          </a>
+                          , click on <strong>Messaging</strong> in the left sidebar
+                        </span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          2.
+                        </span>
+                        <span>
+                          Click on <strong>Services</strong>
+                        </span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          3.
+                        </span>
+                        <span>
+                          Select or create a Messaging Service
+                        </span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          4.
+                        </span>
+                        <span>
+                          Copy the <strong>Service SID</strong> (starts with "MG")
+                        </span>
+                      </li>
+                      <li className="flex gap-3">
+                        <span className="font-bold text-primary flex-shrink-0">
+                          5.
+                        </span>
+                        <span>
+                          Paste it in the Messaging Service SID field above (optional)
+                        </span>
+                      </li>
+                    </ol>
+                    <p className="text-xs text-blue-700 mt-3 italic">
+                      💡 Using a Messaging Service ensures all SMS are sent and received through the same service, making team collaboration easier.
+                    </p>
+                  </div>
+                </div>
               </div>
             </Card>
           </div>

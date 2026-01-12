@@ -35,6 +35,7 @@ export interface TwilioCredentials {
   adminId: string;
   accountSid: string;
   authToken: string;
+  messagingServiceSid?: string; // Optional: for sending SMS through Messaging Service
   connectedAt: string;
 }
 

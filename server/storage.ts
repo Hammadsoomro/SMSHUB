@@ -18,7 +18,10 @@ import {
   Message,
   Contact,
 } from "@shared/api";
-import { normalizePhoneNumber, phoneNumbersMatch } from "./utils/phone-normalizer";
+import {
+  normalizePhoneNumber,
+  phoneNumbersMatch,
+} from "./utils/phone-normalizer";
 
 class Storage {
   // User operations
@@ -374,9 +377,10 @@ class Storage {
    */
   async normalizeAllPhoneNumbers(): Promise<void> {
     try {
-      const allNumbers = await PhoneNumberModel.find({});
       let updatedCount = 0;
 
+      // Normalize phone numbers in PhoneNumberModel
+      const allNumbers = await PhoneNumberModel.find({});
       for (const phoneNumberDoc of allNumbers) {
         const original = phoneNumberDoc.phoneNumber;
         const normalized = normalizePhoneNumber(original);
@@ -391,20 +395,31 @@ class Storage {
         }
       }
 
+      // Also normalize phone numbers in ContactModel
+      const allContacts = await ContactModel.find({});
+      for (const contactDoc of allContacts) {
+        const original = contactDoc.phoneNumber;
+        const normalized = normalizePhoneNumber(original);
+
+        if (original !== normalized) {
+          console.log(
+            `[Storage] Normalizing contact phone number: ${original} → ${normalized}`,
+          );
+          contactDoc.phoneNumber = normalized;
+          await contactDoc.save();
+          updatedCount++;
+        }
+      }
+
       if (updatedCount > 0) {
         console.log(
           `[Storage] ✅ Normalized ${updatedCount} phone numbers in database`,
         );
       } else {
-        console.log(
-          "[Storage] All phone numbers are already in E.164 format",
-        );
+        console.log("[Storage] All phone numbers are already in E.164 format");
       }
     } catch (error) {
-      console.error(
-        "[Storage] Error normalizing phone numbers:",
-        error,
-      );
+      console.error("[Storage] Error normalizing phone numbers:", error);
     }
   }
 }

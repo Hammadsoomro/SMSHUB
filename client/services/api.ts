@@ -8,10 +8,16 @@ interface ApiResponse<T> {
 class ApiService {
   private getAuthHeader() {
     const token = localStorage.getItem("token");
-    return {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     };
+
+    // Only include Authorization header if token exists
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
   }
 
   private async request<T>(

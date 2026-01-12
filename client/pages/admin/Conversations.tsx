@@ -369,7 +369,7 @@ export default function Conversations() {
       const timeoutPromise = new Promise<boolean>((resolve) => {
         setTimeout(() => {
           resolve(false);
-        }, 15000); // 15 second timeout
+        }, 30000); // 15 second timeout
       });
 
       const connected = await Promise.race([connectionPromise, timeoutPromise]);
@@ -884,7 +884,15 @@ export default function Conversations() {
       // Sort pinned contacts to the top
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
-      return 0;
+
+      // Sort by last message time (most recent first)
+      const aTime = a.lastMessageTime
+        ? new Date(a.lastMessageTime).getTime()
+        : 0;
+      const bTime = b.lastMessageTime
+        ? new Date(b.lastMessageTime).getTime()
+        : 0;
+      return bTime - aTime; // Descending order (newest first)
     });
 
   const selectedContact = contacts.find((c) => c.id === selectedContactId);

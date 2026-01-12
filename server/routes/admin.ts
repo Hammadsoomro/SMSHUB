@@ -1,10 +1,10 @@
 import { RequestHandler } from "express";
-import crypto from "crypto";
 import https from "https";
 import { storage } from "../storage";
 import { generateToken } from "../jwt";
 import ablyServer from "../ably";
 import { encrypt, decrypt } from "../crypto";
+import { hashPassword } from "../password";
 import {
   TwilioCredentialsRequest,
   TwilioCredentials,
@@ -12,10 +12,6 @@ import {
   TeamMember,
   User,
 } from "@shared/api";
-
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
 
 // Validate Twilio credentials by making a test API call
 async function validateTwilioCredentials(
@@ -111,7 +107,8 @@ async function validateTwilioCredentials(
 export const handleSaveCredentials: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const { accountSid, authToken } = req.body as TwilioCredentialsRequest;
+    const { accountSid, authToken, messagingServiceSid } =
+      req.body as TwilioCredentialsRequest & { messagingServiceSid?: string };
 
     if (!accountSid || !authToken) {
       return res
@@ -134,6 +131,7 @@ export const handleSaveCredentials: RequestHandler = async (req, res) => {
       adminId,
       accountSid,
       authToken: encryptedAuthToken,
+      messagingServiceSid, // Store Messaging Service SID if provided
       connectedAt: new Date().toISOString(),
     };
 
@@ -183,6 +181,59 @@ export const handleRemoveCredentials: RequestHandler = async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Remove credentials error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const handleUpdateMessagingServiceSid: RequestHandler = async (
+  req,
+  res,
+) => {
+  try {
+    const adminId = req.userId!;
+    const { messagingServiceSid } = req.body as { messagingServiceSid: string };
+
+    if (!messagingServiceSid) {
+      return res
+        .status(400)
+        .json({ error: "Messaging Service SID is required" });
+    }
+
+    // Validate Messaging Service SID format (should start with MG)
+    if (!messagingServiceSid.startsWith("MG")) {
+      return res.status(400).json({
+        error: "Invalid Messaging Service SID format (should start with MG)",
+      });
+    }
+
+    // Get existing credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res.status(400).json({
+        error:
+          "Twilio credentials not found. Please connect your credentials first.",
+      });
+    }
+
+    // Update with new Messaging Service SID
+    const updatedCredentials: TwilioCredentials = {
+      ...credentials,
+      messagingServiceSid,
+    };
+
+    storage.setTwilioCredentials(updatedCredentials);
+
+    // Decrypt token for response
+    const decryptedAuthToken = decrypt(credentials.authToken);
+
+    res.json({
+      credentials: {
+        ...updatedCredentials,
+        authToken: decryptedAuthToken,
+      },
+    });
+  } catch (error) {
+    console.error("Update Messaging Service SID error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

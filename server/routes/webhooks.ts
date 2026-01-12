@@ -2,6 +2,10 @@ import { RequestHandler } from "express";
 import { storage } from "../storage";
 import { Message, Contact } from "@shared/api";
 import ablyServer from "../ably";
+import {
+  normalizePhoneNumber,
+  phoneNumbersMatch,
+} from "../utils/phone-normalizer";
 
 /**
  * Health check endpoint - verify webhook is reachable
@@ -62,12 +66,12 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     console.log("[handleInboundSMS] Assigned to:", phoneNumber.assignedTo);
     console.log("[handleInboundSMS] Admin ID:", phoneNumber.adminId);
 
-    // Store the message
+    // Store the message - normalize phone numbers for consistency
     const message: Message = {
       id: MessageSid || Math.random().toString(36).substr(2, 9),
       phoneNumberId: phoneNumber.id,
-      from: From,
-      to: To,
+      from: normalizePhoneNumber(From),
+      to: normalizePhoneNumber(To),
       body: Body,
       direction: "inbound",
       timestamp: new Date().toISOString(),
@@ -78,23 +82,29 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     await storage.addMessage(message);
     console.log("[handleInboundSMS] Message stored successfully");
 
-    // Get or create contact
+    // Get or create contact - use normalized phone numbers for matching
     const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
-    const existingContact = contacts.find((c) => c.phoneNumber === From);
+    const normalizedFromNumber = normalizePhoneNumber(From);
+    const existingContact = contacts.find((c) =>
+      phoneNumbersMatch(c.phoneNumber, From),
+    );
 
     let savedContact: Contact;
     if (!existingContact) {
+      // Store contact with normalized phone number
       const contact: Contact = {
         id: Math.random().toString(36).substr(2, 9),
         phoneNumberId: phoneNumber.id,
-        phoneNumber: From,
+        phoneNumber: normalizedFromNumber,
         lastMessage: Body.substring(0, 50),
         lastMessageTime: message.timestamp,
         unreadCount: 1,
       };
       await storage.addContact(contact);
       savedContact = contact;
-      console.log(`✅ New contact created: ${From}`);
+      console.log(
+        `✅ New contact created: ${From} (normalized: ${normalizedFromNumber})`,
+      );
     } else {
       // Update last message info and increment unread count
       const updatedContact = {
@@ -106,7 +116,7 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
       await storage.updateContact(updatedContact);
       savedContact = updatedContact;
       console.log(
-        `✅ Contact updated: ${From}, unread count: ${(existingContact.unreadCount || 0) + 1}`,
+        `✅ Contact updated: ${From} (normalized: ${normalizedFromNumber}), unread count: ${(existingContact.unreadCount || 0) + 1}`,
       );
     }
 

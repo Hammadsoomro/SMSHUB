@@ -27,22 +27,35 @@ export class TwilioClient {
 
   /**
    * Send an SMS message through Twilio
+   * @param to - Recipient phone number
+   * @param from - Sender phone number (required if messagingServiceSid is not provided)
+   * @param body - Message body
+   * @param messagingServiceSid - Optional: Messaging Service SID to use for sending
    */
   async sendSMS(
     to: string,
     from: string,
     body: string,
+    messagingServiceSid?: string,
   ): Promise<TwilioResponse> {
     return new Promise((resolve, reject) => {
       const auth = Buffer.from(`${this.accountSid}:${this.authToken}`).toString(
         "base64",
       );
 
-      const postData = new URLSearchParams({
+      const params: Record<string, string> = {
         To: to,
-        From: from,
         Body: body,
-      }).toString();
+      };
+
+      // Use MessagingServiceSid if provided, otherwise use From
+      if (messagingServiceSid) {
+        params.MessagingServiceSid = messagingServiceSid;
+      } else {
+        params.From = from;
+      }
+
+      const postData = new URLSearchParams(params).toString();
 
       const options = {
         hostname: "api.twilio.com",

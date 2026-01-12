@@ -1,14 +1,24 @@
 import crypto from "crypto";
 
-// ✅ SECURITY: Enforce JWT_SECRET in production - fail hard if not set
+// ✅ SECURITY: Enforce JWT_SECRET in production - fail at first use if not set
 const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  throw new Error(
-    "[FATAL] JWT_SECRET environment variable is REQUIRED and must be set. " +
-      "Authentication cannot function without it. " +
-      "Set it in your .env file or Netlify environment variables.",
-  );
+// Verify JWT_SECRET is set (but don't crash at import time - check on first use instead)
+function ensureJWTSecret(): void {
+  if (!JWT_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[FATAL] JWT_SECRET environment variable is REQUIRED in production. " +
+          "Authentication cannot function without it. " +
+          "Set it in your environment variables or deployment configuration.",
+      );
+    } else {
+      console.warn(
+        "[WARN] JWT_SECRET not configured in development. " +
+          "Set JWT_SECRET environment variable for proper security.",
+      );
+    }
+  }
 }
 
 interface JWTPayload {
@@ -28,9 +38,11 @@ function base64UrlEncode(str: string): string {
 }
 
 function base64UrlDecode(str: string): string {
-  str += new Array(5 - (str.length % 4)).join("=");
+  // Fix padding: add the correct number of '=' characters
+  const padding = (4 - (str.length % 4)) % 4;
+  const paddedStr = str + "=".repeat(padding);
   return Buffer.from(
-    str.replace(/-/g, "+").replace(/_/g, "/"),
+    paddedStr.replace(/-/g, "+").replace(/_/g, "/"),
     "base64",
   ).toString();
 }
@@ -38,6 +50,12 @@ function base64UrlDecode(str: string): string {
 export function generateToken(
   payload: Omit<JWTPayload, "iat" | "exp">,
 ): string {
+  ensureJWTSecret();
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+
   const now = Math.floor(Date.now() / 1000);
   const jwtPayload: JWTPayload = {
     ...payload,
@@ -48,6 +66,7 @@ export function generateToken(
   const header = base64UrlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload64 = base64UrlEncode(JSON.stringify(jwtPayload));
 
+  // Fix: encode signature buffer directly, not signature.toString("base64")
   const signature = crypto
     .createHmac("sha256", JWT_SECRET)
     .update(`${header}.${payload64}`)
@@ -59,6 +78,8 @@ export function generateToken(
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
+    ensureJWTSecret();
+
     if (!JWT_SECRET) {
       console.error("[JWT] JWT_SECRET is not configured");
       return null;

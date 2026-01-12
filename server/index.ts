@@ -19,6 +19,7 @@ import {
   handleSaveCredentials,
   handleGetCredentials,
   handleRemoveCredentials,
+  handleUpdateMessagingServiceSid,
   handleGetNumbers,
   handleSetActiveNumber,
   handleGetTeamMembers,
@@ -57,6 +58,9 @@ import {
 
 // Webhooks
 import { handleInboundSMS, handleWebhookHealth } from "./routes/webhooks";
+
+// Ably token generation
+import { handleGetAblyToken } from "./routes/ably";
 
 // Middleware
 import { authMiddleware, adminOnly, teamMemberOnly } from "./middleware/auth";
@@ -156,6 +160,9 @@ export async function createServer() {
   app.patch("/api/auth/profile", authMiddleware, handleUpdateProfile);
   app.post("/api/auth/change-password", authMiddleware, handleChangePassword);
 
+  // Real-time authentication (requires authentication)
+  app.get("/api/ably/token", authMiddleware, handleGetAblyToken);
+
   // Webhook routes (public - for Twilio callbacks)
   // Note: Health check doesn't need signature validation
   app.get("/api/webhooks/inbound-sms", handleWebhookHealth);
@@ -184,6 +191,12 @@ export async function createServer() {
     authMiddleware,
     adminOnly,
     handleRemoveCredentials,
+  );
+  app.patch(
+    "/api/admin/messaging-service-sid",
+    authMiddleware,
+    adminOnly,
+    handleUpdateMessagingServiceSid,
   );
   app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
   app.post(
