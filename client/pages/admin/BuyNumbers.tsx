@@ -457,6 +457,14 @@ export default function BuyNumbers() {
               Purchase Twilio phone numbers from multiple countries
             </p>
           </div>
+          <Button
+            onClick={() => setShowAddExistingDialog(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Existing Number
+          </Button>
         </div>
 
         {/* Error Message */}
