@@ -163,6 +163,9 @@ export default function BuyNumbers() {
       fax: false,
     },
   );
+  const [showAddExistingDialog, setShowAddExistingDialog] = useState(false);
+  const [existingPhoneNumber, setExistingPhoneNumber] = useState("");
+  const [isAddingExisting, setIsAddingExisting] = useState(false);
 
   useEffect(() => {
     const validateAuth = async () => {
