@@ -374,9 +374,10 @@ class Storage {
    */
   async normalizeAllPhoneNumbers(): Promise<void> {
     try {
-      const allNumbers = await PhoneNumberModel.find({});
       let updatedCount = 0;
 
+      // Normalize phone numbers in PhoneNumberModel
+      const allNumbers = await PhoneNumberModel.find({});
       for (const phoneNumberDoc of allNumbers) {
         const original = phoneNumberDoc.phoneNumber;
         const normalized = normalizePhoneNumber(original);
@@ -387,6 +388,22 @@ class Storage {
           );
           phoneNumberDoc.phoneNumber = normalized;
           await phoneNumberDoc.save();
+          updatedCount++;
+        }
+      }
+
+      // Also normalize phone numbers in ContactModel
+      const allContacts = await ContactModel.find({});
+      for (const contactDoc of allContacts) {
+        const original = contactDoc.phoneNumber;
+        const normalized = normalizePhoneNumber(original);
+
+        if (original !== normalized) {
+          console.log(
+            `[Storage] Normalizing contact phone number: ${original} → ${normalized}`,
+          );
+          contactDoc.phoneNumber = normalized;
+          await contactDoc.save();
           updatedCount++;
         }
       }
