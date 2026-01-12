@@ -166,12 +166,11 @@ export async function createServer() {
       }
 
       // Check if any admin user already exists
-      const existingAdmins = await storage.getUserByEmail(email);
-      if (existingAdmins) {
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
         return res.status(400).json({ error: "User already exists" });
       }
 
-      const { hashPassword } = await import("./password");
       const userId = storage.generateId();
       const hashedPassword = hashPassword(password);
 
@@ -186,7 +185,6 @@ export async function createServer() {
 
       await storage.createUser(user);
 
-      const { generateToken } = await import("./jwt");
       const token = generateToken({
         userId,
         email,
