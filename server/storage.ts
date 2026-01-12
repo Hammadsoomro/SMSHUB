@@ -33,13 +33,47 @@ class Storage {
   async getUserByEmail(
     email: string,
   ): Promise<(User & { password: string }) | undefined> {
-    return (await UserModel.findOne({ email: email.toLowerCase() })) as
-      | (User & { password: string })
-      | null;
+    const user = (await UserModel.findOne({
+      email: email.toLowerCase(),
+    })) as any;
+    if (!user) return undefined;
+
+    // Ensure user has an id field (for backward compatibility with existing users)
+    if (!user.id && user._id) {
+      user.id = user._id.toString();
+      await user.save();
+    }
+
+    // Convert Mongoose document to plain JavaScript object
+    const userObj = user.toObject();
+
+    // Debug logging
+    console.log(
+      `[DEBUG getUserByEmail] Email: ${email}, Role: ${userObj.role}, ID: ${userObj.id}`,
+    );
+
+    return userObj as User & { password: string };
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    const user = (await UserModel.findById(id)) as any;
+    let user = (await UserModel.findOne({ id })) as any;
+
+    // Fallback to MongoDB's _id for backward compatibility with existing users
+    if (!user) {
+      try {
+        user = (await UserModel.findById(id)) as any;
+      } catch (error) {
+        // findById may fail if id is not a valid ObjectId
+        return undefined;
+      }
+
+      // If found by _id but doesn't have custom id field, ensure it's set to _id
+      if (user && !user.id) {
+        user.id = user._id.toString();
+        await user.save();
+      }
+    }
+
     if (!user) return undefined;
     const { password, ...userWithoutPassword } = user.toObject();
     return userWithoutPassword as User;
@@ -47,9 +81,35 @@ class Storage {
 
   async updateUser(user: User): Promise<void> {
     const { password, ...userWithoutPassword } = user as any;
-    await UserModel.findByIdAndUpdate(user.id, userWithoutPassword, {
-      new: true,
-    });
+
+    // Try to update by custom id field first
+    let result = await UserModel.findOneAndUpdate(
+      { id: user.id },
+      userWithoutPassword,
+      { new: true },
+    );
+
+    // Fallback to MongoDB's _id for backward compatibility
+    if (!result) {
+      try {
+        result = await UserModel.findByIdAndUpdate(
+          user.id,
+          userWithoutPassword,
+          {
+            new: true,
+          },
+        );
+
+        // If found by _id but doesn't have custom id field, ensure it's set to _id
+        if (result && !result.id) {
+          result.id = result._id.toString();
+          await result.save();
+        }
+      } catch (error) {
+        // findByIdAndUpdate may fail if id is not a valid ObjectId
+        throw error;
+      }
+    }
   }
 
   // Twilio Credentials
@@ -158,15 +218,38 @@ class Storage {
   async getTeamMembersByAdminId(adminId: string): Promise<TeamMember[]> {
     const members = await TeamMemberModel.find({ adminId });
     return members.map((member) => {
-      const { password, ...teamMember } = member.toObject() as any;
+      const memberObj = member.toObject() as any;
+      const { password, ...teamMember } = memberObj;
+
+      // Ensure team member has an id field for backward compatibility
+      if (!teamMember.id && memberObj._id) {
+        teamMember.id = memberObj._id.toString();
+      }
+
       return teamMember as TeamMember;
     });
   }
 
   async getTeamMemberById(id: string): Promise<TeamMember | undefined> {
-    const member = await TeamMemberModel.findOne({ id });
+    let member = await TeamMemberModel.findOne({ id });
+
+    // Fallback to MongoDB's _id for backward compatibility
+    if (!member) {
+      try {
+        member = (await TeamMemberModel.findById(id)) as any;
+      } catch (error) {
+        return undefined;
+      }
+    }
+
     if (!member) return undefined;
-    const { password, ...memberWithoutPassword } = member.toObject() as any;
+    const memberObj = member.toObject() as any;
+    const { password, ...memberWithoutPassword } = memberObj;
+
+    // Ensure team member has an id field for backward compatibility
+    if (!memberWithoutPassword.id && memberObj._id) {
+      memberWithoutPassword.id = memberObj._id.toString();
+    }
     return memberWithoutPassword as TeamMember;
   }
 
