@@ -107,7 +107,8 @@ async function validateTwilioCredentials(
 export const handleSaveCredentials: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const { accountSid, authToken, messagingServiceSid } = req.body as TwilioCredentialsRequest & { messagingServiceSid?: string };
+    const { accountSid, authToken, messagingServiceSid } =
+      req.body as TwilioCredentialsRequest & { messagingServiceSid?: string };
 
     if (!accountSid || !authToken) {
       return res
@@ -184,19 +185,24 @@ export const handleRemoveCredentials: RequestHandler = async (req, res) => {
   }
 };
 
-export const handleUpdateMessagingServiceSid: RequestHandler = async (req, res) => {
+export const handleUpdateMessagingServiceSid: RequestHandler = async (
+  req,
+  res,
+) => {
   try {
     const adminId = req.userId!;
     const { messagingServiceSid } = req.body as { messagingServiceSid: string };
 
     if (!messagingServiceSid) {
-      return res.status(400).json({ error: "Messaging Service SID is required" });
+      return res
+        .status(400)
+        .json({ error: "Messaging Service SID is required" });
     }
 
     // Validate Messaging Service SID format (should start with MG)
     if (!messagingServiceSid.startsWith("MG")) {
       return res.status(400).json({
-        error: "Invalid Messaging Service SID format (should start with MG)"
+        error: "Invalid Messaging Service SID format (should start with MG)",
       });
     }
 
@@ -204,7 +210,8 @@ export const handleUpdateMessagingServiceSid: RequestHandler = async (req, res) 
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
       return res.status(400).json({
-        error: "Twilio credentials not found. Please connect your credentials first."
+        error:
+          "Twilio credentials not found. Please connect your credentials first.",
       });
     }
 

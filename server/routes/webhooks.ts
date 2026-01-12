@@ -2,7 +2,10 @@ import { RequestHandler } from "express";
 import { storage } from "../storage";
 import { Message, Contact } from "@shared/api";
 import ablyServer from "../ably";
-import { normalizePhoneNumber, phoneNumbersMatch } from "../utils/phone-normalizer";
+import {
+  normalizePhoneNumber,
+  phoneNumbersMatch,
+} from "../utils/phone-normalizer";
 
 /**
  * Health check endpoint - verify webhook is reachable
@@ -83,7 +86,7 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
     const normalizedFromNumber = normalizePhoneNumber(From);
     const existingContact = contacts.find((c) =>
-      phoneNumbersMatch(c.phoneNumber, From)
+      phoneNumbersMatch(c.phoneNumber, From),
     );
 
     let savedContact: Contact;
@@ -99,7 +102,9 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
       };
       await storage.addContact(contact);
       savedContact = contact;
-      console.log(`✅ New contact created: ${From} (normalized: ${normalizedFromNumber})`);
+      console.log(
+        `✅ New contact created: ${From} (normalized: ${normalizedFromNumber})`,
+      );
     } else {
       // Update last message info and increment unread count
       const updatedContact = {

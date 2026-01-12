@@ -886,8 +886,12 @@ export default function Conversations() {
       if (!a.isPinned && b.isPinned) return 1;
 
       // Sort by last message time (most recent first)
-      const aTime = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
-      const bTime = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+      const aTime = a.lastMessageTime
+        ? new Date(a.lastMessageTime).getTime()
+        : 0;
+      const bTime = b.lastMessageTime
+        ? new Date(b.lastMessageTime).getTime()
+        : 0;
       return bTime - aTime; // Descending order (newest first)
     });
 

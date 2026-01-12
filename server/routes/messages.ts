@@ -3,7 +3,10 @@ import { storage } from "../storage";
 import { decrypt } from "../crypto";
 import { SendMessageRequest, Message, Contact, PhoneNumber } from "@shared/api";
 import { TwilioClient } from "../twilio";
-import { normalizePhoneNumber, phoneNumbersMatch } from "../utils/phone-normalizer";
+import {
+  normalizePhoneNumber,
+  phoneNumbersMatch,
+} from "../utils/phone-normalizer";
 
 export const handleGetAssignedPhoneNumber: RequestHandler = async (
   req,
@@ -234,7 +237,7 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     // Use normalized phone numbers for matching
     const normalizedToNumber = normalizePhoneNumber(to);
     const existingContact = existingContacts.find((c) =>
-      phoneNumbersMatch(c.phoneNumber, to)
+      phoneNumbersMatch(c.phoneNumber, to),
     );
 
     if (!existingContact) {
@@ -245,7 +248,12 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
         phoneNumber: normalizedToNumber,
         unreadCount: 0,
       };
-      console.log("[handleSendMessage] Creating new contact:", contact.id, "(normalized:", normalizedToNumber + ")");
+      console.log(
+        "[handleSendMessage] Creating new contact:",
+        contact.id,
+        "(normalized:",
+        normalizedToNumber + ")",
+      );
       await storage.addContact(contact);
       console.log("[handleSendMessage] Contact created successfully");
     } else {
@@ -315,7 +323,11 @@ export const handleAddContact: RequestHandler = async (req, res) => {
     // Check if contact already exists - use normalized phone numbers
     const existingContacts =
       await storage.getContactsByPhoneNumber(phoneNumberId);
-    if (existingContacts.some((c) => phoneNumbersMatch(c.phoneNumber, phoneNumber))) {
+    if (
+      existingContacts.some((c) =>
+        phoneNumbersMatch(c.phoneNumber, phoneNumber),
+      )
+    ) {
       return res.status(400).json({ error: "Contact already exists" });
     }
 

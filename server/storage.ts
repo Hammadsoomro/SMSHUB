@@ -18,7 +18,10 @@ import {
   Message,
   Contact,
 } from "@shared/api";
-import { normalizePhoneNumber, phoneNumbersMatch } from "./utils/phone-normalizer";
+import {
+  normalizePhoneNumber,
+  phoneNumbersMatch,
+} from "./utils/phone-normalizer";
 
 class Storage {
   // User operations
@@ -413,15 +416,10 @@ class Storage {
           `[Storage] ✅ Normalized ${updatedCount} phone numbers in database`,
         );
       } else {
-        console.log(
-          "[Storage] All phone numbers are already in E.164 format",
-        );
+        console.log("[Storage] All phone numbers are already in E.164 format");
       }
     } catch (error) {
-      console.error(
-        "[Storage] Error normalizing phone numbers:",
-        error,
-      );
+      console.error("[Storage] Error normalizing phone numbers:", error);
     }
   }
 }

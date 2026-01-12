@@ -8,7 +8,7 @@ import { Realtime } from "ably";
 export const handleGetAblyToken: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId;
-    
+
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -16,8 +16,8 @@ export const handleGetAblyToken: RequestHandler = async (req, res) => {
     const ablyApiKey = process.env.ABLY_API_KEY;
     if (!ablyApiKey) {
       console.error("[Ably] ABLY_API_KEY not configured");
-      return res.status(500).json({ 
-        error: "Real-time service is unavailable. Please try again later." 
+      return res.status(500).json({
+        error: "Real-time service is unavailable. Please try again later.",
       });
     }
 
@@ -42,8 +42,8 @@ export const handleGetAblyToken: RequestHandler = async (req, res) => {
     res.json({ token: tokenRequest });
   } catch (error) {
     console.error("[Ably] Token generation error:", error);
-    res.status(500).json({ 
-      error: "Failed to generate authentication token" 
+    res.status(500).json({
+      error: "Failed to generate authentication token",
     });
   }
 };

@@ -9,7 +9,7 @@ export function hashPassword(password: string): string {
   const hash = crypto
     .pbkdf2Sync(password, salt, 100000, 64, "sha512")
     .toString("hex");
-  
+
   // Return salt and hash together (separated by :)
   return `${salt}:${hash}`;
 }
@@ -17,18 +17,21 @@ export function hashPassword(password: string): string {
 /**
  * Verify a password against a previously hashed password
  */
-export function verifyPassword(password: string, hashedPassword: string): boolean {
+export function verifyPassword(
+  password: string,
+  hashedPassword: string,
+): boolean {
   try {
     const [salt, originalHash] = hashedPassword.split(":");
-    
+
     if (!salt || !originalHash) {
       return false;
     }
-    
+
     const hash = crypto
       .pbkdf2Sync(password, salt, 100000, 64, "sha512")
       .toString("hex");
-    
+
     // Use timing-safe comparison to prevent timing attacks
     return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(originalHash));
   } catch (error) {
