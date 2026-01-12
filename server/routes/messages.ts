@@ -312,18 +312,20 @@ export const handleAddContact: RequestHandler = async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    // Check if contact already exists
+    // Check if contact already exists - use normalized phone numbers
     const existingContacts =
       await storage.getContactsByPhoneNumber(phoneNumberId);
-    if (existingContacts.some((c) => c.phoneNumber === phoneNumber)) {
+    if (existingContacts.some((c) => phoneNumbersMatch(c.phoneNumber, phoneNumber))) {
       return res.status(400).json({ error: "Contact already exists" });
     }
 
+    // Store contact with normalized phone number
+    const normalizedPhoneNumber = normalizePhoneNumber(phoneNumber);
     const contact: Contact = {
       id: Math.random().toString(36).substr(2, 9),
       phoneNumberId,
-      phoneNumber,
-      name: name || phoneNumber,
+      phoneNumber: normalizedPhoneNumber,
+      name: name || normalizedPhoneNumber,
       unreadCount: 0,
     };
 
