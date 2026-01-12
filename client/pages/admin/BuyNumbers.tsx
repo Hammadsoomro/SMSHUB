@@ -823,7 +823,10 @@ export default function BuyNumbers() {
         )}
 
         {/* Add Existing Number Dialog */}
-        <Dialog open={showAddExistingDialog} onOpenChange={setShowAddExistingDialog}>
+        <Dialog
+          open={showAddExistingDialog}
+          onOpenChange={setShowAddExistingDialog}
+        >
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Add Existing Phone Number</DialogTitle>
