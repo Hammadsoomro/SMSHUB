@@ -1,14 +1,24 @@
 import crypto from "crypto";
 
-// ✅ SECURITY: Enforce JWT_SECRET in production - fail hard if not set
+// ✅ SECURITY: Enforce JWT_SECRET in production - fail at first use if not set
 const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  throw new Error(
-    "[FATAL] JWT_SECRET environment variable is REQUIRED and must be set. " +
-      "Authentication cannot function without it. " +
-      "Set it in your .env file or Netlify environment variables.",
-  );
+// Verify JWT_SECRET is set (but don't crash at import time - check on first use instead)
+function ensureJWTSecret(): void {
+  if (!JWT_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[FATAL] JWT_SECRET environment variable is REQUIRED in production. " +
+          "Authentication cannot function without it. " +
+          "Set it in your environment variables or deployment configuration.",
+      );
+    } else {
+      console.warn(
+        "[WARN] JWT_SECRET not configured in development. " +
+          "Set JWT_SECRET environment variable for proper security.",
+      );
+    }
+  }
 }
 
 interface JWTPayload {
