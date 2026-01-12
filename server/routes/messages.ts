@@ -3,6 +3,7 @@ import { storage } from "../storage";
 import { decrypt } from "../crypto";
 import { SendMessageRequest, Message, Contact, PhoneNumber } from "@shared/api";
 import { TwilioClient } from "../twilio";
+import { normalizePhoneNumber, phoneNumbersMatch } from "../utils/phone-normalizer";
 
 export const handleGetAssignedPhoneNumber: RequestHandler = async (
   req,
