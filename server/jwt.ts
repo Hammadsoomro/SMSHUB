@@ -50,6 +50,12 @@ function base64UrlDecode(str: string): string {
 export function generateToken(
   payload: Omit<JWTPayload, "iat" | "exp">,
 ): string {
+  ensureJWTSecret();
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+
   const now = Math.floor(Date.now() / 1000);
   const jwtPayload: JWTPayload = {
     ...payload,
@@ -60,6 +66,7 @@ export function generateToken(
   const header = base64UrlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload64 = base64UrlEncode(JSON.stringify(jwtPayload));
 
+  // Fix: encode signature buffer directly, not signature.toString("base64")
   const signature = crypto
     .createHmac("sha256", JWT_SECRET)
     .update(`${header}.${payload64}`)
