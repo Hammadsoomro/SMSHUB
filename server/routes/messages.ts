@@ -231,16 +231,21 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     );
     console.log("[handleSendMessage] Looking for contact with phone:", to);
 
-    const existingContact = existingContacts.find((c) => c.phoneNumber === to);
+    // Use normalized phone numbers for matching
+    const normalizedToNumber = normalizePhoneNumber(to);
+    const existingContact = existingContacts.find((c) =>
+      phoneNumbersMatch(c.phoneNumber, to)
+    );
 
     if (!existingContact) {
+      // Store contact with normalized phone number
       const contact: Contact = {
         id: Math.random().toString(36).substr(2, 9),
         phoneNumberId,
-        phoneNumber: to,
+        phoneNumber: normalizedToNumber,
         unreadCount: 0,
       };
-      console.log("[handleSendMessage] Creating new contact:", contact.id);
+      console.log("[handleSendMessage] Creating new contact:", contact.id, "(normalized:", normalizedToNumber + ")");
       await storage.addContact(contact);
       console.log("[handleSendMessage] Contact created successfully");
     } else {
