@@ -201,12 +201,12 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
         .json({ error: twilioResponse.error_message || twilioResponse.error });
     }
 
-    // Store message in database
+    // Store message in database - normalize phone numbers for consistency
     const message: Message = {
       id: Math.random().toString(36).substr(2, 9),
       phoneNumberId,
-      from: phoneNumber.phoneNumber,
-      to,
+      from: normalizePhoneNumber(phoneNumber.phoneNumber),
+      to: normalizePhoneNumber(to),
       body,
       direction: "outbound",
       timestamp: new Date().toISOString(),
