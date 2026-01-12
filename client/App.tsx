@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import InitAdmin from "./pages/InitAdmin";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 import { ContactProvider } from "./contexts/ContactContext";
