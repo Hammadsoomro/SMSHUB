@@ -38,9 +38,11 @@ function base64UrlEncode(str: string): string {
 }
 
 function base64UrlDecode(str: string): string {
-  str += new Array(5 - (str.length % 4)).join("=");
+  // Fix padding: add the correct number of '=' characters
+  const padding = (4 - (str.length % 4)) % 4;
+  const paddedStr = str + "=".repeat(padding);
   return Buffer.from(
-    str.replace(/-/g, "+").replace(/_/g, "/"),
+    paddedStr.replace(/-/g, "+").replace(/_/g, "/"),
     "base64",
   ).toString();
 }
