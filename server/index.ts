@@ -160,6 +160,9 @@ export async function createServer() {
   app.patch("/api/auth/profile", authMiddleware, handleUpdateProfile);
   app.post("/api/auth/change-password", authMiddleware, handleChangePassword);
 
+  // Real-time authentication (requires authentication)
+  app.get("/api/ably/token", authMiddleware, handleGetAblyToken);
+
   // Webhook routes (public - for Twilio callbacks)
   // Note: Health check doesn't need signature validation
   app.get("/api/webhooks/inbound-sms", handleWebhookHealth);
