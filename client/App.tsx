@@ -45,6 +45,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/init-admin" element={<InitAdmin />} />
 
               {/* Team Member Routes */}
               <Route path="/messages" element={<Messages />} />
