@@ -153,7 +153,7 @@ export default function Messages() {
     }
   };
 
-  const fetchMessages = async (contactId: string) => {
+  const fetchMessages = async (contactId: string, skipNotification = false) => {
     // Check if messages are cached
     if (messagesCacheRef.current[contactId]) {
       setConversation((prev) => ({
@@ -172,6 +172,21 @@ export default function Messages() {
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
       const messages = data.messages || [];
+
+      // Check for new inbound messages
+      if (!skipNotification && messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.direction === "inbound") {
+          const contact = contacts.find((c) => c.id === contactId);
+          if (contact && notificationsRef.current) {
+            showNotification(
+              "New Message",
+              `${contact.name || contact.phoneNumber}: ${lastMessage.body.substring(0, 50)}`,
+            );
+          }
+        }
+      }
+
       messagesCacheRef.current[contactId] = messages;
       setConversation((prev) => ({
         ...prev,
