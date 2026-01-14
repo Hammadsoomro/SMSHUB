@@ -241,6 +241,7 @@ export default function Messages() {
 
     const messageToSend = messageText;
     const contactId = conversation.contact.id;
+    const currentTime = new Date().toISOString();
     setMessageText("");
     setError("");
     setIsSending(true);
@@ -256,7 +257,7 @@ export default function Messages() {
         to: conversation.contact.phoneNumber,
         body: messageToSend,
         direction: "outbound",
-        timestamp: new Date().toISOString(),
+        timestamp: currentTime,
         sid: "",
       };
 
@@ -264,6 +265,29 @@ export default function Messages() {
         ...prev,
         messages: [...prev.messages, optimisticMessage],
       }));
+
+      // Update contact with new message time (optimistic)
+      setContacts((prev) =>
+        prev
+          .map((c) =>
+            c.id === contactId
+              ? {
+                  ...c,
+                  lastMessage: messageToSend.substring(0, 50),
+                  lastMessageTime: currentTime,
+                }
+              : c,
+          )
+          .sort((a, b) => {
+            const aTime = a.lastMessageTime
+              ? new Date(a.lastMessageTime).getTime()
+              : 0;
+            const bTime = b.lastMessageTime
+              ? new Date(b.lastMessageTime).getTime()
+              : 0;
+            return bTime - aTime;
+          }),
+      );
 
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/send", {
