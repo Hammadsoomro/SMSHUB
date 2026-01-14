@@ -416,13 +416,22 @@ export default function Conversations() {
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
+          console.log("[Ably] Contact update received:", data);
           const currentActivePhone = activePhoneNumberRef.current;
+          const selectedId = selectedContactIdRef.current;
+
           if (currentActivePhone) {
             const phoneNum = phoneNumbersRef.current.find(
               (p) => p.phoneNumber === currentActivePhone,
             );
             if (phoneNum) {
+              // Reload contacts and ensure proper sorting
               loadContactsForPhoneNumber(phoneNum.id);
+
+              // If a contact is selected and a message came in for it, mark as read
+              if (selectedId && data?.contactId === selectedId) {
+                markMessagesAsRead(selectedId);
+              }
             }
           }
         },
