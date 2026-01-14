@@ -33,21 +33,34 @@ class Storage {
   async getUserByEmail(
     email: string,
   ): Promise<(User & { password: string }) | undefined> {
-    const user = (await UserModel.findOne({
-      email: email.toLowerCase(),
-    })) as any;
-    if (!user) return undefined;
+    try {
+      const user = (await UserModel.findOne({
+        email: email.toLowerCase(),
+      })) as any;
+      if (!user) return undefined;
 
-    // Ensure user has an id field (for backward compatibility with existing users)
-    if (!user.id && user._id) {
-      user.id = user._id.toString();
-      await user.save();
+      // Ensure user has an id field (for backward compatibility with existing users)
+      if (!user.id && user._id) {
+        user.id = user._id.toString();
+        await user.save();
+        console.log(
+          `[Storage] Auto-assigned ID to user ${email}: ${user.id}`,
+        );
+      }
+
+      // Convert Mongoose document to plain JavaScript object
+      const userObj = user.toObject();
+
+      // Double-check ID is present in object
+      if (!userObj.id && userObj._id) {
+        userObj.id = userObj._id.toString();
+      }
+
+      return userObj as User & { password: string };
+    } catch (error) {
+      console.error(`[Storage] Error fetching user by email ${email}:`, error);
+      throw error;
     }
-
-    // Convert Mongoose document to plain JavaScript object
-    const userObj = user.toObject();
-
-    return userObj as User & { password: string };
   }
 
   async getUserById(id: string): Promise<User | undefined> {
