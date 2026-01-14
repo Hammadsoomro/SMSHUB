@@ -4,6 +4,7 @@ import TeamMemberLayout from "@/components/TeamMemberLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   MessageSquare,
   Send,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { Message, Contact } from "@shared/api";
 import ablyService from "@/services/ablyService";
+import { notificationAudioManager } from "@/lib/notification-audio";
 
 interface ConversationState {
   contact: Contact | null;
@@ -53,8 +55,12 @@ export default function Messages() {
   const [activePhoneNumberId, setActivePhoneNumberId] = useState<string | null>(
     null,
   );
+  const [notifications, setNotifications] = useState(() => {
+    return Notification.permission === "granted";
+  });
   const messagesCacheRef = useRef<MessageCache>({});
   const contactsCacheRef = useRef<Contact[]>([]);
+  const notificationsRef = useRef(false);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -67,8 +73,16 @@ export default function Messages() {
       navigate("/login");
       return;
     }
+
+    // Request notification permission
+    requestNotificationPermission();
+
     initializeMessages();
   }, [navigate]);
+
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
 
   const initializeMessages = async () => {
     try {
@@ -118,16 +132,28 @@ export default function Messages() {
 
       if (!response.ok) throw new Error("Failed to fetch contacts");
       const data = await response.json();
-      const contacts = data.contacts || [];
-      setContacts(contacts);
-      contactsCacheRef.current = contacts;
+      const contactsData = data.contacts || [];
+
+      // Sort contacts: by last message time (newest first)
+      const sortedContacts = contactsData.sort((a: Contact, b: Contact) => {
+        const aTime = a.lastMessageTime
+          ? new Date(a.lastMessageTime).getTime()
+          : 0;
+        const bTime = b.lastMessageTime
+          ? new Date(b.lastMessageTime).getTime()
+          : 0;
+        return bTime - aTime;
+      });
+
+      setContacts(sortedContacts);
+      contactsCacheRef.current = sortedContacts;
     } catch (err) {
       console.error("Error fetching contacts:", err);
       setError("Failed to load contacts");
     }
   };
 
-  const fetchMessages = async (contactId: string) => {
+  const fetchMessages = async (contactId: string, skipNotification = false) => {
     // Check if messages are cached
     if (messagesCacheRef.current[contactId]) {
       setConversation((prev) => ({
@@ -146,6 +172,21 @@ export default function Messages() {
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
       const messages = data.messages || [];
+
+      // Check for new inbound messages
+      if (!skipNotification && messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.direction === "inbound") {
+          const contact = contacts.find((c) => c.id === contactId);
+          if (contact && notificationsRef.current) {
+            showNotification(
+              "New Message",
+              `${contact.name || contact.phoneNumber}: ${lastMessage.body.substring(0, 50)}`,
+            );
+          }
+        }
+      }
+
       messagesCacheRef.current[contactId] = messages;
       setConversation((prev) => ({
         ...prev,
@@ -166,8 +207,26 @@ export default function Messages() {
     const cachedMessages = messagesCacheRef.current[contact.id] || [];
     setConversation({ contact, messages: cachedMessages });
 
+    // Mark as read optimistically
+    setContacts((prev) =>
+      prev.map((c) =>
+        c.id === contact.id ? { ...c, unreadCount: 0 } : c,
+      ),
+    );
+
     // Fetch fresh messages in the background
     fetchMessages(contact.id);
+
+    // Mark as read on server
+    if (contact.unreadCount > 0) {
+      const token = localStorage.getItem("token");
+      fetch(`/api/messages/mark-read/${contact.id}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {
+        // Silently fail
+      });
+    }
 
     // Subscribe to real-time updates
     const storedUser = localStorage.getItem("user");
@@ -227,6 +286,7 @@ export default function Messages() {
 
     const messageToSend = messageText;
     const contactId = conversation.contact.id;
+    const currentTime = new Date().toISOString();
     setMessageText("");
     setError("");
     setIsSending(true);
@@ -242,7 +302,7 @@ export default function Messages() {
         to: conversation.contact.phoneNumber,
         body: messageToSend,
         direction: "outbound",
-        timestamp: new Date().toISOString(),
+        timestamp: currentTime,
         sid: "",
       };
 
@@ -250,6 +310,29 @@ export default function Messages() {
         ...prev,
         messages: [...prev.messages, optimisticMessage],
       }));
+
+      // Update contact with new message time (optimistic)
+      setContacts((prev) =>
+        prev
+          .map((c) =>
+            c.id === contactId
+              ? {
+                  ...c,
+                  lastMessage: messageToSend.substring(0, 50),
+                  lastMessageTime: currentTime,
+                }
+              : c,
+          )
+          .sort((a, b) => {
+            const aTime = a.lastMessageTime
+              ? new Date(a.lastMessageTime).getTime()
+              : 0;
+            const bTime = b.lastMessageTime
+              ? new Date(b.lastMessageTime).getTime()
+              : 0;
+            return bTime - aTime;
+          }),
+      );
 
       const token = localStorage.getItem("token");
       const response = await fetch("/api/messages/send", {
@@ -293,6 +376,38 @@ export default function Messages() {
       }));
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const requestNotificationPermission = async () => {
+    if (Notification.permission === "default") {
+      const permission = await Notification.requestPermission();
+      setNotifications(permission === "granted");
+    }
+  };
+
+  const showNotification = (title: string, body: string) => {
+    if (notifications && Notification.permission === "granted") {
+      // Play notification sound
+      notificationAudioManager.playNotificationChime().catch(() => {
+        // Silently fail if audio can't play
+      });
+
+      const notification = new Notification(title, {
+        body,
+        icon: "/favicon.svg",
+        badge: "/favicon.svg",
+        tag: "sms-notification",
+        requireInteraction: false,
+        silent: false,
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+
+      setTimeout(() => notification.close(), 5000);
     }
   };
 
@@ -353,30 +468,38 @@ export default function Messages() {
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : filteredContacts.length > 0 ? (
-              <div className="space-y-1 p-2">
+              <div className="space-y-0.5 p-2">
                 {filteredContacts.map((contact) => (
                   <button
                     key={contact.id}
                     onClick={() => handleSelectContact(contact)}
-                    className={`w-full text-left p-4 rounded-lg smooth-transition ${
+                    className={`w-full text-left p-3 rounded-lg transition-all ${
                       conversation.contact?.id === contact.id
-                        ? "bg-primary text-white"
-                        : "hover:bg-muted"
+                        ? "bg-gradient-to-r from-primary to-secondary text-white shadow-md"
+                        : "hover:bg-muted/60"
                     }`}
                   >
-                    <div className="flex items-start justify-between mb-1">
-                      <p className="font-semibold text-sm">
-                        {contact.name || contact.phoneNumber}
-                      </p>
-                      {contact.unreadCount > 0 && (
-                        <span className="px-2 py-1 rounded-full bg-destructive text-white text-xs font-semibold">
-                          {contact.unreadCount}
-                        </span>
-                      )}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">
+                          {contact.name || contact.phoneNumber}
+                        </p>
+                        <p className="text-xs opacity-75 truncate mt-0.5">
+                          {contact.lastMessage || "No messages yet"}
+                        </p>
+                      </div>
+                      {contact.unreadCount > 0 &&
+                        conversation.contact?.id !== contact.id && (
+                          <Badge
+                            variant="destructive"
+                            className="text-xs h-5 min-w-[20px] flex-shrink-0"
+                          >
+                            {contact.unreadCount > 99
+                              ? "99+"
+                              : contact.unreadCount}
+                          </Badge>
+                        )}
                     </div>
-                    <p className="text-xs opacity-75 truncate">
-                      {contact.lastMessage || "No messages yet"}
-                    </p>
                     {contact.lastMessageTime && (
                       <p className="text-xs opacity-50 mt-1">
                         {new Date(contact.lastMessageTime).toLocaleDateString()}

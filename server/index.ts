@@ -71,6 +71,8 @@ import { handleDemo } from "./routes/demo";
 import { storage } from "./storage";
 import { TwilioClient } from "./twilio";
 import ablyServer from "./ably";
+import { hashPassword } from "./password";
+import { generateToken } from "./jwt";
 
 // Global socket.io instance for webhook access
 let globalIO: IOServer | null = null;
@@ -87,8 +89,10 @@ export async function createServer() {
   // Connect to MongoDB BEFORE creating the app
   await connectDB();
 
-  // Normalize all existing phone numbers to E.164 format (one-time migration)
-  await storage.normalizeAllPhoneNumbers();
+  // Run database migrations
+  console.log("[Server] Running database migrations...");
+  await storage.migrateUserIds(); // Ensure old users have ID field
+  await storage.normalizeAllPhoneNumbers(); // Normalize phone numbers to E.164 format
 
   // Initialize Ably for real-time messaging
   await ablyServer.initialize();
@@ -151,6 +155,54 @@ export async function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // Initialize first admin user (only works if no admin exists)
+  app.post("/api/init-admin", async (req, res) => {
+    try {
+      const { email, password, name } = req.body;
+
+      if (!email || !password || !name) {
+        return res
+          .status(400)
+          .json({ error: "Email, password, and name are required" });
+      }
+
+      // Check if any admin user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User already exists" });
+      }
+
+      const userId = storage.generateId();
+      const hashedPassword = hashPassword(password);
+
+      const user = {
+        id: userId,
+        email,
+        name,
+        password: hashedPassword,
+        role: "admin" as const,
+        createdAt: new Date().toISOString(),
+      };
+
+      await storage.createUser(user);
+
+      const token = generateToken({
+        userId,
+        email,
+        role: "admin",
+      });
+
+      res.json({
+        message: "Admin user created successfully",
+        user: { id: userId, email, name, role: "admin" },
+        token,
+      });
+    } catch (error) {
+      console.error("Init admin error:", error);
+      res.status(500).json({ error: "Failed to create admin user" });
+    }
+  });
 
   // Auth routes (public)
   app.post("/api/auth/signup", handleSignup);

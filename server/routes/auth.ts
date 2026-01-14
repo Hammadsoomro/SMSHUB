@@ -95,13 +95,30 @@ export const handleLogin: RequestHandler = async (req, res) => {
     }
 
     // Find user
+    console.log("[handleLogin] Searching for user with email:", email.toLowerCase());
     const user = await storage.getUserByEmail(email);
     if (!user) {
+      console.error("[handleLogin] User not found for email:", email);
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    console.log("[handleLogin] User found:", {
+      id: user.id,
+      email: user.email,
+      hasPassword: !!user.password,
+    });
+
     // Verify password
-    if (!verifyPassword(password, user.password)) {
+    const passwordMatch = verifyPassword(password, user.password);
+    console.log("[handleLogin] Password verification result:", passwordMatch);
+
+    if (!passwordMatch) {
+      console.error("[handleLogin] Password verification failed for user:", email);
+      console.error("[handleLogin] Stored password hash format:", {
+        length: user.password?.length,
+        hasColon: user.password?.includes(':'),
+        first50chars: user.password?.substring(0, 50),
+      });
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
@@ -125,6 +142,7 @@ export const handleLogin: RequestHandler = async (req, res) => {
       token,
     };
 
+    console.log("[handleLogin] Login successful for user:", email);
     res.json(response);
   } catch (error) {
     console.error("Login error:", error);

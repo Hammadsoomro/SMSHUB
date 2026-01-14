@@ -43,6 +43,7 @@ import {
 import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
 import ablyService from "@/services/ablyService";
+import { notificationAudioManager } from "@/lib/notification-audio";
 import AdBanner from "@/components/AdBanner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
@@ -279,6 +280,11 @@ export default function Conversations() {
     scrollToBottom();
   }, [messages]);
 
+  // Update page title whenever contacts change
+  useEffect(() => {
+    updatePageTitle();
+  }, [contacts]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -411,13 +417,22 @@ export default function Conversations() {
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
+          console.log("[Ably] Contact update received:", data);
           const currentActivePhone = activePhoneNumberRef.current;
+          const selectedId = selectedContactIdRef.current;
+
           if (currentActivePhone) {
             const phoneNum = phoneNumbersRef.current.find(
               (p) => p.phoneNumber === currentActivePhone,
             );
             if (phoneNum) {
+              // Reload contacts and ensure proper sorting
               loadContactsForPhoneNumber(phoneNum.id);
+
+              // If a contact is selected and a message came in for it, mark as read
+              if (selectedId && data?.contactId === selectedId) {
+                markMessagesAsRead(selectedId);
+              }
             }
           }
         },
@@ -460,7 +475,21 @@ export default function Conversations() {
           }
           return freshContact;
         });
-        return updatedContacts;
+
+        // Sort contacts: pinned first, then by last message time (newest first)
+        const sortedContacts = updatedContacts.sort((a, b) => {
+          if (a.isPinned && !b.isPinned) return -1;
+          if (!a.isPinned && b.isPinned) return 1;
+          const aTime = a.lastMessageTime
+            ? new Date(a.lastMessageTime).getTime()
+            : 0;
+          const bTime = b.lastMessageTime
+            ? new Date(b.lastMessageTime).getTime()
+            : 0;
+          return bTime - aTime;
+        });
+
+        return sortedContacts;
       });
     } catch (error) {
       console.error("Error loading contacts:", error);
@@ -491,11 +520,14 @@ export default function Conversations() {
       // Update UI immediately (optimistic update)
       setContacts((prev) => {
         const updated = prev.map((contact) =>
-          contact.id === contactId ? { ...contact, unreadCount: 0 } : contact,
+          contact.id === contactId
+            ? { ...contact, unreadCount: 0 }
+            : contact,
         );
+        const updatedContact = updated.find((c) => c.id === contactId);
         console.log(
           `[markMessagesAsRead] UI updated, new state:`,
-          updated.find((c) => c.id === contactId),
+          updatedContact,
         );
         return updated;
       });
@@ -560,7 +592,20 @@ export default function Conversations() {
         phoneNum.id,
       );
 
-      // Reload messages and contacts in background
+      // Update optimistic contact with new message time
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === selectedContactId
+            ? {
+                ...c,
+                lastMessage: messageToSend.substring(0, 50),
+                lastMessageTime: new Date().toISOString(),
+              }
+            : c,
+        ),
+      );
+
+      // Reload messages and contacts in background to ensure consistency
       await Promise.all([
         loadMessages(selectedContactId),
         loadContactsForPhoneNumber(phoneNum.id),
@@ -807,10 +852,18 @@ export default function Conversations() {
 
   const showNotification = (title: string, body: string) => {
     if (notifications && Notification.permission === "granted") {
+      // Play notification sound
+      notificationAudioManager.playNotificationChime().catch(() => {
+        // Silently fail if audio can't play
+      });
+
       const notification = new Notification(title, {
         body,
-        icon: "/favicon.ico",
+        icon: "/favicon.svg",
+        badge: "/favicon.svg",
         tag: "sms-notification",
+        requireInteraction: false,
+        silent: false,
       });
 
       notification.onclick = () => {

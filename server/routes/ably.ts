@@ -38,8 +38,11 @@ export const handleGetAblyToken: RequestHandler = async (req, res) => {
       throw new Error("Failed to create token request");
     }
 
-    console.log(`[Ably] Generated token for user ${userId}`);
-    res.json({ token: tokenRequest });
+    // Serialize the token request to ensure it can be sent as JSON
+    const serializedToken = JSON.stringify(tokenRequest);
+
+    console.log(`[Ably] Generated token request for user ${userId}`);
+    res.json({ token: serializedToken });
   } catch (error) {
     console.error("[Ably] Token generation error:", error);
     res.status(500).json({

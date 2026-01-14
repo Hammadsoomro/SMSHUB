@@ -13,21 +13,23 @@
 export function normalizePhoneNumber(phoneNumber: string): string {
   if (!phoneNumber) return "";
 
-  // Remove all non-digit characters except leading +
-  let cleaned = phoneNumber.replace(/\D/g, "");
+  // Remove all whitespace and non-digit characters except +
+  let cleaned = phoneNumber.trim().replace(/[\s\-().]/g, "");
 
-  // If the number doesn't start with country code, assume North America (1)
-  // North American numbers are 10 digits
+  // Remove any leading + signs first
+  cleaned = cleaned.replace(/^\+/, "");
+
+  // Remove all remaining non-digit characters
+  cleaned = cleaned.replace(/\D/g, "");
+
+  // If the number is exactly 10 digits, assume it's a North American number without country code
   if (cleaned.length === 10) {
     cleaned = "1" + cleaned;
   }
 
-  // Add + prefix if not present
+  // Add + prefix to create E.164 format
   if (!cleaned.startsWith("+")) {
     cleaned = "+" + cleaned;
-  } else if (cleaned.startsWith("++")) {
-    // Handle double plus
-    cleaned = "+" + cleaned.replace(/\+/g, "");
   }
 
   return cleaned;
