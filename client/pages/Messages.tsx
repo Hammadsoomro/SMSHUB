@@ -55,8 +55,12 @@ export default function Messages() {
   const [activePhoneNumberId, setActivePhoneNumberId] = useState<string | null>(
     null,
   );
+  const [notifications, setNotifications] = useState(() => {
+    return Notification.permission === "granted";
+  });
   const messagesCacheRef = useRef<MessageCache>({});
   const contactsCacheRef = useRef<Contact[]>([]);
+  const notificationsRef = useRef(false);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
