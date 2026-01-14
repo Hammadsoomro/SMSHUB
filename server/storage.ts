@@ -464,6 +464,36 @@ class Storage {
       console.error("[Storage] Error normalizing phone numbers:", error);
     }
   }
+
+  /**
+   * Migrate old users to have ID field
+   * This is a one-time migration to ensure backward compatibility
+   */
+  async migrateUserIds(): Promise<void> {
+    try {
+      let migratedCount = 0;
+
+      const allUsers = await UserModel.find({});
+      for (const userDoc of allUsers) {
+        if (!userDoc.id && userDoc._id) {
+          userDoc.id = userDoc._id.toString();
+          await userDoc.save();
+          migratedCount++;
+          console.log(`[Storage] Migrated user ID: ${userDoc.email} → ${userDoc.id}`);
+        }
+      }
+
+      if (migratedCount > 0) {
+        console.log(
+          `[Storage] ✅ Migrated ${migratedCount} users to have ID field`,
+        );
+      } else {
+        console.log("[Storage] All users already have ID field");
+      }
+    } catch (error) {
+      console.error("[Storage] Error migrating user IDs:", error);
+    }
+  }
 }
 
 export const storage = new Storage();
