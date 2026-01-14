@@ -579,7 +579,20 @@ export default function Conversations() {
         phoneNum.id,
       );
 
-      // Reload messages and contacts in background
+      // Update optimistic contact with new message time
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === selectedContactId
+            ? {
+                ...c,
+                lastMessage: messageToSend.substring(0, 50),
+                lastMessageTime: new Date().toISOString(),
+              }
+            : c,
+        ),
+      );
+
+      // Reload messages and contacts in background to ensure consistency
       await Promise.all([
         loadMessages(selectedContactId),
         loadContactsForPhoneNumber(phoneNum.id),
