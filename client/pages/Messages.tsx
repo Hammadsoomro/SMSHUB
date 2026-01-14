@@ -4,6 +4,7 @@ import TeamMemberLayout from "@/components/TeamMemberLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   MessageSquare,
   Send,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { Message, Contact } from "@shared/api";
 import ablyService from "@/services/ablyService";
+import { notificationAudioManager } from "@/lib/notification-audio";
 
 interface ConversationState {
   contact: Contact | null;
