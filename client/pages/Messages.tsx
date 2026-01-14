@@ -391,30 +391,38 @@ export default function Messages() {
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : filteredContacts.length > 0 ? (
-              <div className="space-y-1 p-2">
+              <div className="space-y-0.5 p-2">
                 {filteredContacts.map((contact) => (
                   <button
                     key={contact.id}
                     onClick={() => handleSelectContact(contact)}
-                    className={`w-full text-left p-4 rounded-lg smooth-transition ${
+                    className={`w-full text-left p-3 rounded-lg transition-all ${
                       conversation.contact?.id === contact.id
-                        ? "bg-primary text-white"
-                        : "hover:bg-muted"
+                        ? "bg-gradient-to-r from-primary to-secondary text-white shadow-md"
+                        : "hover:bg-muted/60"
                     }`}
                   >
-                    <div className="flex items-start justify-between mb-1">
-                      <p className="font-semibold text-sm">
-                        {contact.name || contact.phoneNumber}
-                      </p>
-                      {contact.unreadCount > 0 && (
-                        <span className="px-2 py-1 rounded-full bg-destructive text-white text-xs font-semibold">
-                          {contact.unreadCount}
-                        </span>
-                      )}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">
+                          {contact.name || contact.phoneNumber}
+                        </p>
+                        <p className="text-xs opacity-75 truncate mt-0.5">
+                          {contact.lastMessage || "No messages yet"}
+                        </p>
+                      </div>
+                      {contact.unreadCount > 0 &&
+                        conversation.contact?.id !== contact.id && (
+                          <Badge
+                            variant="destructive"
+                            className="text-xs h-5 min-w-[20px] flex-shrink-0"
+                          >
+                            {contact.unreadCount > 99
+                              ? "99+"
+                              : contact.unreadCount}
+                          </Badge>
+                        )}
                     </div>
-                    <p className="text-xs opacity-75 truncate">
-                      {contact.lastMessage || "No messages yet"}
-                    </p>
                     {contact.lastMessageTime && (
                       <p className="text-xs opacity-50 mt-1">
                         {new Date(contact.lastMessageTime).toLocaleDateString()}
