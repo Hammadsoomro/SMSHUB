@@ -120,9 +120,21 @@ export default function Messages() {
 
       if (!response.ok) throw new Error("Failed to fetch contacts");
       const data = await response.json();
-      const contacts = data.contacts || [];
-      setContacts(contacts);
-      contactsCacheRef.current = contacts;
+      const contactsData = data.contacts || [];
+
+      // Sort contacts: by last message time (newest first)
+      const sortedContacts = contactsData.sort((a: Contact, b: Contact) => {
+        const aTime = a.lastMessageTime
+          ? new Date(a.lastMessageTime).getTime()
+          : 0;
+        const bTime = b.lastMessageTime
+          ? new Date(b.lastMessageTime).getTime()
+          : 0;
+        return bTime - aTime;
+      });
+
+      setContacts(sortedContacts);
+      contactsCacheRef.current = sortedContacts;
     } catch (err) {
       console.error("Error fetching contacts:", err);
       setError("Failed to load contacts");
