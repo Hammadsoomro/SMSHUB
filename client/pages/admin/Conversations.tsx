@@ -43,6 +43,7 @@ import {
 import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
 import ablyService from "@/services/ablyService";
+import { notificationAudioManager } from "@/lib/notification-audio";
 import AdBanner from "@/components/AdBanner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
