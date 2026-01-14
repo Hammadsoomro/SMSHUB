@@ -510,11 +510,14 @@ export default function Conversations() {
       // Update UI immediately (optimistic update)
       setContacts((prev) => {
         const updated = prev.map((contact) =>
-          contact.id === contactId ? { ...contact, unreadCount: 0 } : contact,
+          contact.id === contactId
+            ? { ...contact, unreadCount: 0 }
+            : contact,
         );
+        const updatedContact = updated.find((c) => c.id === contactId);
         console.log(
           `[markMessagesAsRead] UI updated, new state:`,
-          updated.find((c) => c.id === contactId),
+          updatedContact,
         );
         return updated;
       });
