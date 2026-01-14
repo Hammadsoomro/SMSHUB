@@ -73,8 +73,16 @@ export default function Messages() {
       navigate("/login");
       return;
     }
+
+    // Request notification permission
+    requestNotificationPermission();
+
     initializeMessages();
   }, [navigate]);
+
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
 
   const initializeMessages = async () => {
     try {
