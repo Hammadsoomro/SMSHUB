@@ -346,6 +346,38 @@ export default function Messages() {
     }
   };
 
+  const requestNotificationPermission = async () => {
+    if (Notification.permission === "default") {
+      const permission = await Notification.requestPermission();
+      setNotifications(permission === "granted");
+    }
+  };
+
+  const showNotification = (title: string, body: string) => {
+    if (notifications && Notification.permission === "granted") {
+      // Play notification sound
+      notificationAudioManager.playNotificationChime().catch(() => {
+        // Silently fail if audio can't play
+      });
+
+      const notification = new Notification(title, {
+        body,
+        icon: "/favicon.svg",
+        badge: "/favicon.svg",
+        tag: "sms-notification",
+        requireInteraction: false,
+        silent: false,
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+
+      setTimeout(() => notification.close(), 5000);
+    }
+  };
+
   const filteredContacts = contacts.filter(
     (contact) =>
       contact.phoneNumber.includes(searchTerm) ||
