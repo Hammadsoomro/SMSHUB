@@ -192,8 +192,26 @@ export default function Messages() {
     const cachedMessages = messagesCacheRef.current[contact.id] || [];
     setConversation({ contact, messages: cachedMessages });
 
+    // Mark as read optimistically
+    setContacts((prev) =>
+      prev.map((c) =>
+        c.id === contact.id ? { ...c, unreadCount: 0 } : c,
+      ),
+    );
+
     // Fetch fresh messages in the background
     fetchMessages(contact.id);
+
+    // Mark as read on server
+    if (contact.unreadCount > 0) {
+      const token = localStorage.getItem("token");
+      fetch(`/api/messages/mark-read/${contact.id}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {
+        // Silently fail
+      });
+    }
 
     // Subscribe to real-time updates
     const storedUser = localStorage.getItem("user");
