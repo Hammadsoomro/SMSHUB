@@ -460,7 +460,21 @@ export default function Conversations() {
           }
           return freshContact;
         });
-        return updatedContacts;
+
+        // Sort contacts: pinned first, then by last message time (newest first)
+        const sortedContacts = updatedContacts.sort((a, b) => {
+          if (a.isPinned && !b.isPinned) return -1;
+          if (!a.isPinned && b.isPinned) return 1;
+          const aTime = a.lastMessageTime
+            ? new Date(a.lastMessageTime).getTime()
+            : 0;
+          const bTime = b.lastMessageTime
+            ? new Date(b.lastMessageTime).getTime()
+            : 0;
+          return bTime - aTime;
+        });
+
+        return sortedContacts;
       });
     } catch (error) {
       console.error("Error loading contacts:", error);
