@@ -85,9 +85,28 @@ export const handleInboundSMS: RequestHandler = async (req, res) => {
     // Get or create contact - use normalized phone numbers for matching
     const contacts = await storage.getContactsByPhoneNumber(phoneNumber.id);
     const normalizedFromNumber = normalizePhoneNumber(From);
-    const existingContact = contacts.find((c) =>
+
+    // Find existing contact using phone number matching (handles different formats)
+    let existingContact = contacts.find((c) =>
       phoneNumbersMatch(c.phoneNumber, From),
     );
+
+    // Additional safety: if no exact match found, try to find by normalized comparison
+    if (!existingContact && contacts.length > 0) {
+      const normalizedContactNumbers = contacts.map((c) => ({
+        ...c,
+        normalizedPhone: normalizePhoneNumber(c.phoneNumber),
+      }));
+      const matchedContact = normalizedContactNumbers.find(
+        (c) => c.normalizedPhone === normalizedFromNumber,
+      );
+      if (matchedContact) {
+        existingContact = matchedContact;
+        console.log(
+          `[Webhooks] Contact matched by normalized number: ${From} -> ${normalizedFromNumber}`,
+        );
+      }
+    }
 
     let savedContact: Contact;
     if (!existingContact) {
