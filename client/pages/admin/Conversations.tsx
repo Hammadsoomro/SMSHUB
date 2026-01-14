@@ -279,6 +279,11 @@ export default function Conversations() {
     scrollToBottom();
   }, [messages]);
 
+  // Update page title whenever contacts change
+  useEffect(() => {
+    updatePageTitle();
+  }, [contacts]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
