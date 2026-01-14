@@ -72,6 +72,9 @@ class Storage {
         user = (await UserModel.findById(id)) as any;
       } catch (error) {
         // findById may fail if id is not a valid ObjectId
+        console.warn(
+          `[Storage] findById failed for id ${id}, may not be a valid ObjectId`,
+        );
         return undefined;
       }
 
@@ -79,11 +82,25 @@ class Storage {
       if (user && !user.id) {
         user.id = user._id.toString();
         await user.save();
+        console.log(
+          `[Storage] Auto-assigned ID to user with _id ${user._id}: ${user.id}`,
+        );
       }
     }
 
-    if (!user) return undefined;
-    const { password, ...userWithoutPassword } = user.toObject();
+    if (!user) {
+      console.warn(`[Storage] User not found with id: ${id}`);
+      return undefined;
+    }
+
+    const userObj = user.toObject();
+    const { password, ...userWithoutPassword } = userObj;
+
+    // Double-check ID is present
+    if (!userWithoutPassword.id && userWithoutPassword._id) {
+      userWithoutPassword.id = userWithoutPassword._id.toString();
+    }
+
     return userWithoutPassword as User;
   }
 
