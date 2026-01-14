@@ -823,8 +823,10 @@ export default function Conversations() {
     if (notifications && Notification.permission === "granted") {
       const notification = new Notification(title, {
         body,
-        icon: "/favicon.ico",
+        icon: "/favicon.svg",
+        badge: "/favicon.svg",
         tag: "sms-notification",
+        requireInteraction: false,
       });
 
       notification.onclick = () => {
