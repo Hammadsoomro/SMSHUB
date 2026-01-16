@@ -1103,7 +1103,7 @@ export default function Conversations() {
 
           {/* Contacts List */}
           <ScrollArea className="flex-1">
-            <div className="p-2">
+            <div className="p-2 pr-0">
               {filteredContacts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
