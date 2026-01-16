@@ -472,14 +472,31 @@ class Storage {
   async migrateUserIds(): Promise<void> {
     try {
       let migratedCount = 0;
+      let fixedRolesCount = 0;
 
       const allUsers = await UserModel.find({});
       for (const userDoc of allUsers) {
+        let needsSave = false;
+
+        // Fix invalid role values (convert "member" to "team_member")
+        if (userDoc.role === "member") {
+          console.log(`[Storage] Fixing role for user: ${userDoc.email} (member → team_member)`);
+          userDoc.role = "team_member";
+          fixedRolesCount++;
+          needsSave = true;
+        }
+
+        // Migrate ID if missing
         if (!userDoc.id && userDoc._id) {
           userDoc.id = userDoc._id.toString();
-          await userDoc.save();
           migratedCount++;
+          needsSave = true;
           console.log(`[Storage] Migrated user ID: ${userDoc.email} → ${userDoc.id}`);
+        }
+
+        // Save if any changes were made
+        if (needsSave) {
+          await userDoc.save();
         }
       }
 
@@ -487,8 +504,14 @@ class Storage {
         console.log(
           `[Storage] ✅ Migrated ${migratedCount} users to have ID field`,
         );
-      } else {
-        console.log("[Storage] All users already have ID field");
+      }
+      if (fixedRolesCount > 0) {
+        console.log(
+          `[Storage] ✅ Fixed ${fixedRolesCount} users with invalid role values`,
+        );
+      }
+      if (migratedCount === 0 && fixedRolesCount === 0) {
+        console.log("[Storage] All users already have ID field and valid roles");
       }
     } catch (error) {
       console.error("[Storage] Error migrating user IDs:", error);
