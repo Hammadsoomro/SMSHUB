@@ -519,9 +519,7 @@ export default function Conversations() {
       // Update UI immediately (optimistic update)
       setContacts((prev) => {
         const updated = prev.map((contact) =>
-          contact.id === contactId
-            ? { ...contact, unreadCount: 0 }
-            : contact,
+          contact.id === contactId ? { ...contact, unreadCount: 0 } : contact,
         );
         const updatedContact = updated.find((c) => c.id === contactId);
         console.log(
@@ -1272,7 +1270,6 @@ export default function Conversations() {
               )}
             </div>
           </ScrollArea>
-
         </div>
 
         {/* Right Side - Chat Area */}
@@ -1469,7 +1466,6 @@ export default function Conversations() {
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
           )}

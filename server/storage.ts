@@ -43,9 +43,7 @@ class Storage {
       if (!user.id && user._id) {
         user.id = user._id.toString();
         await user.save();
-        console.log(
-          `[Storage] Auto-assigned ID to user ${email}: ${user.id}`,
-        );
+        console.log(`[Storage] Auto-assigned ID to user ${email}: ${user.id}`);
       }
 
       // Convert Mongoose document to plain JavaScript object
@@ -480,7 +478,9 @@ class Storage {
 
         // Fix invalid role values (convert "member" to "team_member")
         if (userDoc.role === "member") {
-          console.log(`[Storage] Fixing role for user: ${userDoc.email} (member → team_member)`);
+          console.log(
+            `[Storage] Fixing role for user: ${userDoc.email} (member → team_member)`,
+          );
           userDoc.role = "team_member";
           fixedRolesCount++;
           needsSave = true;
@@ -491,7 +491,9 @@ class Storage {
           userDoc.id = userDoc._id.toString();
           migratedCount++;
           needsSave = true;
-          console.log(`[Storage] Migrated user ID: ${userDoc.email} → ${userDoc.id}`);
+          console.log(
+            `[Storage] Migrated user ID: ${userDoc.email} → ${userDoc.id}`,
+          );
         }
 
         // Save if any changes were made
@@ -511,7 +513,9 @@ class Storage {
         );
       }
       if (migratedCount === 0 && fixedRolesCount === 0) {
-        console.log("[Storage] All users already have ID field and valid roles");
+        console.log(
+          "[Storage] All users already have ID field and valid roles",
+        );
       }
     } catch (error) {
       console.error("[Storage] Error migrating user IDs:", error);
