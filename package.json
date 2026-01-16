@@ -24,7 +24,7 @@
     "ably": "^2.16.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "mongoose": "^9.0.1",
+    "mongoose": "9.0.1",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",
     "twilio": "^5.10.7",

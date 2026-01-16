@@ -78,7 +78,7 @@ export default function InitAdmin() {
             <MessageSquare className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Connectlify
+            conneclify
           </span>
         </div>
 

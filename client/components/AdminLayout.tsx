@@ -82,7 +82,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 className={`overflow-hidden ${!sidebarOpen ? "lg:hidden" : ""}`}
               >
                 <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent whitespace-nowrap">
-                  Connectlify
+                  conneclify
                 </span>
               </div>
             </Link>

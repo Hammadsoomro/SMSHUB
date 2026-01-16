@@ -44,7 +44,6 @@ import { format, isToday, isYesterday } from "date-fns";
 import ApiService from "@/services/api";
 import ablyService from "@/services/ablyService";
 import { notificationAudioManager } from "@/lib/notification-audio";
-import AdBanner from "@/components/AdBanner";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
 import ConversationsTopBar from "@/components/ConversationsTopBar";
@@ -520,9 +519,7 @@ export default function Conversations() {
       // Update UI immediately (optimistic update)
       setContacts((prev) => {
         const updated = prev.map((contact) =>
-          contact.id === contactId
-            ? { ...contact, unreadCount: 0 }
-            : contact,
+          contact.id === contactId ? { ...contact, unreadCount: 0 } : contact,
         );
         const updatedContact = updated.find((c) => c.id === contactId);
         console.log(
@@ -881,9 +878,9 @@ export default function Conversations() {
       0,
     );
     if (totalUnread > 0) {
-      document.title = `(${totalUnread}) Connectlify - Messages`;
+      document.title = `(${totalUnread}) conneclify - Messages`;
     } else {
-      document.title = "Connectlify - Messages";
+      document.title = "conneclify - Messages";
     }
   };
 
@@ -963,7 +960,7 @@ export default function Conversations() {
           </div>
           <div>
             <h3 className="text-lg font-semibold mb-2">
-              Failed to Load Connectlify
+              Failed to Load conneclify
             </h3>
             <p className="text-sm text-muted-foreground mb-4">{loadError}</p>
           </div>
@@ -997,7 +994,7 @@ export default function Conversations() {
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <div>
-            <h3 className="text-lg font-semibold">Loading Connectlify</h3>
+            <h3 className="text-lg font-semibold">Loading conneclify</h3>
             <p className="text-sm text-muted-foreground">
               Setting up your conversations...
             </p>
@@ -1104,7 +1101,7 @@ export default function Conversations() {
 
           {/* Contacts List */}
           <ScrollArea className="flex-1">
-            <div className="p-2">
+            <div className="p-2 pr-0">
               {filteredContacts.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -1119,61 +1116,64 @@ export default function Conversations() {
                 filteredContacts.map((contact) => (
                   <Card
                     key={contact.id}
-                    className={`mb-2 cursor-pointer transition-all duration-300 border-0 ${
+                    className={`mb-2 cursor-pointer transition-all duration-300 border-0 mr-1.5 ${
                       selectedContactId === contact.id
                         ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
                         : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
                     }`}
                     onClick={() => setSelectedContactId(contact.id)}
                   >
-                    <CardContent className="p-3 relative">
-                      <div className="flex gap-3">
+                    <CardContent className="p-2.5 relative">
+                      <div className="flex gap-2 items-start">
                         {/* Avatar */}
-                        <Avatar className="w-10 h-10 flex-shrink-0">
-                          <AvatarImage src={contact.avatar} />
-                          <AvatarFallback className="bg-primary/10 text-primary">
+                        <Avatar className="w-8 h-8 flex-shrink-0 mt-0.5">
+                          <AvatarImage src={contact.avatar || ""} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
                             {(contact.name || contact.phoneNumber)
                               .substring(0, 2)
                               .toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
 
-                        {/* Content */}
+                        {/* Content - Main info */}
                         <div className="flex-1 min-w-0">
-                          {/* Name, Time, Pin */}
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium truncate text-sm flex-1">
-                              {contact.name || contact.phoneNumber}
-                            </h4>
+                          <div className="flex items-start gap-1">
+                            <div className="flex-1 min-w-0">
+                              {/* Name */}
+                              <h4 className="font-medium truncate text-xs">
+                                {contact.name || contact.phoneNumber}
+                              </h4>
+                              {/* Phone number */}
+                              <p className="text-xs text-muted-foreground font-mono truncate">
+                                {contact.phoneNumber}
+                              </p>
+                            </div>
+                            {/* Pin icon on right of name */}
                             {contact.isPinned && (
-                              <Pin className="w-3 h-3 text-primary flex-shrink-0" />
-                            )}
-                            {contact.lastMessageTime && (
-                              <span className="text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
-                                {formatMessageTime(contact.lastMessageTime)}
-                              </span>
+                              <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0 mt-0.5" />
                             )}
                           </div>
 
-                          {/* Phone number */}
-                          <p className="text-xs text-muted-foreground font-mono truncate mb-1">
-                            {contact.phoneNumber}
-                          </p>
-
-                          {/* Last message - allow wrapping instead of truncate */}
+                          {/* Last message */}
                           {contact.lastMessage && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 break-words">
+                            <p className="text-xs text-muted-foreground line-clamp-1 break-words mt-1">
                               {contact.lastMessage}
                             </p>
                           )}
                         </div>
 
-                        <div className="flex items-center space-x-2 flex-shrink-0">
+                        {/* Right side - Actions */}
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          {contact.lastMessageTime && (
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {formatMessageTime(contact.lastMessageTime)}
+                            </span>
+                          )}
                           {contact.unreadCount > 0 &&
                             selectedContactId !== contact.id && (
                               <Badge
                                 variant="destructive"
-                                className="text-xs h-5 min-w-[20px]"
+                                className="text-xs h-5 min-w-[20px] py-0"
                               >
                                 {contact.unreadCount > 99
                                   ? "99+"
@@ -1186,13 +1186,13 @@ export default function Conversations() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="p-1 h-auto opacity-60 hover:opacity-100"
+                                className="p-1 h-5 w-5 opacity-60 hover:opacity-100 flex-shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <MoreVertical className="w-4 h-4" />
+                                <MoreVertical className="w-3.5 h-3.5" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" side="left">
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1270,16 +1270,6 @@ export default function Conversations() {
               )}
             </div>
           </ScrollArea>
-
-          {/* Ad Banner at Bottom */}
-          <div className="p-3 border-t border-border bg-muted/20">
-            <div className="text-center mb-2">
-              <span className="text-xs text-muted-foreground">
-                Advertisement
-              </span>
-            </div>
-            <AdBanner width={300} height={80} />
-          </div>
         </div>
 
         {/* Right Side - Chat Area */}
@@ -1291,7 +1281,7 @@ export default function Conversations() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={selectedContact.avatar} />
+                      <AvatarImage src={selectedContact.avatar || ""} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {(selectedContact.name || selectedContact.phoneNumber)
                           .substring(0, 2)
@@ -1441,7 +1431,7 @@ export default function Conversations() {
 
                 <div>
                   <h2 className="text-2xl font-bold mb-2">
-                    Welcome to Connectlify
+                    Welcome to conneclify
                   </h2>
                   <p className="text-muted-foreground">
                     Select a contact from the sidebar to start messaging, or add
@@ -1475,16 +1465,6 @@ export default function Conversations() {
                       </span>
                     </div>
                   </div>
-                </div>
-
-                {/* Large Ad Banner */}
-                <div className="mt-8">
-                  <div className="text-center mb-4">
-                    <span className="text-xs text-muted-foreground">
-                      Advertisement
-                    </span>
-                  </div>
-                  <AdBanner width={728} height={90} />
                 </div>
               </div>
             </div>

@@ -41,10 +41,10 @@ export default function Landing() {
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          name: "Connectlify",
+          name: "conneclify",
           description:
             "Professional SMS messaging platform for teams. Send bulk SMS, manage phone numbers, and automate communication.",
-          url: "https://connectlify.io",
+          url: "https://conneclify.com",
           applicationCategory: "BusinessApplication",
           offers: {
             "@type": "Offer",
@@ -67,7 +67,7 @@ export default function Landing() {
               <MessageSquare className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Connectlify
+              conneclify
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -270,7 +270,7 @@ export default function Landing() {
             Ready to Transform Your SMS Business?
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Join teams using Connectlify to manage their Twilio operations
+            Join teams using conneclify to manage their Twilio operations
             efficiently
           </p>
           <Link to="/signup">
@@ -287,7 +287,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4 bg-background/50">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm text-muted-foreground">
-          <p>&copy; 2024 Connectlify. All rights reserved.</p>
+          <p>&copy; 2024 conneclify. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-foreground smooth-transition">
               Privacy
