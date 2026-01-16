@@ -1281,7 +1281,7 @@ export default function Conversations() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={selectedContact.avatar} />
+                      <AvatarImage src={selectedContact.avatar || ""} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {(selectedContact.name || selectedContact.phoneNumber)
                           .substring(0, 2)
