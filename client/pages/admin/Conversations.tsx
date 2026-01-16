@@ -1118,17 +1118,17 @@ export default function Conversations() {
                 filteredContacts.map((contact) => (
                   <Card
                     key={contact.id}
-                    className={`mb-2 cursor-pointer transition-all duration-300 border-0 ${
+                    className={`mb-2 cursor-pointer transition-all duration-300 border-0 mr-1.5 ${
                       selectedContactId === contact.id
                         ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
                         : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
                     }`}
                     onClick={() => setSelectedContactId(contact.id)}
                   >
-                    <CardContent className="p-2 relative">
-                      <div className="flex gap-2">
+                    <CardContent className="p-2.5 relative">
+                      <div className="flex gap-2 items-start">
                         {/* Avatar */}
-                        <Avatar className="w-9 h-9 flex-shrink-0">
+                        <Avatar className="w-8 h-8 flex-shrink-0 mt-0.5">
                           <AvatarImage src={contact.avatar || ""} />
                           <AvatarFallback className="bg-primary/10 text-primary text-xs">
                             {(contact.name || contact.phoneNumber)
@@ -1137,42 +1137,45 @@ export default function Conversations() {
                           </AvatarFallback>
                         </Avatar>
 
-                        {/* Content */}
+                        {/* Content - Main info */}
                         <div className="flex-1 min-w-0">
-                          {/* Name, Time, Pin */}
-                          <div className="flex items-center gap-1 mb-0.5">
-                            <h4 className="font-medium truncate text-xs flex-1">
-                              {contact.name || contact.phoneNumber}
-                            </h4>
+                          <div className="flex items-start gap-1">
+                            <div className="flex-1 min-w-0">
+                              {/* Name */}
+                              <h4 className="font-medium truncate text-xs">
+                                {contact.name || contact.phoneNumber}
+                              </h4>
+                              {/* Phone number */}
+                              <p className="text-xs text-muted-foreground font-mono truncate">
+                                {contact.phoneNumber}
+                              </p>
+                            </div>
+                            {/* Pin icon on right of name */}
                             {contact.isPinned && (
-                              <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0" />
-                            )}
-                            {contact.lastMessageTime && (
-                              <span className="text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
-                                {formatMessageTime(contact.lastMessageTime)}
-                              </span>
+                              <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0 mt-0.5" />
                             )}
                           </div>
 
-                          {/* Phone number */}
-                          <p className="text-xs text-muted-foreground font-mono truncate mb-0.5">
-                            {contact.phoneNumber}
-                          </p>
-
-                          {/* Last message - allow wrapping instead of truncate */}
+                          {/* Last message */}
                           {contact.lastMessage && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 break-words">
+                            <p className="text-xs text-muted-foreground line-clamp-1 break-words mt-1">
                               {contact.lastMessage}
                             </p>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
+                        {/* Right side - Actions */}
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          {contact.lastMessageTime && (
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {formatMessageTime(contact.lastMessageTime)}
+                            </span>
+                          )}
                           {contact.unreadCount > 0 &&
                             selectedContactId !== contact.id && (
                               <Badge
                                 variant="destructive"
-                                className="text-xs h-5 min-w-[20px]"
+                                className="text-xs h-5 min-w-[20px] py-0"
                               >
                                 {contact.unreadCount > 99
                                   ? "99+"
@@ -1185,10 +1188,10 @@ export default function Conversations() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="p-0.5 h-6 w-6 opacity-60 hover:opacity-100"
+                                className="p-1 h-5 w-5 opacity-60 hover:opacity-100 flex-shrink-0"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <MoreVertical className="w-4 h-4" />
+                                <MoreVertical className="w-3.5 h-3.5" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" side="left">
