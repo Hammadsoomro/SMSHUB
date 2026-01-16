@@ -92,6 +92,7 @@ export interface Contact {
   phoneNumberId: string;
   phoneNumber: string;
   name?: string;
+  avatar?: string;
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount: number;
