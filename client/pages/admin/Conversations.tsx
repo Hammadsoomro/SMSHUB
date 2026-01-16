@@ -1032,7 +1032,7 @@ export default function Conversations() {
       {/* Main Content */}
       <div className="relative z-10 flex w-full flex-1 overflow-hidden bg-gradient-to-br from-background via-background to-muted/5">
         {/* Left Sidebar - Contact List & Controls */}
-        <div className="w-80 bg-card/60 backdrop-blur-2xl border-r border-border/60 flex flex-col overflow-hidden shadow-xl">
+        <div className="w-80 bg-card/60 backdrop-blur-2xl border-r border-border/60 flex flex-col overflow-y-auto shadow-xl" style={{overflowX: 'hidden'}}>
           {/* Header Section */}
           <div className="p-4 border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5 backdrop-blur-sm">
             {/* Search Contacts */}
@@ -1126,12 +1126,12 @@ export default function Conversations() {
                     }`}
                     onClick={() => setSelectedContactId(contact.id)}
                   >
-                    <CardContent className="p-3 relative">
-                      <div className="flex gap-3">
+                    <CardContent className="p-2 relative">
+                      <div className="flex gap-2">
                         {/* Avatar */}
-                        <Avatar className="w-10 h-10 flex-shrink-0">
+                        <Avatar className="w-9 h-9 flex-shrink-0">
                           <AvatarImage src={contact.avatar} />
-                          <AvatarFallback className="bg-primary/10 text-primary">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
                             {(contact.name || contact.phoneNumber)
                               .substring(0, 2)
                               .toUpperCase()}
@@ -1141,12 +1141,12 @@ export default function Conversations() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           {/* Name, Time, Pin */}
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium truncate text-sm flex-1">
+                          <div className="flex items-center gap-1 mb-0.5">
+                            <h4 className="font-medium truncate text-xs flex-1">
                               {contact.name || contact.phoneNumber}
                             </h4>
                             {contact.isPinned && (
-                              <Pin className="w-3 h-3 text-primary flex-shrink-0" />
+                              <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0" />
                             )}
                             {contact.lastMessageTime && (
                               <span className="text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap">
@@ -1156,7 +1156,7 @@ export default function Conversations() {
                           </div>
 
                           {/* Phone number */}
-                          <p className="text-xs text-muted-foreground font-mono truncate mb-1">
+                          <p className="text-xs text-muted-foreground font-mono truncate mb-0.5">
                             {contact.phoneNumber}
                           </p>
 
@@ -1168,7 +1168,7 @@ export default function Conversations() {
                           )}
                         </div>
 
-                        <div className="flex items-center space-x-2 flex-shrink-0">
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
                           {contact.unreadCount > 0 &&
                             selectedContactId !== contact.id && (
                               <Badge
@@ -1186,13 +1186,13 @@ export default function Conversations() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="p-1 h-auto opacity-60 hover:opacity-100"
+                                className="p-0.5 h-6 w-6 opacity-60 hover:opacity-100"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreVertical className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" side="left">
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1271,15 +1271,6 @@ export default function Conversations() {
             </div>
           </ScrollArea>
 
-          {/* Ad Banner at Bottom */}
-          <div className="p-3 border-t border-border bg-muted/20">
-            <div className="text-center mb-2">
-              <span className="text-xs text-muted-foreground">
-                Advertisement
-              </span>
-            </div>
-            <AdBanner width={300} height={80} />
-          </div>
         </div>
 
         {/* Right Side - Chat Area */}
@@ -1477,15 +1468,6 @@ export default function Conversations() {
                   </div>
                 </div>
 
-                {/* Large Ad Banner */}
-                <div className="mt-8">
-                  <div className="text-center mb-4">
-                    <span className="text-xs text-muted-foreground">
-                      Advertisement
-                    </span>
-                  </div>
-                  <AdBanner width={728} height={90} />
-                </div>
               </div>
             </div>
           )}
