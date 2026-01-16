@@ -1129,7 +1129,7 @@ export default function Conversations() {
                       <div className="flex gap-2">
                         {/* Avatar */}
                         <Avatar className="w-9 h-9 flex-shrink-0">
-                          <AvatarImage src={contact.avatar} />
+                          <AvatarImage src={contact.avatar || ""} />
                           <AvatarFallback className="bg-primary/10 text-primary text-xs">
                             {(contact.name || contact.phoneNumber)
                               .substring(0, 2)
