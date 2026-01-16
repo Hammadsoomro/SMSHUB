@@ -1031,7 +1031,7 @@ export default function Conversations() {
       {/* Main Content */}
       <div className="relative z-10 flex w-full flex-1 overflow-hidden bg-gradient-to-br from-background via-background to-muted/5">
         {/* Left Sidebar - Contact List & Controls */}
-        <div className="w-80 bg-card/60 backdrop-blur-2xl border-r border-border/60 flex flex-col overflow-y-auto shadow-xl" style={{overflowX: 'hidden'}}>
+        <div className="w-80 bg-card/60 backdrop-blur-2xl border-r border-border/60 flex flex-col overflow-hidden shadow-xl">
           {/* Header Section */}
           <div className="p-4 border-b border-border/40 bg-gradient-to-r from-primary/5 to-secondary/5 backdrop-blur-sm">
             {/* Search Contacts */}
