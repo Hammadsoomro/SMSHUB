@@ -216,9 +216,7 @@ export default function Messages() {
 
     // Mark as read optimistically
     setContacts((prev) =>
-      prev.map((c) =>
-        c.id === contact.id ? { ...c, unreadCount: 0 } : c,
-      ),
+      prev.map((c) => (c.id === contact.id ? { ...c, unreadCount: 0 } : c)),
     );
 
     // Fetch fresh messages in the background
