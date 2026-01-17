@@ -931,11 +931,17 @@ export default function Conversations() {
       );
     })
     .sort((a, b) => {
-      // Sort pinned contacts to the top
+      // 1. Sort pinned contacts to the top
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
 
-      // Sort by last message time (most recent first)
+      // 2. Sort contacts with unread messages above read ones
+      const aHasUnread = a.unreadCount > 0;
+      const bHasUnread = b.unreadCount > 0;
+      if (aHasUnread && !bHasUnread) return -1;
+      if (!aHasUnread && bHasUnread) return 1;
+
+      // 3. Sort by last message time (most recent first)
       const aTime = a.lastMessageTime
         ? new Date(a.lastMessageTime).getTime()
         : 0;
