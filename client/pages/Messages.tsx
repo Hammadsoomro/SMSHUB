@@ -134,8 +134,15 @@ export default function Messages() {
       const data = await response.json();
       const contactsData = data.contacts || [];
 
-      // Sort contacts: by last message time (newest first)
+      // Sort contacts: unread first, then by last message time (newest first)
       const sortedContacts = contactsData.sort((a: Contact, b: Contact) => {
+        // 1. Sort contacts with unread messages above read ones
+        const aHasUnread = a.unreadCount > 0;
+        const bHasUnread = b.unreadCount > 0;
+        if (aHasUnread && !bHasUnread) return -1;
+        if (!aHasUnread && bHasUnread) return 1;
+
+        // 2. Sort by last message time (most recent first)
         const aTime = a.lastMessageTime
           ? new Date(a.lastMessageTime).getTime()
           : 0;
