@@ -850,3 +850,162 @@ export const handleGetUserById: RequestHandler = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+/**
+ * Enhanced debug endpoint for troubleshooting phone purchase issues
+ * Shows:
+ * - Twilio credentials validation
+ * - Phone numbers in Twilio account (from API)
+ * - Phone numbers in database (from our storage)
+ * - Comparison and potential discrepancies
+ */
+export const handleDebugPhonePurchase: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { TwilioClient } = await import("../twilio");
+
+    console.log("\n=== PHONE PURCHASE DEBUG ===");
+    console.log("Admin ID:", adminId);
+
+    // Step 1: Get and validate credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res.status(400).json({
+        error: "No Twilio credentials found",
+        step: "credentials_check",
+      });
+    }
+
+    console.log("✅ Credentials found");
+    console.log("Account SID:", credentials.accountSid.substring(0, 6) + "...");
+
+    // Step 2: Decrypt auth token
+    const decryptedAuthToken = decrypt(credentials.authToken);
+    if (!decryptedAuthToken) {
+      return res.status(500).json({
+        error: "Failed to decrypt auth token",
+        step: "decryption_check",
+      });
+    }
+    console.log("✅ Auth token decrypted successfully");
+
+    // Step 3: List all phone numbers in Twilio
+    console.log("\n📞 Fetching phone numbers from Twilio API...");
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      decryptedAuthToken,
+    );
+
+    let twilioPhoneNumbers: string[] = [];
+    try {
+      twilioPhoneNumbers = await twilioClient.getAllIncomingPhoneNumbers();
+      console.log("✅ Fetched from Twilio:", twilioPhoneNumbers);
+    } catch (error) {
+      console.error("❌ Error fetching from Twilio:", error);
+      return res.status(400).json({
+        error: "Failed to fetch phone numbers from Twilio",
+        details: error instanceof Error ? error.message : String(error),
+        step: "twilio_fetch",
+      });
+    }
+
+    // Step 4: Get phone numbers from our database
+    console.log("\n💾 Fetching phone numbers from database...");
+    const dbPhoneNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+    const dbPhoneList = dbPhoneNumbers.map((n) => n.phoneNumber);
+    console.log("✅ Database numbers:", dbPhoneList);
+
+    // Step 5: Compare and identify discrepancies
+    const discrepancies = {
+      inDatabaseButNotTwilio: dbPhoneList.filter(
+        (n) => !twilioPhoneNumbers.includes(n),
+      ),
+      inTwilioButNotDatabase: twilioPhoneNumbers.filter(
+        (n) => !dbPhoneList.includes(n),
+      ),
+      synchronized: dbPhoneList.filter((n) => twilioPhoneNumbers.includes(n)),
+    };
+
+    console.log("\n🔍 Analysis:");
+    console.log(
+      "In database but NOT in Twilio:",
+      discrepancies.inDatabaseButNotTwilio,
+    );
+    console.log(
+      "In Twilio but NOT in database:",
+      discrepancies.inTwilioButNotDatabase,
+    );
+    console.log("Synchronized:", discrepancies.synchronized);
+
+    // Step 6: Try to get account balance
+    console.log("\n💰 Checking account balance...");
+    let accountBalance = null;
+    let balanceError = null;
+    try {
+      accountBalance = await twilioClient.getAccountBalance();
+      console.log("✅ Account balance:", accountBalance);
+    } catch (error) {
+      balanceError = error instanceof Error ? error.message : String(error);
+      console.error("❌ Error getting balance:", balanceError);
+    }
+
+    // Step 7: Try to search for an available number (test API connectivity)
+    console.log("\n🔎 Testing number search API...");
+    let searchTest = null;
+    let searchError = null;
+    try {
+      searchTest = await twilioClient.getAvailableNumbers("US", 0, "CA");
+      const availableCount =
+        searchTest.available_phone_numbers?.length || 0;
+      console.log("✅ Available numbers found:", availableCount);
+    } catch (error) {
+      searchError = error instanceof Error ? error.message : String(error);
+      console.error("❌ Error searching numbers:", searchError);
+    }
+
+    // Step 8: Return comprehensive debug info
+    const debugInfo = {
+      adminId,
+      credentials: {
+        accountSid: credentials.accountSid,
+        hasAuthToken: !!decryptedAuthToken,
+        messagingServiceSid: credentials.messagingServiceSid || null,
+      },
+      twilioApi: {
+        incomingPhoneNumbers: twilioPhoneNumbers,
+        count: twilioPhoneNumbers.length,
+        accountBalance: accountBalance,
+        balanceError: balanceError,
+        searchApiWorking: !searchError,
+        searchError: searchError,
+      },
+      database: {
+        phoneNumbers: dbPhoneNumbers.map((n) => ({
+          id: n.id,
+          phoneNumber: n.phoneNumber,
+          active: n.active,
+          purchasedAt: n.purchasedAt,
+          assignedTo: n.assignedTo,
+        })),
+        count: dbPhoneNumbers.length,
+      },
+      discrepancies: discrepancies,
+      recommendation:
+        discrepancies.inDatabaseButNotTwilio.length > 0
+          ? "⚠️ ISSUE FOUND: You have numbers in the app database that are NOT in Twilio. These are fake purchases. Please contact support or remove them."
+          : discrepancies.inTwilioButNotDatabase.length > 0
+            ? "ℹ️ INFO: You have numbers in Twilio that aren't registered in the app. Use 'Sync Phone Numbers' to add them."
+            : "✅ All numbers are synchronized!",
+    };
+
+    console.log("\n=== DEBUG COMPLETE ===\n");
+    res.json(debugInfo);
+  } catch (error) {
+    console.error("Debug phone purchase error:", error);
+    res.status(500).json({
+      error: "Internal server error during debug",
+      details: error instanceof Error ? error.message : String(error),
+      step: "unexpected_error",
+    });
+  }
+};
