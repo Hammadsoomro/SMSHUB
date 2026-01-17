@@ -425,11 +425,28 @@ export default function Messages() {
     }
   };
 
-  const filteredContacts = contacts.filter(
-    (contact) =>
-      contact.phoneNumber.includes(searchTerm) ||
-      contact.name?.includes(searchTerm),
-  );
+  const filteredContacts = contacts
+    .filter(
+      (contact) =>
+        contact.phoneNumber.includes(searchTerm) ||
+        contact.name?.includes(searchTerm),
+    )
+    .sort((a, b) => {
+      // 1. Sort contacts with unread messages above read ones
+      const aHasUnread = a.unreadCount > 0;
+      const bHasUnread = b.unreadCount > 0;
+      if (aHasUnread && !bHasUnread) return -1;
+      if (!aHasUnread && bHasUnread) return 1;
+
+      // 2. Sort by last message time (most recent first)
+      const aTime = a.lastMessageTime
+        ? new Date(a.lastMessageTime).getTime()
+        : 0;
+      const bTime = b.lastMessageTime
+        ? new Date(b.lastMessageTime).getTime()
+        : 0;
+      return bTime - aTime;
+    });
 
   const messagesContent = (
     <div className="h-full bg-background flex flex-col">
