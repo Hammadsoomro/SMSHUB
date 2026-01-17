@@ -331,6 +331,13 @@ export default function Messages() {
               : c,
           )
           .sort((a, b) => {
+            // 1. Sort contacts with unread messages above read ones
+            const aHasUnread = a.unreadCount > 0;
+            const bHasUnread = b.unreadCount > 0;
+            if (aHasUnread && !bHasUnread) return -1;
+            if (!aHasUnread && bHasUnread) return 1;
+
+            // 2. Sort by last message time (most recent first)
             const aTime = a.lastMessageTime
               ? new Date(a.lastMessageTime).getTime()
               : 0;
