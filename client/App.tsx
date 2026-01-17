@@ -1,5 +1,6 @@
 import "./global.css";
 
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -14,6 +15,7 @@ import InitAdmin from "./pages/InitAdmin";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 import { ContactProvider } from "./contexts/ContactContext";
+import { registerServiceWorker } from "./lib/service-worker";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
