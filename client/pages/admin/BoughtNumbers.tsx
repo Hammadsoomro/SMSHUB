@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import { AlertCircle, Phone, Loader2, Search, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneNumber, TeamMember } from "@shared/api";
