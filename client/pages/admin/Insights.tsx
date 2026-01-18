@@ -296,6 +296,9 @@ export default function Insights() {
               </Card>
             </div>
 
+            {/* Ad Space */}
+            <GoogleAdSense />
+
             {/* Charts Section */}
             <div className="grid lg:grid-cols-2 gap-8 mb-8">
               {/* Daily Messages Chart */}
