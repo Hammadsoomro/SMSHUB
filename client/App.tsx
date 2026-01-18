@@ -1,5 +1,6 @@
 import "./global.css";
 
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -14,6 +15,7 @@ import InitAdmin from "./pages/InitAdmin";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 import { ContactProvider } from "./contexts/ContactContext";
+import { registerServiceWorker } from "./lib/service-worker";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -32,46 +34,53 @@ import TeamMemberSettings from "./pages/TeamMemberSettings";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <ContactProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Landing />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/init-admin" element={<InitAdmin />} />
+const App = () => {
+  // Register service worker for PWA offline support on app startup
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
 
-              {/* Team Member Routes */}
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/conversations" element={<Conversations />} />
-              <Route path="/settings" element={<TeamMemberSettings />} />
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ContactProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/init-admin" element={<InitAdmin />} />
 
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/conversations" element={<Conversations />} />
-              <Route path="/admin/credentials" element={<Credentials />} />
-              <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
-              <Route path="/admin/bought-numbers" element={<BoughtNumbers />} />
-              <Route path="/admin/team" element={<TeamManagement />} />
-              <Route path="/admin/settings" element={<Settings />} />
-              <Route path="/admin/account" element={<AccountInfo />} />
-              <Route path="/admin/insights" element={<Insights />} />
-              <Route path="/admin/twilio-balance" element={<TwilioBalance />} />
+                {/* Team Member Routes */}
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/conversations" element={<Conversations />} />
+                <Route path="/settings" element={<TeamMemberSettings />} />
 
-              {/* Catch All */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ContactProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/conversations" element={<Conversations />} />
+                <Route path="/admin/credentials" element={<Credentials />} />
+                <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
+                <Route path="/admin/bought-numbers" element={<BoughtNumbers />} />
+                <Route path="/admin/team" element={<TeamManagement />} />
+                <Route path="/admin/settings" element={<Settings />} />
+                <Route path="/admin/account" element={<AccountInfo />} />
+                <Route path="/admin/insights" element={<Insights />} />
+                <Route path="/admin/twilio-balance" element={<TwilioBalance />} />
+
+                {/* Catch All */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ContactProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);

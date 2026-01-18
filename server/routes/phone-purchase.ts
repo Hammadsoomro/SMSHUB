@@ -339,13 +339,20 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
       cost: number;
     };
 
+    console.log("[Purchase] Starting purchase process");
+    console.log("[Purchase] Phone number:", phoneNumber);
+    console.log("[Purchase] Cost:", cost);
+    console.log("[Purchase] Admin ID:", adminId);
+
     if (!phoneNumber || cost === undefined) {
+      console.error("[Purchase] Missing required fields");
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     // Check if number is already purchased in the system
     const numbers = await storage.getPhoneNumbersByAdminId(adminId);
     if (numbers.some((n) => n.phoneNumber === phoneNumber)) {
+      console.error("[Purchase] Number already purchased:", phoneNumber);
       return res
         .status(400)
         .json({ error: "This number is already purchased by you" });
@@ -354,6 +361,7 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
     // Get admin's Twilio credentials
     const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
     if (!credentials) {
+      console.error("[Purchase] No Twilio credentials found for admin:", adminId);
       return res
         .status(400)
         .json({ error: "Please connect your Twilio credentials first" });
@@ -361,22 +369,27 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
 
     // Validate that credentials have the required fields
     if (!credentials.accountSid || !credentials.authToken) {
+      console.error("[Purchase] Incomplete credentials");
       return res.status(400).json({
         error: "Incomplete Twilio credentials. Please reconnect your account.",
       });
     }
+
+    console.log("[Purchase] Account SID:", credentials.accountSid.substring(0, 6) + "...");
 
     // Decrypt the auth token
     const decryptedAuthToken = decrypt(credentials.authToken);
 
     // Additional validation for decrypted token
     if (!decryptedAuthToken || decryptedAuthToken.trim().length === 0) {
+      console.error("[Purchase] Invalid decrypted auth token");
       return res.status(400).json({
         error: "Invalid Twilio auth token. Please reconnect your credentials.",
       });
     }
 
     // Purchase number from Twilio
+    console.log("[Purchase] Calling Twilio API to purchase number...");
     const twilioClient = new TwilioClient(
       credentials.accountSid,
       decryptedAuthToken,
@@ -384,11 +397,26 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
     const purchaseResponse =
       await twilioClient.purchasePhoneNumber(phoneNumber);
 
+    console.log("[Purchase] Twilio API response:", JSON.stringify(purchaseResponse));
+
     if (purchaseResponse.error || purchaseResponse.error_message) {
+      console.error("[Purchase] Twilio purchase failed:", purchaseResponse.error_message || purchaseResponse.error);
       return res.status(400).json({
-        error: purchaseResponse.error_message || purchaseResponse.error,
+        error: `Twilio API Error: ${purchaseResponse.error_message || purchaseResponse.error}`,
+        twilioError: purchaseResponse,
       });
     }
+
+    // Check if purchase was successful (has a SID)
+    if (!purchaseResponse.sid) {
+      console.error("[Purchase] No SID in response - purchase may have failed", purchaseResponse);
+      return res.status(400).json({
+        error: "Purchase response did not contain a phone number SID. Purchase may have failed.",
+        twilioResponse: purchaseResponse,
+      });
+    }
+
+    console.log("[Purchase] ✅ Twilio purchase successful. SID:", purchaseResponse.sid);
 
     // Store phone number in database
     const newPhoneNumber: PhoneNumber = {
@@ -399,12 +427,19 @@ export const handlePurchaseNumber: RequestHandler = async (req, res) => {
       active: true,
     };
 
+    console.log("[Purchase] Adding phone number to database...");
     await storage.addPhoneNumber(newPhoneNumber);
 
+    console.log("[Purchase] ✅ Phone number successfully added to database and purchased from Twilio");
     res.json({ phoneNumber: newPhoneNumber });
   } catch (error) {
-    console.error("Purchase number error:", error);
-    res.status(500).json({ error: "Failed to purchase number" });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("[Purchase] ❌ Purchase number error:", errorMessage);
+    console.error("[Purchase] Full error:", error);
+    res.status(500).json({
+      error: `Failed to purchase number: ${errorMessage}`,
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 };
 

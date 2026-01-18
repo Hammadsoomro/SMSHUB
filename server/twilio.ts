@@ -553,6 +553,28 @@ export class TwilioClient {
         res.on("end", () => {
           try {
             const response = JSON.parse(data);
+
+            // Check HTTP status code for errors
+            if (res.statusCode && res.statusCode >= 400) {
+              console.error(
+                `[Twilio] Purchase failed with status ${res.statusCode}:`,
+                response
+              );
+              return resolve({
+                ...response,
+                error: response.code || response.message || `HTTP ${res.statusCode}`,
+                error_message: response.message || `Purchase failed: ${response.detail || response.code}`,
+                status_code: res.statusCode,
+              });
+            }
+
+            // Success response - return it as-is
+            console.log(
+              "[Twilio] Purchase successful. Phone:",
+              response.phone_number,
+              "SID:",
+              response.sid
+            );
             resolve(response);
           } catch (error) {
             reject(error);
@@ -561,6 +583,7 @@ export class TwilioClient {
       });
 
       req.on("error", (error) => {
+        console.error("[Twilio] Purchase request error:", error);
         reject(error);
       });
 

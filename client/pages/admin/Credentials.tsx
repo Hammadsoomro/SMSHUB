@@ -4,6 +4,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import { AlertCircle, CheckCircle2, Lock, Loader2, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { TwilioCredentialsRequest, TwilioCredentials } from "@shared/api";

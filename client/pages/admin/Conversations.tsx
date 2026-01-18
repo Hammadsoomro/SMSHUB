@@ -47,6 +47,7 @@ import { notificationAudioManager } from "@/lib/notification-audio";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
 import ConversationsTopBar from "@/components/ConversationsTopBar";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import { Message, Contact, PhoneNumber, User as UserType } from "@shared/api";
 
 interface ConversationContact extends Contact {
@@ -118,6 +119,7 @@ export default function Conversations() {
   const selectedContactIdRef = useRef<string | null>(null);
   const notificationsRef = useRef(false);
   const contactsRef = useRef<ConversationContact[]>([]);
+  const ablyListenersCleanupRef = useRef<(() => void) | null>(null);
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -151,6 +153,11 @@ export default function Conversations() {
 
     return () => {
       try {
+        // Cleanup Ably listeners if they exist
+        if (ablyListenersCleanupRef.current) {
+          ablyListenersCleanupRef.current();
+          ablyListenersCleanupRef.current = null;
+        }
         ablyService.disconnect();
       } catch (error) {
         console.error("Error during Conversations cleanup:", error);
@@ -388,7 +395,11 @@ export default function Conversations() {
 
       // Subscribe to contact updates once connected
       try {
-        setupAblyListeners();
+        const cleanup = setupAblyListeners();
+        // Store cleanup function for proper lifecycle management
+        if (cleanup) {
+          ablyListenersCleanupRef.current = cleanup;
+        }
       } catch (listenerError) {
         console.error("Error setting up Ably listeners:", listenerError);
         // Continue anyway - core functionality doesn't require listeners
@@ -400,23 +411,25 @@ export default function Conversations() {
     }
   };
 
-  const setupAblyListeners = () => {
+  const setupAblyListeners = (): (() => void) => {
     try {
       const storedUser = localStorage.getItem("user");
       const userProfile = storedUser ? JSON.parse(storedUser) : null;
       const userId = userProfile?.id;
 
       if (!userId) {
-        console.error("No user ID found for Ably subscriptions");
+        console.error("[Conversations] No user ID found for Ably subscriptions");
         return () => {};
       }
+
+      console.log("[Conversations] Setting up Ably listeners for user:", userId);
 
       // Subscribe to contact updates for the current user
       // This will be called whenever a new message arrives to update the contact list
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
-          console.log("[Ably] Contact update received:", data);
+          console.log("[Conversations] Contact update received:", data);
           const currentActivePhone = activePhoneNumberRef.current;
           const selectedId = selectedContactIdRef.current;
 
@@ -426,10 +439,12 @@ export default function Conversations() {
             );
             if (phoneNum) {
               // Reload contacts and ensure proper sorting
+              console.log("[Conversations] Reloading contacts for phone:", currentActivePhone);
               loadContactsForPhoneNumber(phoneNum.id);
 
               // If a contact is selected and a message came in for it, mark as read
               if (selectedId && data?.contactId === selectedId) {
+                console.log("[Conversations] Marking selected contact as read");
                 markMessagesAsRead(selectedId);
               }
             }
@@ -437,13 +452,16 @@ export default function Conversations() {
         },
       );
 
+      console.log("[Conversations] ✅ Ably listeners set up successfully");
+
       // Cleanup function - unsubscribe from contacts
       return () => {
+        console.log("[Conversations] Cleaning up Ably listeners");
         unsubscribeContacts?.();
       };
     } catch (error) {
-      console.error("Error initializing Ably listeners:", error);
-      toast.error("Failed to initialize real-time listeners");
+      console.error("[Conversations] Error initializing Ably listeners:", error);
+      // Don't show toast on initialization - just log the error
       return () => {};
     }
   };
@@ -475,10 +493,19 @@ export default function Conversations() {
           return freshContact;
         });
 
-        // Sort contacts: pinned first, then by last message time (newest first)
+        // Sort contacts: pinned first, then unread, then by last message time (newest first)
         const sortedContacts = updatedContacts.sort((a, b) => {
+          // 1. Pinned contacts first
           if (a.isPinned && !b.isPinned) return -1;
           if (!a.isPinned && b.isPinned) return 1;
+
+          // 2. Contacts with unread messages above read ones
+          const aHasUnread = a.unreadCount > 0;
+          const bHasUnread = b.unreadCount > 0;
+          if (aHasUnread && !bHasUnread) return -1;
+          if (!aHasUnread && bHasUnread) return 1;
+
+          // 3. Sort by last message time (most recent first)
           const aTime = a.lastMessageTime
             ? new Date(a.lastMessageTime).getTime()
             : 0;
@@ -849,8 +876,8 @@ export default function Conversations() {
 
   const showNotification = (title: string, body: string) => {
     if (notifications && Notification.permission === "granted") {
-      // Play notification sound
-      notificationAudioManager.playNotificationChime().catch(() => {
+      // Play notification sound with unique ringtone
+      notificationAudioManager.playNotificationTone().catch(() => {
         // Silently fail if audio can't play
       });
 
@@ -859,7 +886,7 @@ export default function Conversations() {
         icon: "/favicon.svg",
         badge: "/favicon.svg",
         tag: "sms-notification",
-        requireInteraction: false,
+        requireInteraction: true,
         silent: false,
       });
 
@@ -868,7 +895,14 @@ export default function Conversations() {
         notification.close();
       };
 
-      setTimeout(() => notification.close(), 5000);
+      // Keep notification visible longer for better UX
+      setTimeout(() => {
+        try {
+          notification.close();
+        } catch (e) {
+          // Notification may have already been closed
+        }
+      }, 8000);
     }
   };
 
@@ -931,11 +965,17 @@ export default function Conversations() {
       );
     })
     .sort((a, b) => {
-      // Sort pinned contacts to the top
+      // 1. Sort pinned contacts to the top
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
 
-      // Sort by last message time (most recent first)
+      // 2. Sort contacts with unread messages above read ones
+      const aHasUnread = a.unreadCount > 0;
+      const bHasUnread = b.unreadCount > 0;
+      if (aHasUnread && !bHasUnread) return -1;
+      if (!aHasUnread && bHasUnread) return 1;
+
+      // 3. Sort by last message time (most recent first)
       const aTime = a.lastMessageTime
         ? new Date(a.lastMessageTime).getTime()
         : 0;
@@ -1113,16 +1153,17 @@ export default function Conversations() {
                   </p>
                 </div>
               ) : (
-                filteredContacts.map((contact) => (
-                  <Card
-                    key={contact.id}
-                    className={`mb-2 cursor-pointer transition-all duration-300 border-0 mr-1.5 ${
-                      selectedContactId === contact.id
-                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
-                        : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
-                    }`}
-                    onClick={() => setSelectedContactId(contact.id)}
-                  >
+                filteredContacts.flatMap((contact, index) => {
+                  const items: any[] = [
+                    <Card
+                      key={contact.id}
+                      className={`mb-2 cursor-pointer transition-all duration-300 border-0 mr-1.5 ${
+                        selectedContactId === contact.id
+                          ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
+                          : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
+                      }`}
+                      onClick={() => setSelectedContactId(contact.id)}
+                    >
                     <CardContent className="p-2.5 relative">
                       <div className="flex gap-2 items-start">
                         {/* Avatar */}
@@ -1265,8 +1306,13 @@ export default function Conversations() {
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))
+                    </Card>
+                  ];
+                  if (index > 0 && (index + 1) % 5 === 0) {
+                    items.push(<div key={`ad-${index}`}><GoogleAdSense /></div>);
+                  }
+                  return items;
+                }).flat()
               )}
             </div>
           </ScrollArea>

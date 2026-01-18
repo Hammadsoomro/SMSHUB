@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import {
   MessageSquare,
   Lock,
@@ -133,6 +134,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Ad Space */}
+      <GoogleAdSense />
+
       {/* Features Section */}
       <section className="py-20 px-4 bg-card/50">
         <div className="max-w-7xl mx-auto">
@@ -208,6 +212,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Ad Space */}
+      <GoogleAdSense />
+
       {/* How It Works */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
@@ -262,6 +269,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Ad Space */}
+      <GoogleAdSense />
 
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10 border-t border-border">

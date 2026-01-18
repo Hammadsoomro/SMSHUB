@@ -1,5 +1,6 @@
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import { useEffect, useState } from "react";
 import {
   BarChart3,
@@ -191,6 +192,9 @@ export default function AdminDashboard() {
           />
         </div>
 
+        {/* Ad Space */}
+        <GoogleAdSense />
+
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Team Members Status Chart */}
@@ -299,6 +303,9 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
+        {/* Ad Space */}
+        <GoogleAdSense />
+
         {/* Team Members List */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -372,6 +379,9 @@ export default function AdminDashboard() {
             </div>
           )}
         </Card>
+
+        {/* Ad Space */}
+        <GoogleAdSense />
 
         {/* Welcome Section */}
         <Card className="p-8 bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 border-primary/20">

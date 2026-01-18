@@ -3,6 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import {
   AlertCircle,
   Users,

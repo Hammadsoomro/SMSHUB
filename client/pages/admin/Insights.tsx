@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import {
   BarChart3,
   TrendingUp,
@@ -294,6 +295,9 @@ export default function Insights() {
                 </div>
               </Card>
             </div>
+
+            {/* Ad Space */}
+            <GoogleAdSense />
 
             {/* Charts Section */}
             <div className="grid lg:grid-cols-2 gap-8 mb-8">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import {
   MessageSquare,
   Send,
@@ -78,6 +79,15 @@ export default function Messages() {
     requestNotificationPermission();
 
     initializeMessages();
+
+    // Cleanup on unmount
+    return () => {
+      try {
+        ablyService.disconnect();
+      } catch (error) {
+        console.error("Error during Messages cleanup:", error);
+      }
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -87,10 +97,55 @@ export default function Messages() {
   const initializeMessages = async () => {
     try {
       setIsLoading(true);
-      // First load assigned phone numbers
+
+      // Initialize Ably connection first
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const connected = await ablyService.connect(token);
+          if (connected) {
+            console.log("✅ [Messages] Ably connected for real-time updates");
+            // Setup contact update listeners once Ably is connected
+            setupAblyListeners();
+          }
+        } catch (ablyError) {
+          console.warn(
+            "[Messages] Ably connection failed, app will work with polling:",
+            ablyError
+          );
+          // Continue anyway - app works without Ably
+        }
+      }
+
+      // Then load assigned phone numbers
       await fetchAssignedPhoneNumbers();
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const setupAblyListeners = () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const userProfile = storedUser ? JSON.parse(storedUser) : null;
+      const userId = userProfile?.id;
+
+      if (!userId) {
+        console.error("[Messages] No user ID found for Ably subscriptions");
+        return;
+      }
+
+      // Subscribe to contact updates so new messages update the contact list in real-time
+      ablyService.subscribeToContactUpdates(userId, (data: any) => {
+        console.log("[Messages] Contact update received:", data);
+        // Reload contacts to reflect new messages
+        if (activePhoneNumberId) {
+          fetchContacts(activePhoneNumberId);
+        }
+      });
+    } catch (error) {
+      console.error("[Messages] Error setting up Ably listeners:", error);
+      // Continue anyway - core functionality doesn't require listeners
     }
   };
 
@@ -134,8 +189,15 @@ export default function Messages() {
       const data = await response.json();
       const contactsData = data.contacts || [];
 
-      // Sort contacts: by last message time (newest first)
+      // Sort contacts: unread first, then by last message time (newest first)
       const sortedContacts = contactsData.sort((a: Contact, b: Contact) => {
+        // 1. Sort contacts with unread messages above read ones
+        const aHasUnread = a.unreadCount > 0;
+        const bHasUnread = b.unreadCount > 0;
+        if (aHasUnread && !bHasUnread) return -1;
+        if (!aHasUnread && bHasUnread) return 1;
+
+        // 2. Sort by last message time (most recent first)
         const aTime = a.lastMessageTime
           ? new Date(a.lastMessageTime).getTime()
           : 0;
@@ -209,9 +271,7 @@ export default function Messages() {
 
     // Mark as read optimistically
     setContacts((prev) =>
-      prev.map((c) =>
-        c.id === contact.id ? { ...c, unreadCount: 0 } : c,
-      ),
+      prev.map((c) => (c.id === contact.id ? { ...c, unreadCount: 0 } : c)),
     );
 
     // Fetch fresh messages in the background
@@ -324,6 +384,13 @@ export default function Messages() {
               : c,
           )
           .sort((a, b) => {
+            // 1. Sort contacts with unread messages above read ones
+            const aHasUnread = a.unreadCount > 0;
+            const bHasUnread = b.unreadCount > 0;
+            if (aHasUnread && !bHasUnread) return -1;
+            if (!aHasUnread && bHasUnread) return 1;
+
+            // 2. Sort by last message time (most recent first)
             const aTime = a.lastMessageTime
               ? new Date(a.lastMessageTime).getTime()
               : 0;
@@ -388,8 +455,8 @@ export default function Messages() {
 
   const showNotification = (title: string, body: string) => {
     if (notifications && Notification.permission === "granted") {
-      // Play notification sound
-      notificationAudioManager.playNotificationChime().catch(() => {
+      // Play notification sound with unique ringtone
+      notificationAudioManager.playNotificationTone().catch(() => {
         // Silently fail if audio can't play
       });
 
@@ -398,7 +465,7 @@ export default function Messages() {
         icon: "/favicon.svg",
         badge: "/favicon.svg",
         tag: "sms-notification",
-        requireInteraction: false,
+        requireInteraction: true,
         silent: false,
       });
 
@@ -407,15 +474,39 @@ export default function Messages() {
         notification.close();
       };
 
-      setTimeout(() => notification.close(), 5000);
+      // Keep notification visible longer for better UX
+      setTimeout(() => {
+        try {
+          notification.close();
+        } catch (e) {
+          // Notification may have already been closed
+        }
+      }, 8000);
     }
   };
 
-  const filteredContacts = contacts.filter(
-    (contact) =>
-      contact.phoneNumber.includes(searchTerm) ||
-      contact.name?.includes(searchTerm),
-  );
+  const filteredContacts = contacts
+    .filter(
+      (contact) =>
+        contact.phoneNumber.includes(searchTerm) ||
+        contact.name?.includes(searchTerm),
+    )
+    .sort((a, b) => {
+      // 1. Sort contacts with unread messages above read ones
+      const aHasUnread = a.unreadCount > 0;
+      const bHasUnread = b.unreadCount > 0;
+      if (aHasUnread && !bHasUnread) return -1;
+      if (!aHasUnread && bHasUnread) return 1;
+
+      // 2. Sort by last message time (most recent first)
+      const aTime = a.lastMessageTime
+        ? new Date(a.lastMessageTime).getTime()
+        : 0;
+      const bTime = b.lastMessageTime
+        ? new Date(b.lastMessageTime).getTime()
+        : 0;
+      return bTime - aTime;
+    });
 
   const messagesContent = (
     <div className="h-full bg-background flex flex-col">
@@ -469,44 +560,50 @@ export default function Messages() {
               </div>
             ) : filteredContacts.length > 0 ? (
               <div className="space-y-0.5 p-2">
-                {filteredContacts.map((contact) => (
-                  <button
-                    key={contact.id}
-                    onClick={() => handleSelectContact(contact)}
-                    className={`w-full text-left p-3 rounded-lg transition-all ${
-                      conversation.contact?.id === contact.id
-                        ? "bg-gradient-to-r from-primary to-secondary text-white shadow-md"
-                        : "hover:bg-muted/60"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">
-                          {contact.name || contact.phoneNumber}
-                        </p>
-                        <p className="text-xs opacity-75 truncate mt-0.5">
-                          {contact.lastMessage || "No messages yet"}
-                        </p>
+                {filteredContacts.flatMap((contact, index) => {
+                  const items: any[] = [
+                    <button
+                      key={contact.id}
+                      onClick={() => handleSelectContact(contact)}
+                      className={`w-full text-left p-3 rounded-lg transition-all ${
+                        conversation.contact?.id === contact.id
+                          ? "bg-gradient-to-r from-primary to-secondary text-white shadow-md"
+                          : "hover:bg-muted/60"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate">
+                            {contact.name || contact.phoneNumber}
+                          </p>
+                          <p className="text-xs opacity-75 truncate mt-0.5">
+                            {contact.lastMessage || "No messages yet"}
+                          </p>
+                        </div>
+                        {contact.unreadCount > 0 &&
+                          conversation.contact?.id !== contact.id && (
+                            <Badge
+                              variant="destructive"
+                              className="text-xs h-5 min-w-[20px] flex-shrink-0"
+                            >
+                              {contact.unreadCount > 99
+                                ? "99+"
+                                : contact.unreadCount}
+                            </Badge>
+                          )}
                       </div>
-                      {contact.unreadCount > 0 &&
-                        conversation.contact?.id !== contact.id && (
-                          <Badge
-                            variant="destructive"
-                            className="text-xs h-5 min-w-[20px] flex-shrink-0"
-                          >
-                            {contact.unreadCount > 99
-                              ? "99+"
-                              : contact.unreadCount}
-                          </Badge>
-                        )}
-                    </div>
-                    {contact.lastMessageTime && (
-                      <p className="text-xs opacity-50 mt-1">
-                        {new Date(contact.lastMessageTime).toLocaleDateString()}
-                      </p>
-                    )}
-                  </button>
-                ))}
+                      {contact.lastMessageTime && (
+                        <p className="text-xs opacity-50 mt-1">
+                          {new Date(contact.lastMessageTime).toLocaleDateString()}
+                        </p>
+                      )}
+                    </button>,
+                  ];
+                  if (index > 0 && (index + 1) % 5 === 0) {
+                    items.push(<div key={`ad-${index}`}><GoogleAdSense /></div>);
+                  }
+                  return items;
+                }).flat()}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
