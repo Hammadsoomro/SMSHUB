@@ -47,6 +47,7 @@ import { notificationAudioManager } from "@/lib/notification-audio";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import AddContactDialog from "@/components/AddContactDialog";
 import ConversationsTopBar from "@/components/ConversationsTopBar";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import { Message, Contact, PhoneNumber, User as UserType } from "@shared/api";
 
 interface ConversationContact extends Contact {
