@@ -78,6 +78,15 @@ export default function Messages() {
     requestNotificationPermission();
 
     initializeMessages();
+
+    // Cleanup on unmount
+    return () => {
+      try {
+        ablyService.disconnect();
+      } catch (error) {
+        console.error("Error during Messages cleanup:", error);
+      }
+    };
   }, [navigate]);
 
   useEffect(() => {
