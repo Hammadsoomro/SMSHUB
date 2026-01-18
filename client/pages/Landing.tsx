@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import {
   MessageSquare,
   Lock,
