@@ -1,5 +1,6 @@
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import { useEffect, useState } from "react";
 import {
   BarChart3,
