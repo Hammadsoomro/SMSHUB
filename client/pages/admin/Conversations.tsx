@@ -152,6 +152,11 @@ export default function Conversations() {
 
     return () => {
       try {
+        // Cleanup Ably listeners if they exist
+        if (ablyListenersCleanupRef.current) {
+          ablyListenersCleanupRef.current();
+          ablyListenersCleanupRef.current = null;
+        }
         ablyService.disconnect();
       } catch (error) {
         console.error("Error during Conversations cleanup:", error);
