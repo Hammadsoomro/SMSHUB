@@ -394,7 +394,11 @@ export default function Conversations() {
 
       // Subscribe to contact updates once connected
       try {
-        setupAblyListeners();
+        const cleanup = setupAblyListeners();
+        // Store cleanup function for proper lifecycle management
+        if (cleanup) {
+          ablyListenersCleanupRef.current = cleanup;
+        }
       } catch (listenerError) {
         console.error("Error setting up Ably listeners:", listenerError);
         // Continue anyway - core functionality doesn't require listeners
