@@ -380,6 +380,9 @@ export default function AdminDashboard() {
           )}
         </Card>
 
+        {/* Ad Space */}
+        <GoogleAdSense />
+
         {/* Welcome Section */}
         <Card className="p-8 bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 border-primary/20">
           <div className="flex items-start gap-4">
