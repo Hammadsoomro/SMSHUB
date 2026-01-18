@@ -410,23 +410,25 @@ export default function Conversations() {
     }
   };
 
-  const setupAblyListeners = () => {
+  const setupAblyListeners = (): (() => void) => {
     try {
       const storedUser = localStorage.getItem("user");
       const userProfile = storedUser ? JSON.parse(storedUser) : null;
       const userId = userProfile?.id;
 
       if (!userId) {
-        console.error("No user ID found for Ably subscriptions");
+        console.error("[Conversations] No user ID found for Ably subscriptions");
         return () => {};
       }
+
+      console.log("[Conversations] Setting up Ably listeners for user:", userId);
 
       // Subscribe to contact updates for the current user
       // This will be called whenever a new message arrives to update the contact list
       const unsubscribeContacts = ablyService.subscribeToContactUpdates(
         userId,
         (data: any) => {
-          console.log("[Ably] Contact update received:", data);
+          console.log("[Conversations] Contact update received:", data);
           const currentActivePhone = activePhoneNumberRef.current;
           const selectedId = selectedContactIdRef.current;
 
@@ -436,10 +438,12 @@ export default function Conversations() {
             );
             if (phoneNum) {
               // Reload contacts and ensure proper sorting
+              console.log("[Conversations] Reloading contacts for phone:", currentActivePhone);
               loadContactsForPhoneNumber(phoneNum.id);
 
               // If a contact is selected and a message came in for it, mark as read
               if (selectedId && data?.contactId === selectedId) {
+                console.log("[Conversations] Marking selected contact as read");
                 markMessagesAsRead(selectedId);
               }
             }
@@ -447,13 +451,16 @@ export default function Conversations() {
         },
       );
 
+      console.log("[Conversations] ✅ Ably listeners set up successfully");
+
       // Cleanup function - unsubscribe from contacts
       return () => {
+        console.log("[Conversations] Cleaning up Ably listeners");
         unsubscribeContacts?.();
       };
     } catch (error) {
-      console.error("Error initializing Ably listeners:", error);
-      toast.error("Failed to initialize real-time listeners");
+      console.error("[Conversations] Error initializing Ably listeners:", error);
+      // Don't show toast on initialization - just log the error
       return () => {};
     }
   };
