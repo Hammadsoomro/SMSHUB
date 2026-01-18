@@ -1,10 +1,11 @@
-const CACHE_VERSION = 'v1-2026-01-17';
+const CACHE_VERSION = 'v2-2026-01-18';
 const CACHE_NAME = `conneclify-${CACHE_VERSION}`;
 
+// Only cache truly static assets that don't change between deployments
+// Do NOT cache index.html or assets with hash names - let them load fresh
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/favicon.svg',
+  '/favicon.ico',
   '/manifest.json',
   '/robots.txt'
 ];
@@ -41,9 +42,10 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - network first, fallback to cache
+// Fetch event - network first for HTML and hashed assets, cache first for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+  const url = new URL(request.url);
 
   // Skip non-GET requests
   if (request.method !== 'GET') {
@@ -83,7 +85,66 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For other resources (JS, CSS, etc): cache first, fallback to network
+  // For HTML pages: always network first to get fresh content
+  if (request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Cache successful responses for offline use
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Network failed, try cache
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            return new Response('Offline - Please check your connection', {
+              status: 503,
+              statusText: 'Service Unavailable',
+            });
+          });
+        })
+    );
+    return;
+  }
+
+  // For hashed assets (JS/CSS with hash in filename): network first with cache fallback
+  // These have unique names per deployment, so we want fresh versions
+  if (url.pathname.includes('/assets/') && url.pathname.match(/-[a-zA-Z0-9]+\.(js|css)$/)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            return new Response('Offline', {
+              status: 503,
+              statusText: 'Service Unavailable',
+            });
+          });
+        })
+    );
+    return;
+  }
+
+  // For static assets (images, fonts, etc): cache first, fallback to network
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
