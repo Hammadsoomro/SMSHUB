@@ -212,6 +212,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Ad Space */}
+      <GoogleAdSense />
+
       {/* How It Works */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
