@@ -455,8 +455,8 @@ export default function Messages() {
 
   const showNotification = (title: string, body: string) => {
     if (notifications && Notification.permission === "granted") {
-      // Play notification sound
-      notificationAudioManager.playNotificationChime().catch(() => {
+      // Play notification sound with unique ringtone
+      notificationAudioManager.playNotificationTone().catch(() => {
         // Silently fail if audio can't play
       });
 
@@ -465,7 +465,7 @@ export default function Messages() {
         icon: "/favicon.svg",
         badge: "/favicon.svg",
         tag: "sms-notification",
-        requireInteraction: false,
+        requireInteraction: true,
         silent: false,
       });
 
@@ -474,7 +474,14 @@ export default function Messages() {
         notification.close();
       };
 
-      setTimeout(() => notification.close(), 5000);
+      // Keep notification visible longer for better UX
+      setTimeout(() => {
+        try {
+          notification.close();
+        } catch (e) {
+          // Notification may have already been closed
+        }
+      }, 8000);
     }
   };
 
