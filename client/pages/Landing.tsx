@@ -270,6 +270,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Ad Space */}
+      <GoogleAdSense />
+
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10 border-t border-border">
         <div className="max-w-4xl mx-auto text-center">
