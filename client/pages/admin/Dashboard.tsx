@@ -192,6 +192,9 @@ export default function AdminDashboard() {
           />
         </div>
 
+        {/* Ad Space */}
+        <GoogleAdSense />
+
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Team Members Status Chart */}
