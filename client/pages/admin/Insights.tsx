@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
+import GoogleAdSense from "@/components/GoogleAdSense";
 import {
   BarChart3,
   TrendingUp,
