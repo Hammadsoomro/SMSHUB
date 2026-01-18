@@ -87,10 +87,55 @@ export default function Messages() {
   const initializeMessages = async () => {
     try {
       setIsLoading(true);
-      // First load assigned phone numbers
+
+      // Initialize Ably connection first
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const connected = await ablyService.connect(token);
+          if (connected) {
+            console.log("✅ [Messages] Ably connected for real-time updates");
+            // Setup contact update listeners once Ably is connected
+            setupAblyListeners();
+          }
+        } catch (ablyError) {
+          console.warn(
+            "[Messages] Ably connection failed, app will work with polling:",
+            ablyError
+          );
+          // Continue anyway - app works without Ably
+        }
+      }
+
+      // Then load assigned phone numbers
       await fetchAssignedPhoneNumbers();
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const setupAblyListeners = () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const userProfile = storedUser ? JSON.parse(storedUser) : null;
+      const userId = userProfile?.id;
+
+      if (!userId) {
+        console.error("[Messages] No user ID found for Ably subscriptions");
+        return;
+      }
+
+      // Subscribe to contact updates so new messages update the contact list in real-time
+      ablyService.subscribeToContactUpdates(userId, (data: any) => {
+        console.log("[Messages] Contact update received:", data);
+        // Reload contacts to reflect new messages
+        if (activePhoneNumberId) {
+          fetchContacts(activePhoneNumberId);
+        }
+      });
+    } catch (error) {
+      console.error("[Messages] Error setting up Ably listeners:", error);
+      // Continue anyway - core functionality doesn't require listeners
     }
   };
 
