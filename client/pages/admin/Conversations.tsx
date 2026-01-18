@@ -118,6 +118,7 @@ export default function Conversations() {
   const selectedContactIdRef = useRef<string | null>(null);
   const notificationsRef = useRef(false);
   const contactsRef = useRef<ConversationContact[]>([]);
+  const ablyListenersCleanupRef = useRef<(() => void) | null>(null);
 
   // Keep refs in sync with state
   useEffect(() => {
