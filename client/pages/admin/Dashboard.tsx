@@ -303,6 +303,9 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
+        {/* Ad Space */}
+        <GoogleAdSense />
+
         {/* Team Members List */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
