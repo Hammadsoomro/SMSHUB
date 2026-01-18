@@ -1146,16 +1146,17 @@ export default function Conversations() {
                   </p>
                 </div>
               ) : (
-                filteredContacts.map((contact) => (
-                  <Card
-                    key={contact.id}
-                    className={`mb-2 cursor-pointer transition-all duration-300 border-0 mr-1.5 ${
-                      selectedContactId === contact.id
-                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
-                        : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
-                    }`}
-                    onClick={() => setSelectedContactId(contact.id)}
-                  >
+                filteredContacts.flatMap((contact, index) => {
+                  const items: any[] = [
+                    <Card
+                      key={contact.id}
+                      className={`mb-2 cursor-pointer transition-all duration-300 border-0 mr-1.5 ${
+                        selectedContactId === contact.id
+                          ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
+                          : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
+                      }`}
+                      onClick={() => setSelectedContactId(contact.id)}
+                    >
                     <CardContent className="p-2.5 relative">
                       <div className="flex gap-2 items-start">
                         {/* Avatar */}
@@ -1298,8 +1299,13 @@ export default function Conversations() {
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))
+                    </Card>
+                  ];
+                  if (index > 0 && (index + 1) % 5 === 0) {
+                    items.push(<div key={`ad-${index}`}><GoogleAdSense /></div>);
+                  }
+                  return items;
+                }).flat()
               )}
             </div>
           </ScrollArea>
