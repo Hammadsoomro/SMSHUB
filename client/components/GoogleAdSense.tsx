@@ -1,42 +1,70 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function GoogleAdSense() {
+// Track which ad slots have been used on the current page
+const usedAdSlots = new Set<string>();
+
+// Different ad slots for different placements
+const AD_SLOTS = {
+  landing: "6761041317",
+  dashboard: "7861041317",
+  conversations: "8861041317",
+  messages: "9861041317",
+  default: "6761041317",
+};
+
+interface GoogleAdSenseProps {
+  placement?: keyof typeof AD_SLOTS;
+  allowMultiple?: boolean;
+}
+
+export default function GoogleAdSense({
+  placement = "default",
+  allowMultiple = false,
+}: GoogleAdSenseProps) {
   const adRef = useRef<HTMLDivElement>(null);
-  const adAttemptedRef = useRef(false);
+  const [hasRendered, setHasRendered] = useState(false);
+  const adSlot = AD_SLOTS[placement] || AD_SLOTS.default;
 
   useEffect(() => {
-    // Only attempt once per mount
-    if (adAttemptedRef.current) {
+    // Skip if already rendered and multiple not allowed
+    if (hasRendered && !allowMultiple) {
       return;
     }
-    adAttemptedRef.current = true;
 
-    // Check if adsbygoogle is available
-    const checkAndPushAd = () => {
-      if (
-        typeof window !== "undefined" &&
-        (window as any).adsbygoogle !== undefined
-      ) {
-        try {
-          ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push(
-            {}
-          );
-          console.log("✓ Google AdSense ad loaded successfully");
-        } catch (error) {
-          console.warn("⚠ Google AdSense error (non-critical):", error);
-          // Don't throw - ads are optional
+    // Check if slot already used on page (unless allowMultiple is true)
+    if (usedAdSlots.has(adSlot) && !allowMultiple) {
+      console.log(`⚠ Ad slot ${adSlot} already used on this page, skipping`);
+      return;
+    }
+
+    usedAdSlots.add(adSlot);
+    setHasRendered(true);
+
+    // Wait for adsbygoogle to be available
+    const pushAd = () => {
+      if (typeof window !== "undefined") {
+        const adsbygoogle = (window as any).adsbygoogle;
+        if (adsbygoogle !== undefined) {
+          try {
+            adsbygoogle.push({});
+            console.log(`✓ Ad loaded for slot: ${adSlot}`);
+          } catch (error) {
+            console.warn(
+              `⚠ Google AdSense error for slot ${adSlot}:`,
+              error
+            );
+          }
+        } else {
+          // Retry if script not ready
+          setTimeout(pushAd, 500);
         }
-      } else {
-        // Script not ready yet, retry after a delay
-        setTimeout(checkAndPushAd, 500);
       }
     };
 
     // Small delay to ensure DOM is ready
-    const timeoutId = setTimeout(checkAndPushAd, 100);
-
+    const timeoutId = setTimeout(pushAd, 50);
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [adSlot, allowMultiple, hasRendered]);
 
   return (
     <div className="my-8 flex justify-center w-full">
@@ -44,9 +72,10 @@ export default function GoogleAdSense() {
         ref={adRef}
         className="w-full max-w-4xl"
         style={{
-          minHeight: "280px",
+          minHeight: "250px",
           display: "flex",
           justifyContent: "center",
+          alignItems: "center",
           backgroundColor: "transparent",
         }}
       >
@@ -55,10 +84,10 @@ export default function GoogleAdSense() {
           style={{
             display: "block",
             width: "100%",
-            minHeight: "280px",
+            minHeight: "250px",
           }}
           data-ad-client="ca-pub-8199077937393778"
-          data-ad-slot="6761041317"
+          data-ad-slot={adSlot}
           data-ad-format="auto"
           data-full-width-responsive="true"
         ></ins>
