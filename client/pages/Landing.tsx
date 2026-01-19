@@ -296,18 +296,29 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4 bg-background/50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center text-sm text-muted-foreground">
-          <p>&copy; 2024 conneclify. All rights reserved.</p>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-foreground smooth-transition">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-foreground smooth-transition">
-              Terms
-            </a>
-            <a href="#" className="hover:text-foreground smooth-transition">
-              Contact
-            </a>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center text-sm text-muted-foreground mb-4">
+            <p>&copy; 2026 conneclify. All rights reserved. | Hammad Soomro</p>
+            <div className="flex gap-6">
+              <Link
+                to="/privacy"
+                className="hover:text-foreground smooth-transition"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                to="/terms"
+                className="hover:text-foreground smooth-transition"
+              >
+                Terms and Conditions
+              </Link>
+              <a
+                href="mailto:contact@conneclify.com"
+                className="hover:text-foreground smooth-transition"
+              >
+                Contact
+              </a>
+            </div>
           </div>
         </div>
       </footer>
