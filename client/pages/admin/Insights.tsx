@@ -297,7 +297,7 @@ export default function Insights() {
             </div>
 
             {/* Ad Space */}
-            <GoogleAdSense />
+            <GoogleAdSense placement="dashboard" />
 
             {/* Charts Section */}
             <div className="grid lg:grid-cols-2 gap-8 mb-8">
