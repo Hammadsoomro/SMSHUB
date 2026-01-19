@@ -135,7 +135,7 @@ export default function Landing() {
       </section>
 
       {/* Ad Space */}
-      <GoogleAdSense />
+      <GoogleAdSense placement="landing" />
 
       {/* Features Section */}
       <section className="py-20 px-4 bg-card/50">
