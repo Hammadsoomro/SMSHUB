@@ -56,6 +56,8 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/init-admin" element={<InitAdmin />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsAndConditions />} />
 
                 {/* Team Member Routes */}
                 <Route path="/messages" element={<Messages />} />
