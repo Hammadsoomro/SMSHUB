@@ -66,15 +66,24 @@ const App = () => {
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/conversations" element={<Conversations />} />
+                <Route
+                  path="/admin/conversations"
+                  element={<Conversations />}
+                />
                 <Route path="/admin/credentials" element={<Credentials />} />
                 <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
-                <Route path="/admin/bought-numbers" element={<BoughtNumbers />} />
+                <Route
+                  path="/admin/bought-numbers"
+                  element={<BoughtNumbers />}
+                />
                 <Route path="/admin/team" element={<TeamManagement />} />
                 <Route path="/admin/settings" element={<Settings />} />
                 <Route path="/admin/account" element={<AccountInfo />} />
                 <Route path="/admin/insights" element={<Insights />} />
-                <Route path="/admin/twilio-balance" element={<TwilioBalance />} />
+                <Route
+                  path="/admin/twilio-balance"
+                  element={<TwilioBalance />}
+                />
 
                 {/* Catch All */}
                 <Route path="*" element={<NotFound />} />

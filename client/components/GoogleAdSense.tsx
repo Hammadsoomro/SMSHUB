@@ -40,14 +40,9 @@ export default function GoogleAdSense({
         if (adsbygoogle !== undefined && Array.isArray(adsbygoogle)) {
           try {
             adsbygoogle.push({});
-            console.log(
-              `✓ Google AdSense ad loaded (${placement})`
-            );
+            console.log(`✓ Google AdSense ad loaded (${placement})`);
           } catch (error) {
-            console.warn(
-              `⚠ Google AdSense error (${placement}):`,
-              error
-            );
+            console.warn(`⚠ Google AdSense error (${placement}):`, error);
             // Non-critical error - ads are optional
           }
         } else {

@@ -30,9 +30,7 @@ export default function TermsAndConditions() {
         <div className="space-y-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">Terms and Conditions</h1>
-            <p className="text-muted-foreground">
-              Last Updated: January 2026
-            </p>
+            <p className="text-muted-foreground">Last Updated: January 2026</p>
           </div>
 
           <section>
@@ -101,8 +99,12 @@ export default function TermsAndConditions() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4">3. Acceptable Use Policy</h2>
-            <p className="text-muted-foreground mb-4">You agree not to use the Service for:</p>
+            <h2 className="text-2xl font-bold mb-4">
+              3. Acceptable Use Policy
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              You agree not to use the Service for:
+            </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-2">
               <li>Sending spam, harassment, or abusive messages</li>
               <li>Violating any applicable laws or regulations</li>
@@ -111,12 +113,9 @@ export default function TermsAndConditions() {
               <li>Attempting to gain unauthorized access to our systems</li>
               <li>Engaging in fraudulent or deceptive practices</li>
               <li>Interfering with the Service's normal operation</li>
+              <li>Violating intellectual property rights of others</li>
               <li>
-                Violating intellectual property rights of others
-              </li>
-              <li>
-                Engaging in any activity that violates Twilio's terms of
-                service
+                Engaging in any activity that violates Twilio's terms of service
               </li>
             </ul>
           </section>
@@ -124,9 +123,7 @@ export default function TermsAndConditions() {
           <section>
             <h2 className="text-2xl font-bold mb-4">4. Twilio Integration</h2>
             <div className="space-y-4 text-muted-foreground">
-              <p>
-                By connecting your Twilio account to our Service, you:
-              </p>
+              <p>By connecting your Twilio account to our Service, you:</p>
               <ul className="list-disc list-inside space-y-1 ml-2">
                 <li>Authorize conneclify to access your Twilio account</li>
                 <li>
@@ -138,8 +135,8 @@ export default function TermsAndConditions() {
                   conneclify
                 </li>
                 <li>
-                  Acknowledge that conneclify is not affiliated with or
-                  endorsed by Twilio
+                  Acknowledge that conneclify is not affiliated with or endorsed
+                  by Twilio
                 </li>
               </ul>
             </div>
@@ -201,7 +198,9 @@ export default function TermsAndConditions() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4">8. Limitation of Liability</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              8. Limitation of Liability
+            </h2>
             <p className="text-muted-foreground mb-4">
               TO THE FULLEST EXTENT PERMITTED BY LAW:
             </p>
@@ -211,8 +210,8 @@ export default function TermsAndConditions() {
                 special, or consequential damages
               </li>
               <li>
-                Our total liability shall not exceed the fees paid by you in
-                the past 12 months
+                Our total liability shall not exceed the fees paid by you in the
+                past 12 months
               </li>
               <li>
                 We are not liable for unauthorized access to your account due to
@@ -262,8 +261,8 @@ export default function TermsAndConditions() {
               <p>
                 <strong>Effects of Termination:</strong> Upon termination, your
                 access to the Service ceases, but provisions regarding
-                intellectual property, liability limitations, and indemnification
-                survive.
+                intellectual property, liability limitations, and
+                indemnification survive.
               </p>
             </div>
           </section>
@@ -292,7 +291,9 @@ export default function TermsAndConditions() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4">14. Modifications to Service</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              14. Modifications to Service
+            </h2>
             <p className="text-muted-foreground">
               We reserve the right to modify, suspend, or discontinue the
               Service or any features at any time with or without notice. We
@@ -302,9 +303,7 @@ export default function TermsAndConditions() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4">
-              15. Changes to Terms
-            </h2>
+            <h2 className="text-2xl font-bold mb-4">15. Changes to Terms</h2>
             <p className="text-muted-foreground">
               We may update these Terms at any time. Your continued use of the
               Service after changes constitutes acceptance of the updated Terms.
@@ -336,9 +335,9 @@ export default function TermsAndConditions() {
             <h2 className="text-2xl font-bold mb-4">18. Severability</h2>
             <p className="text-muted-foreground">
               If any provision of these Terms is found to be unenforceable, such
-              provision shall be modified to the minimum extent necessary to make
-              it enforceable, and the remaining provisions shall continue in
-              full force and effect.
+              provision shall be modified to the minimum extent necessary to
+              make it enforceable, and the remaining provisions shall continue
+              in full force and effect.
             </p>
           </section>
 

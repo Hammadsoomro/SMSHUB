@@ -417,11 +417,16 @@ export default function Conversations() {
       const userId = userProfile?.id;
 
       if (!userId) {
-        console.error("[Conversations] No user ID found for Ably subscriptions");
+        console.error(
+          "[Conversations] No user ID found for Ably subscriptions",
+        );
         return () => {};
       }
 
-      console.log("[Conversations] Setting up Ably listeners for user:", userId);
+      console.log(
+        "[Conversations] Setting up Ably listeners for user:",
+        userId,
+      );
 
       // Subscribe to contact updates for the current user
       // This will be called whenever a new message arrives to update the contact list
@@ -438,7 +443,10 @@ export default function Conversations() {
             );
             if (phoneNum) {
               // Reload contacts and ensure proper sorting
-              console.log("[Conversations] Reloading contacts for phone:", currentActivePhone);
+              console.log(
+                "[Conversations] Reloading contacts for phone:",
+                currentActivePhone,
+              );
               loadContactsForPhoneNumber(phoneNum.id);
 
               // If a contact is selected and a message came in for it, mark as read
@@ -459,7 +467,10 @@ export default function Conversations() {
         unsubscribeContacts?.();
       };
     } catch (error) {
-      console.error("[Conversations] Error initializing Ably listeners:", error);
+      console.error(
+        "[Conversations] Error initializing Ably listeners:",
+        error,
+      );
       // Don't show toast on initialization - just log the error
       return () => {};
     }
@@ -1152,163 +1163,166 @@ export default function Conversations() {
                   </p>
                 </div>
               ) : (
-                filteredContacts.flatMap((contact, index) => {
-                  const items: any[] = [
-                    <Card
-                      key={contact.id}
-                      className={`mb-2 cursor-pointer transition-all duration-300 border-0 mr-1.5 ${
-                        selectedContactId === contact.id
-                          ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
-                          : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
-                      }`}
-                      onClick={() => setSelectedContactId(contact.id)}
-                    >
-                    <CardContent className="p-2.5 relative">
-                      <div className="flex gap-2 items-start">
-                        {/* Avatar */}
-                        <Avatar className="w-8 h-8 flex-shrink-0 mt-0.5">
-                          <AvatarImage src={contact.avatar || ""} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {(contact.name || contact.phoneNumber)
-                              .substring(0, 2)
-                              .toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                filteredContacts
+                  .flatMap((contact, index) => {
+                    const items: any[] = [
+                      <Card
+                        key={contact.id}
+                        className={`mb-2 cursor-pointer transition-all duration-300 border-0 mr-1.5 ${
+                          selectedContactId === contact.id
+                            ? "bg-gradient-to-r from-primary/20 to-secondary/20 shadow-md ring-2 ring-primary/40"
+                            : "bg-muted/30 hover:bg-muted/60 hover:shadow-md"
+                        }`}
+                        onClick={() => setSelectedContactId(contact.id)}
+                      >
+                        <CardContent className="p-2.5 relative">
+                          <div className="flex gap-2 items-start">
+                            {/* Avatar */}
+                            <Avatar className="w-8 h-8 flex-shrink-0 mt-0.5">
+                              <AvatarImage src={contact.avatar || ""} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {(contact.name || contact.phoneNumber)
+                                  .substring(0, 2)
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
 
-                        {/* Content - Main info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start gap-1">
+                            {/* Content - Main info */}
                             <div className="flex-1 min-w-0">
-                              {/* Name */}
-                              <h4 className="font-medium truncate text-xs">
-                                {contact.name || contact.phoneNumber}
-                              </h4>
-                              {/* Phone number */}
-                              <p className="text-xs text-muted-foreground font-mono truncate">
-                                {contact.phoneNumber}
-                              </p>
-                            </div>
-                            {/* Pin icon on right of name */}
-                            {contact.isPinned && (
-                              <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0 mt-0.5" />
-                            )}
-                          </div>
-
-                          {/* Last message */}
-                          {contact.lastMessage && (
-                            <p className="text-xs text-muted-foreground line-clamp-1 break-words mt-1">
-                              {contact.lastMessage}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Right side - Actions */}
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
-                          {contact.lastMessageTime && (
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {formatMessageTime(contact.lastMessageTime)}
-                            </span>
-                          )}
-                          {contact.unreadCount > 0 &&
-                            selectedContactId !== contact.id && (
-                              <Badge
-                                variant="destructive"
-                                className="text-xs h-5 min-w-[20px] py-0"
-                              >
-                                {contact.unreadCount > 99
-                                  ? "99+"
-                                  : contact.unreadCount}
-                              </Badge>
-                            )}
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="p-1 h-5 w-5 opacity-60 hover:opacity-100 flex-shrink-0"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreVertical className="w-3.5 h-3.5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" side="left">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingContact(contact);
-                                  setNewContactName(contact.name || "");
-                                  setShowEditContact(true);
-                                }}
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit Name
-                              </DropdownMenuItem>
-
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePinContact(contact.id);
-                                }}
-                              >
-                                {contact.isPinned ? (
-                                  <>
-                                    <PinOff className="w-4 h-4 mr-2" />
-                                    Unpin
-                                  </>
-                                ) : (
-                                  <>
-                                    <Pin className="w-4 h-4 mr-2" />
-                                    Pin to Top
-                                  </>
+                              <div className="flex items-start gap-1">
+                                <div className="flex-1 min-w-0">
+                                  {/* Name */}
+                                  <h4 className="font-medium truncate text-xs">
+                                    {contact.name || contact.phoneNumber}
+                                  </h4>
+                                  {/* Phone number */}
+                                  <p className="text-xs text-muted-foreground font-mono truncate">
+                                    {contact.phoneNumber}
+                                  </p>
+                                </div>
+                                {/* Pin icon on right of name */}
+                                {contact.isPinned && (
+                                  <Pin className="w-2.5 h-2.5 text-primary flex-shrink-0 mt-0.5" />
                                 )}
-                              </DropdownMenuItem>
+                              </div>
 
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setMovingContact(contact);
-                                  const currentCategory =
-                                    contact.category || "general";
-                                  setMoveToCategory(
-                                    currentCategory === "general"
-                                      ? "sales"
-                                      : "general",
-                                  );
-                                  setShowMoveContact(true);
-                                }}
-                              >
-                                <ArrowRight className="w-4 h-4 mr-2" />
-                                Move to{" "}
-                                {(contact.category || "general") === "general"
-                                  ? "Sales"
-                                  : "General"}
-                              </DropdownMenuItem>
+                              {/* Last message */}
+                              {contact.lastMessage && (
+                                <p className="text-xs text-muted-foreground line-clamp-1 break-words mt-1">
+                                  {contact.lastMessage}
+                                </p>
+                              )}
+                            </div>
 
-                              <DropdownMenuSeparator />
+                            {/* Right side - Actions */}
+                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                              {contact.lastMessageTime && (
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {formatMessageTime(contact.lastMessageTime)}
+                                </span>
+                              )}
+                              {contact.unreadCount > 0 &&
+                                selectedContactId !== contact.id && (
+                                  <Badge
+                                    variant="destructive"
+                                    className="text-xs h-5 min-w-[20px] py-0"
+                                  >
+                                    {contact.unreadCount > 99
+                                      ? "99+"
+                                      : contact.unreadCount}
+                                  </Badge>
+                                )}
 
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeletingContact(contact);
-                                  setShowDeleteContact(true);
-                                }}
-                                className="text-destructive focus:text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Contact
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </CardContent>
-                    </Card>
-                  ];
-                  return items;
-                }).flat()
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="p-1 h-5 w-5 opacity-60 hover:opacity-100 flex-shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreVertical className="w-3.5 h-3.5" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" side="left">
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingContact(contact);
+                                      setNewContactName(contact.name || "");
+                                      setShowEditContact(true);
+                                    }}
+                                  >
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit Name
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuSeparator />
+
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      togglePinContact(contact.id);
+                                    }}
+                                  >
+                                    {contact.isPinned ? (
+                                      <>
+                                        <PinOff className="w-4 h-4 mr-2" />
+                                        Unpin
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Pin className="w-4 h-4 mr-2" />
+                                        Pin to Top
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setMovingContact(contact);
+                                      const currentCategory =
+                                        contact.category || "general";
+                                      setMoveToCategory(
+                                        currentCategory === "general"
+                                          ? "sales"
+                                          : "general",
+                                      );
+                                      setShowMoveContact(true);
+                                    }}
+                                  >
+                                    <ArrowRight className="w-4 h-4 mr-2" />
+                                    Move to{" "}
+                                    {(contact.category || "general") ===
+                                    "general"
+                                      ? "Sales"
+                                      : "General"}
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuSeparator />
+
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeletingContact(contact);
+                                      setShowDeleteContact(true);
+                                    }}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Contact
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>,
+                    ];
+                    return items;
+                  })
+                  .flat()
               )}
             </div>
           </ScrollArea>

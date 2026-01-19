@@ -110,7 +110,7 @@ export default function Messages() {
         } catch (ablyError) {
           console.warn(
             "[Messages] Ably connection failed, app will work with polling:",
-            ablyError
+            ablyError,
           );
           // Continue anyway - app works without Ably
         }
@@ -559,47 +559,51 @@ export default function Messages() {
               </div>
             ) : filteredContacts.length > 0 ? (
               <div className="space-y-0.5 p-2">
-                {filteredContacts.flatMap((contact, index) => {
-                  const items: any[] = [
-                    <button
-                      key={contact.id}
-                      onClick={() => handleSelectContact(contact)}
-                      className={`w-full text-left p-3 rounded-lg transition-all ${
-                        conversation.contact?.id === contact.id
-                          ? "bg-gradient-to-r from-primary to-secondary text-white shadow-md"
-                          : "hover:bg-muted/60"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate">
-                            {contact.name || contact.phoneNumber}
-                          </p>
-                          <p className="text-xs opacity-75 truncate mt-0.5">
-                            {contact.lastMessage || "No messages yet"}
-                          </p>
+                {filteredContacts
+                  .flatMap((contact, index) => {
+                    const items: any[] = [
+                      <button
+                        key={contact.id}
+                        onClick={() => handleSelectContact(contact)}
+                        className={`w-full text-left p-3 rounded-lg transition-all ${
+                          conversation.contact?.id === contact.id
+                            ? "bg-gradient-to-r from-primary to-secondary text-white shadow-md"
+                            : "hover:bg-muted/60"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">
+                              {contact.name || contact.phoneNumber}
+                            </p>
+                            <p className="text-xs opacity-75 truncate mt-0.5">
+                              {contact.lastMessage || "No messages yet"}
+                            </p>
+                          </div>
+                          {contact.unreadCount > 0 &&
+                            conversation.contact?.id !== contact.id && (
+                              <Badge
+                                variant="destructive"
+                                className="text-xs h-5 min-w-[20px] flex-shrink-0"
+                              >
+                                {contact.unreadCount > 99
+                                  ? "99+"
+                                  : contact.unreadCount}
+                              </Badge>
+                            )}
                         </div>
-                        {contact.unreadCount > 0 &&
-                          conversation.contact?.id !== contact.id && (
-                            <Badge
-                              variant="destructive"
-                              className="text-xs h-5 min-w-[20px] flex-shrink-0"
-                            >
-                              {contact.unreadCount > 99
-                                ? "99+"
-                                : contact.unreadCount}
-                            </Badge>
-                          )}
-                      </div>
-                      {contact.lastMessageTime && (
-                        <p className="text-xs opacity-50 mt-1">
-                          {new Date(contact.lastMessageTime).toLocaleDateString()}
-                        </p>
-                      )}
-                    </button>,
-                  ];
-                  return items;
-                }).flat()}
+                        {contact.lastMessageTime && (
+                          <p className="text-xs opacity-50 mt-1">
+                            {new Date(
+                              contact.lastMessageTime,
+                            ).toLocaleDateString()}
+                          </p>
+                        )}
+                      </button>,
+                    ];
+                    return items;
+                  })
+                  .flat()}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">

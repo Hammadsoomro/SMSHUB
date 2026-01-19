@@ -30,9 +30,7 @@ export default function PrivacyPolicy() {
         <div className="space-y-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">Privacy Policy</h1>
-            <p className="text-muted-foreground">
-              Last Updated: January 2026
-            </p>
+            <p className="text-muted-foreground">Last Updated: January 2026</p>
           </div>
 
           <section>
@@ -62,9 +60,7 @@ export default function PrivacyPolicy() {
                   <li>Company information and job title</li>
                   <li>Billing and payment information</li>
                   <li>Twilio account credentials and authentication tokens</li>
-                  <li>
-                    Communication history and support inquiries
-                  </li>
+                  <li>Communication history and support inquiries</li>
                 </ul>
               </div>
 
@@ -72,7 +68,9 @@ export default function PrivacyPolicy() {
                 <h3 className="font-semibold text-foreground mb-2">
                   Automatically Collected Information
                 </h3>
-                <p>When you access our services, we may automatically collect:</p>
+                <p>
+                  When you access our services, we may automatically collect:
+                </p>
                 <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
                   <li>IP address and browser type</li>
                   <li>Device information and operating system</li>
@@ -83,9 +81,7 @@ export default function PrivacyPolicy() {
               </div>
 
               <div>
-                <h3 className="font-semibold text-foreground mb-2">
-                  SMS Data
-                </h3>
+                <h3 className="font-semibold text-foreground mb-2">SMS Data</h3>
                 <p>
                   When using our SMS management features, we process SMS
                   messages, phone numbers, and related metadata as directed by
@@ -99,7 +95,9 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-bold mb-4">
               2. How We Use Your Information
             </h2>
-            <p className="text-muted-foreground mb-4">We use the information we collect for:</p>
+            <p className="text-muted-foreground mb-4">
+              We use the information we collect for:
+            </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-2">
               <li>Providing and improving our services</li>
               <li>Authenticating users and preventing fraud</li>
@@ -110,9 +108,7 @@ export default function PrivacyPolicy() {
               </li>
               <li>Analyzing usage patterns to enhance user experience</li>
               <li>Complying with legal obligations and protecting rights</li>
-              <li>
-                Marketing and promotional purposes (with your consent)
-              </li>
+              <li>Marketing and promotional purposes (with your consent)</li>
             </ul>
           </section>
 
@@ -162,9 +158,9 @@ export default function PrivacyPolicy() {
               <li>Secure authentication for Twilio credentials</li>
             </ul>
             <p className="text-muted-foreground mt-4">
-              While we strive to protect your information, no security system
-              is impenetrable. We cannot guarantee absolute security, but we
-              are committed to maintaining industry-standard protections.
+              While we strive to protect your information, no security system is
+              impenetrable. We cannot guarantee absolute security, but we are
+              committed to maintaining industry-standard protections.
             </p>
           </section>
 
@@ -180,7 +176,9 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4">6. Your Rights and Choices</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              6. Your Rights and Choices
+            </h2>
             <div className="space-y-4 text-muted-foreground">
               <p>You have the right to:</p>
               <ul className="list-disc list-inside space-y-1 ml-2">
@@ -200,16 +198,15 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold mb-4">7. Cookies and Tracking</h2>
             <p className="text-muted-foreground mb-4">
-              We use cookies and similar technologies to enhance your experience,
-              remember preferences, and understand how you use our services. You
-              can control cookie settings through your browser preferences.
+              We use cookies and similar technologies to enhance your
+              experience, remember preferences, and understand how you use our
+              services. You can control cookie settings through your browser
+              preferences.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4">
-              8. Third-Party Links
-            </h2>
+            <h2 className="text-2xl font-bold mb-4">8. Third-Party Links</h2>
             <p className="text-muted-foreground">
               Our website may contain links to third-party websites. We are not
               responsible for the privacy practices of these external sites.
