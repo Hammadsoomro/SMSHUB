@@ -298,7 +298,7 @@ export default function Landing() {
       <footer className="border-t border-border py-8 px-4 bg-background/50">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center text-sm text-muted-foreground mb-4">
-            <p>&copy; 2026 conneclify. All rights reserved. | Hammad Soomro</p>
+            <p>&copy; 2026 conneclify. All rights reserved.</p>
             <div className="flex gap-6">
               <Link
                 to="/privacy"
@@ -319,6 +319,11 @@ export default function Landing() {
                 Contact
               </a>
             </div>
+          </div>
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-xs text-muted-foreground">
+              <span className="font-semibold">Created by:</span> Hammad Soomro
+            </p>
           </div>
         </div>
       </footer>
