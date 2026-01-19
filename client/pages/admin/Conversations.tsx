@@ -1308,9 +1308,6 @@ export default function Conversations() {
                     </CardContent>
                     </Card>
                   ];
-                  if (index > 0 && (index + 1) % 5 === 0) {
-                    items.push(<div key={`ad-${index}`}><GoogleAdSense /></div>);
-                  }
                   return items;
                 }).flat()
               )}
