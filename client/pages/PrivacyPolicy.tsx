@@ -268,7 +268,7 @@ export default function PrivacyPolicy() {
 
           <div className="border-t border-border pt-8 mt-8">
             <p className="text-sm text-muted-foreground">
-              &copy; 2026 conneclify. All rights reserved. | Hammad Soomro
+              &copy; 2026 conneclify. All rights reserved.
             </p>
           </div>
         </div>
