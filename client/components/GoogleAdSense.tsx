@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
-// Track which ad slots have been used on the current page
-const usedAdSlots = new Set<string>();
+// Track which ad instances have been created
+let adInstanceCount = 0;
 
-// Different ad slots for different placements
+// Different ad slots for different placements and positions
 const AD_SLOTS = {
-  landing: "6761041317",
+  landing_1: "6761041317",
+  landing_2: "6761041318",
+  landing_3: "6761041319",
   dashboard: "7861041317",
   conversations: "8861041317",
   messages: "9861041317",
@@ -14,37 +16,37 @@ const AD_SLOTS = {
 
 interface GoogleAdSenseProps {
   placement?: keyof typeof AD_SLOTS;
-  allowMultiple?: boolean;
 }
 
 export default function GoogleAdSense({
   placement = "default",
-  allowMultiple = false,
 }: GoogleAdSenseProps) {
   const adRef = useRef<HTMLDivElement>(null);
   const [hasRendered, setHasRendered] = useState(false);
-  const adSlot = AD_SLOTS[placement] || AD_SLOTS.default;
+  const [instanceId] = useState(() => ++adInstanceCount);
+
+  // Determine the actual slot to use
+  let adSlot = AD_SLOTS[placement] || AD_SLOTS.default;
+
+  // For landing page, rotate through different slots
+  if (placement === "landing") {
+    const slotKey = (`landing_${(instanceId % 3) + 1}` as keyof typeof AD_SLOTS);
+    adSlot = AD_SLOTS[slotKey];
+  }
 
   useEffect(() => {
-    // Skip if already rendered and multiple not allowed
-    if (hasRendered && !allowMultiple) {
+    // Skip if already rendered
+    if (hasRendered) {
       return;
     }
 
-    // Check if slot already used on page (unless allowMultiple is true)
-    if (usedAdSlots.has(adSlot) && !allowMultiple) {
-      console.log(`⚠ Ad slot ${adSlot} already used on this page, skipping`);
-      return;
-    }
-
-    usedAdSlots.add(adSlot);
     setHasRendered(true);
 
     // Wait for adsbygoogle to be available
     const pushAd = () => {
       if (typeof window !== "undefined") {
         const adsbygoogle = (window as any).adsbygoogle;
-        if (adsbygoogle !== undefined) {
+        if (adsbygoogle !== undefined && Array.isArray(adsbygoogle)) {
           try {
             adsbygoogle.push({});
             console.log(`✓ Ad loaded for slot: ${adSlot}`);
@@ -64,7 +66,7 @@ export default function GoogleAdSense({
     // Small delay to ensure DOM is ready
     const timeoutId = setTimeout(pushAd, 50);
     return () => clearTimeout(timeoutId);
-  }, [adSlot, allowMultiple, hasRendered]);
+  }, [adSlot, hasRendered]);
 
   return (
     <div className="my-8 flex justify-center w-full">
