@@ -14,6 +14,8 @@ import Signup from "./pages/Signup";
 import InitAdmin from "./pages/InitAdmin";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import { ContactProvider } from "./contexts/ContactContext";
 import { registerServiceWorker } from "./lib/service-worker";
 
