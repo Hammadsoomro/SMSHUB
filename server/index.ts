@@ -225,6 +225,16 @@ export async function createServer() {
     handleInboundSMS,
   );
 
+  // Status callback webhook - tracks message delivery status
+  // Health check
+  app.get("/api/webhooks/status", handleWebhookHealth);
+  // Status callback endpoint requires Twilio signature validation
+  app.post(
+    "/api/webhooks/status",
+    validateTwilioSignature,
+    handleStatusCallback,
+  );
+
   // Admin routes (requires admin role)
   app.post(
     "/api/admin/credentials",
