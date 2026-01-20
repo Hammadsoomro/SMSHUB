@@ -353,6 +353,39 @@ class Storage {
     });
   }
 
+  async getMessageBySid(sid: string): Promise<Message | undefined> {
+    try {
+      const doc = await MessageModel.findOne({ sid });
+      if (!doc) return undefined;
+
+      const data = doc.toObject();
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as Message;
+    } catch (error) {
+      console.error(`[Storage] Error fetching message by SID ${sid}:`, error);
+      return undefined;
+    }
+  }
+
+  async updateMessage(message: Message): Promise<void> {
+    try {
+      await MessageModel.updateOne(
+        { sid: message.sid },
+        { $set: message },
+        { upsert: false }
+      );
+      console.log(`[Storage] Message updated: ${message.sid}`);
+    } catch (error) {
+      console.error(
+        `[Storage] Error updating message ${message.sid}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
   // Contacts
   async addContact(contact: Contact): Promise<void> {
     const newContact = new ContactModel(contact);
