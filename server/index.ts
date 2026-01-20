@@ -57,7 +57,7 @@ import {
 } from "./routes/messages";
 
 // Webhooks
-import { handleInboundSMS, handleWebhookHealth } from "./routes/webhooks";
+import { handleInboundSMS, handleWebhookHealth, handleStatusCallback } from "./routes/webhooks";
 
 // Ably token generation
 import { handleGetAblyToken } from "./routes/ably";
