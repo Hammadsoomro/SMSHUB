@@ -85,6 +85,10 @@ export interface Message {
   direction: "inbound" | "outbound";
   timestamp: string;
   sid?: string; // Twilio SID
+  status?: "queued" | "sent" | "delivered" | "failed" | "undelivered"; // Message delivery status
+  errorCode?: number; // Twilio error code if delivery failed
+  errorMessage?: string; // Twilio error message if delivery failed
+  statusUpdatedAt?: string; // Last time status was updated
 }
 
 export interface Contact {
