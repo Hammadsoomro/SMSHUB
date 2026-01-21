@@ -242,8 +242,49 @@ export const handleUpdateMessagingServiceSid: RequestHandler = async (
 export const handleGetNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
-    res.json({ numbers });
+
+    // Get admin's current Twilio credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res.json({ numbers: [] });
+    }
+
+    // Get all numbers for this admin
+    const allNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+
+    // Decrypt auth token to verify numbers belong to current credentials
+    const decryptedAuthToken = decrypt(credentials.authToken);
+    if (!decryptedAuthToken) {
+      return res.json({ numbers: allNumbers }); // Return all if decryption fails
+    }
+
+    // Get numbers actually in the current Twilio account
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      decryptedAuthToken,
+    );
+
+    try {
+      const twilioNumbers = await twilioClient.getAllIncomingPhoneNumbers();
+
+      // Filter to only show numbers that exist in the current Twilio account
+      const filteredNumbers = allNumbers.filter((num) =>
+        twilioNumbers.includes(num.phoneNumber)
+      );
+
+      console.log(
+        `[GetNumbers] Admin ${adminId}: ${allNumbers.length} total, ${filteredNumbers.length} in current Twilio account`
+      );
+
+      res.json({ numbers: filteredNumbers });
+    } catch (twilioError) {
+      console.warn(
+        "[GetNumbers] Could not verify numbers with Twilio, returning all numbers for admin",
+        twilioError
+      );
+      // Fallback: return all numbers if Twilio check fails
+      res.json({ numbers: allNumbers });
+    }
   } catch (error) {
     console.error("Get numbers error:", error);
     res.status(500).json({ error: "Internal server error" });
