@@ -120,9 +120,7 @@ export const handleGetConversation: RequestHandler = async (req, res) => {
     console.log("[getConversation] Phone number ID:", contact.phoneNumberId);
 
     // Get the phone number to verify user has access
-    const phoneNumber = await storage.getPhoneNumberById(
-      contact.phoneNumberId,
-    );
+    const phoneNumber = await storage.getPhoneNumberById(contact.phoneNumberId);
     if (!phoneNumber) {
       return res.status(404).json({ error: "Phone number not found" });
     }
