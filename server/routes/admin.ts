@@ -5,6 +5,7 @@ import { generateToken } from "../jwt";
 import ablyServer from "../ably";
 import { encrypt, decrypt } from "../crypto";
 import { hashPassword } from "../password";
+import { TwilioClient } from "../twilio";
 import {
   TwilioCredentialsRequest,
   TwilioCredentials,
