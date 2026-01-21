@@ -481,12 +481,21 @@ export default function BoughtNumbers() {
                   )}
                 </div>
 
-                <Button
-                  onClick={() => handleAssignClick(num.id)}
-                  className="w-full bg-gradient-to-r from-primary to-secondary"
-                >
-                  {num.assignedTo ? "Change Assignment" : "Assign Number"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleAssignClick(num.id)}
+                    className="flex-1 bg-gradient-to-r from-primary to-secondary"
+                  >
+                    {num.assignedTo ? "Change Assignment" : "Assign Number"}
+                  </Button>
+                  <Button
+                    onClick={() => handleDeleteClick(num)}
+                    variant="outline"
+                    className="px-3 border-red-200 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
