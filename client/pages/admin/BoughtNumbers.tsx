@@ -20,6 +20,9 @@ export default function BoughtNumbers() {
   const [selectedNumberId, setSelectedNumberId] = useState<string | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
   const [isAssigning, setIsAssigning] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [numberToDelete, setNumberToDelete] = useState<PhoneNumber | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchNumbers();
