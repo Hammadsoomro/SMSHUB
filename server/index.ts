@@ -262,6 +262,12 @@ export async function createServer() {
     handleUpdateMessagingServiceSid,
   );
   app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
+  app.delete(
+    "/api/admin/numbers/:phoneNumberId",
+    authMiddleware,
+    adminOnly,
+    handleDeletePhoneNumber,
+  );
   app.post(
     "/api/admin/numbers/set-active",
     authMiddleware,
