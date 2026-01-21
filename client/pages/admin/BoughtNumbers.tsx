@@ -204,6 +204,88 @@ export default function BoughtNumbers() {
           </Button>
         </div>
 
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && numberToDelete && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowDeleteConfirm(false)}
+            />
+            <Card
+              className="p-6 border-red-300 fixed inset-0 m-auto w-96 h-fit z-50 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-red-700">
+                  Remove Phone Number
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setNumberToDelete(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+                <p className="text-sm text-red-800 mb-2">
+                  Are you sure you want to remove this number?
+                </p>
+                <p className="font-mono font-semibold text-red-900">
+                  {numberToDelete.phoneNumber}
+                </p>
+              </div>
+
+              <div className="space-y-3 mb-4">
+                <p className="text-sm text-muted-foreground">
+                  ⚠️ This action will:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>Remove the number from your account</li>
+                  {numberToDelete.assignedTo && (
+                    <li>Unassign it from {teamMembers.find((m) => m.id === numberToDelete.assignedTo)?.name}</li>
+                  )}
+                  <li>Delete all related messages (cannot be undone)</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Removing...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setNumberToDelete(null);
+                  }}
+                  disabled={isDeleting}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </Card>
+          </>
+        )}
+
         {/* Assign Number Modal */}
         {showAssignModal && (
           <>
