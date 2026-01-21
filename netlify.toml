@@ -65,21 +65,21 @@
 
 # Production environment
 [context.production]
-  command = "npm run build:client"
+  command = "npm run build"
   [context.production.environment]
     NODE_ENV = "production"
     NETLIFY_ENV = "production"
 
 # Deploy preview environment
 [context.deploy-preview]
-  command = "npm run build:client"
+  command = "npm run build"
   [context.deploy-preview.environment]
     NODE_ENV = "production"
     NETLIFY_ENV = "deploy-preview"
 
 # Branch deploy environment
 [context.branch-deploy]
-  command = "npm run build:client"
+  command = "npm run build"
   [context.branch-deploy.environment]
     NODE_ENV = "production"
     NETLIFY_ENV = "branch-deploy"
