@@ -74,6 +74,57 @@ export default function BoughtNumbers() {
     setShowAssignModal(true);
   };
 
+  const handleDeleteClick = (phoneNumber: PhoneNumber) => {
+    setNumberToDelete(phoneNumber);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!numberToDelete) return;
+
+    setIsDeleting(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/admin/numbers/${numberToDelete.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        let errorMessage = "Failed to remove number";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Server error (${response.status})`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      setNumbers(numbers.filter((n) => n.id !== numberToDelete.id));
+      setShowDeleteConfirm(false);
+      setNumberToDelete(null);
+      setSuccess(
+        `✅ Number ${numberToDelete.phoneNumber} removed successfully!`
+      );
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleAssignNumber = async () => {
     if (!selectedNumberId) return;
 
