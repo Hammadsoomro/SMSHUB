@@ -276,6 +276,55 @@ class Storage {
     }
   }
 
+  async deletePhoneNumber(phoneNumberId: string): Promise<void> {
+    try {
+      const result = await PhoneNumberModel.deleteOne({ id: phoneNumberId });
+      if (result.deletedCount === 0) {
+        console.warn(`[Storage] Phone number not found: ${phoneNumberId}`);
+      } else {
+        console.log(
+          `[Storage] Successfully deleted phone number: ${phoneNumberId}`
+        );
+      }
+    } catch (error) {
+      console.error(
+        `[Storage] Error deleting phone number ${phoneNumberId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  async deleteMessagesByPhoneNumber(phoneNumberId: string): Promise<void> {
+    try {
+      const result = await MessageModel.deleteMany({ phoneNumberId });
+      console.log(
+        `[Storage] Deleted ${result.deletedCount} messages for phone number ${phoneNumberId}`
+      );
+    } catch (error) {
+      console.error(
+        `[Storage] Error deleting messages for phone number ${phoneNumberId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  async deleteContactsByPhoneNumber(phoneNumberId: string): Promise<void> {
+    try {
+      const result = await ContactModel.deleteMany({ phoneNumberId });
+      console.log(
+        `[Storage] Deleted ${result.deletedCount} contacts for phone number ${phoneNumberId}`
+      );
+    } catch (error) {
+      console.error(
+        `[Storage] Error deleting contacts for phone number ${phoneNumberId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
   // Team Members
   async addTeamMember(
     member: TeamMember & { password: string },
