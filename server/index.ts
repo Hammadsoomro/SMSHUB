@@ -22,6 +22,7 @@ import {
   handleUpdateMessagingServiceSid,
   handleGetNumbers,
   handleSetActiveNumber,
+  handleDeletePhoneNumber,
   handleGetTeamMembers,
   handleInviteTeamMember,
   handleRemoveTeamMember,
