@@ -102,9 +102,11 @@ export const handleGetContacts: RequestHandler = async (req, res) => {
 
 export const handleGetConversation: RequestHandler = async (req, res) => {
   try {
+    const userId = req.userId!;
     const { contactId } = req.params;
     console.log("Looking for contact with ID:", contactId);
 
+    // Get the contact
     const contact = await storage.getContactById(contactId);
     if (!contact) {
       console.warn("Contact not found with ID:", contactId);
@@ -116,6 +118,33 @@ export const handleGetConversation: RequestHandler = async (req, res) => {
 
     console.log("[getConversation] Found contact:", contact.phoneNumber);
     console.log("[getConversation] Phone number ID:", contact.phoneNumberId);
+
+    // Get the phone number to verify user has access
+    const phoneNumber = await storage.getPhoneNumberById(
+      contact.phoneNumberId,
+    );
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    // Get the user to determine admin/team member status
+    const user = await storage.getUserById(userId);
+    let adminId = userId;
+    if (user?.role === "team_member" && user.adminId) {
+      adminId = user.adminId;
+    }
+
+    // Verify user has access to this phone number
+    if (phoneNumber.adminId !== adminId) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // For team members, verify they are assigned to this number
+    if (user?.role === "team_member" && phoneNumber.assignedTo !== userId) {
+      return res
+        .status(403)
+        .json({ error: "This number is not assigned to you" });
+    }
 
     const messages = await storage.getMessagesByPhoneNumber(
       contact.phoneNumberId,
