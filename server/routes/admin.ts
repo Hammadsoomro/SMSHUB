@@ -324,6 +324,58 @@ export const handleSetActiveNumber: RequestHandler = async (req, res) => {
   }
 };
 
+/**
+ * Delete a phone number
+ * Removes number from database and deletes associated messages
+ */
+export const handleDeletePhoneNumber: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumberId } = req.params;
+
+    if (!phoneNumberId) {
+      return res.status(400).json({ error: "Phone number ID is required" });
+    }
+
+    // Get the phone number and verify it belongs to this admin
+    const phoneNumber = await storage.getPhoneNumberById(phoneNumberId);
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    if (phoneNumber.adminId !== adminId) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to delete this number" });
+    }
+
+    console.log(
+      `[DeleteNumber] Admin ${adminId} deleting number: ${phoneNumber.phoneNumber}`
+    );
+
+    // Delete all messages associated with this phone number
+    await storage.deleteMessagesByPhoneNumber(phoneNumberId);
+
+    // Delete all contacts associated with this phone number
+    await storage.deleteContactsByPhoneNumber(phoneNumberId);
+
+    // Delete the phone number
+    await storage.deletePhoneNumber(phoneNumberId);
+
+    console.log(
+      `[DeleteNumber] ✅ Successfully deleted number: ${phoneNumber.phoneNumber}`
+    );
+
+    res.json({
+      message: `Phone number ${phoneNumber.phoneNumber} removed successfully`,
+      phoneNumber,
+    });
+  } catch (error) {
+    console.error("Delete phone number error:", error);
+    res.status(500).json({ error: "Failed to delete phone number" });
+  }
+};
+
 // Team Management
 export const handleGetTeamMembers: RequestHandler = async (req, res) => {
   try {
