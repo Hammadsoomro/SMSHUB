@@ -18,7 +18,7 @@ async function startServer() {
 
     // In production, serve the built SPA files
     const __dirname = import.meta.dirname;
-    const distPath = path.join(__dirname, "../spa");
+    const distPath = path.join(__dirname, "..dist/spa");
 
     // Serve static files
     app.use(express.static(distPath));
