@@ -1,9 +1,6 @@
 import path from "path";
 import { createServer } from "http";
-import {
-  createServer as createExpressServer,
-  setSocketIOInstance,
-} from "./index";
+import { createServer as createExpressServer,  setSocketIOInstance} from "./index";
 import { setupSocketIO } from "./socket";
 import * as express from "express";
 
@@ -35,7 +32,7 @@ async function startServer() {
 
     httpServer.listen(port, () => {
       console.log(`🚀 SMSHub server running on port ${port}`);
-      console.log(`📱 Frontend: http://localhost:${port}`);
+      console.log(`📱 Frontend: http://conneclify.netlify.app:${port}`);
       console.log(`🔧 API: http://localhost:${port}/api`);
       console.log(`⚡ WebSocket: ws://localhost:${port}`);
     });
