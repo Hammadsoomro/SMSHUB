@@ -276,6 +276,55 @@ class Storage {
     }
   }
 
+  async deletePhoneNumber(phoneNumberId: string): Promise<void> {
+    try {
+      const result = await PhoneNumberModel.deleteOne({ id: phoneNumberId });
+      if (result.deletedCount === 0) {
+        console.warn(`[Storage] Phone number not found: ${phoneNumberId}`);
+      } else {
+        console.log(
+          `[Storage] Successfully deleted phone number: ${phoneNumberId}`
+        );
+      }
+    } catch (error) {
+      console.error(
+        `[Storage] Error deleting phone number ${phoneNumberId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  async deleteMessagesByPhoneNumber(phoneNumberId: string): Promise<void> {
+    try {
+      const result = await MessageModel.deleteMany({ phoneNumberId });
+      console.log(
+        `[Storage] Deleted ${result.deletedCount} messages for phone number ${phoneNumberId}`
+      );
+    } catch (error) {
+      console.error(
+        `[Storage] Error deleting messages for phone number ${phoneNumberId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  async deleteContactsByPhoneNumber(phoneNumberId: string): Promise<void> {
+    try {
+      const result = await ContactModel.deleteMany({ phoneNumberId });
+      console.log(
+        `[Storage] Deleted ${result.deletedCount} contacts for phone number ${phoneNumberId}`
+      );
+    } catch (error) {
+      console.error(
+        `[Storage] Error deleting contacts for phone number ${phoneNumberId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
   // Team Members
   async addTeamMember(
     member: TeamMember & { password: string },
@@ -351,6 +400,39 @@ class Storage {
       }
       return data as Message;
     });
+  }
+
+  async getMessageBySid(sid: string): Promise<Message | undefined> {
+    try {
+      const doc = await MessageModel.findOne({ sid });
+      if (!doc) return undefined;
+
+      const data = doc.toObject();
+      if (!data.id && data._id) {
+        data.id = data._id.toString();
+      }
+      return data as Message;
+    } catch (error) {
+      console.error(`[Storage] Error fetching message by SID ${sid}:`, error);
+      return undefined;
+    }
+  }
+
+  async updateMessage(message: Message): Promise<void> {
+    try {
+      await MessageModel.updateOne(
+        { sid: message.sid },
+        { $set: message },
+        { upsert: false }
+      );
+      console.log(`[Storage] Message updated: ${message.sid}`);
+    } catch (error) {
+      console.error(
+        `[Storage] Error updating message ${message.sid}:`,
+        error
+      );
+      throw error;
+    }
   }
 
   // Contacts

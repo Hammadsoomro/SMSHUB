@@ -5,6 +5,7 @@ import { generateToken } from "../jwt";
 import ablyServer from "../ably";
 import { encrypt, decrypt } from "../crypto";
 import { hashPassword } from "../password";
+import { TwilioClient } from "../twilio";
 import {
   TwilioCredentialsRequest,
   TwilioCredentials,
@@ -242,8 +243,49 @@ export const handleUpdateMessagingServiceSid: RequestHandler = async (
 export const handleGetNumbers: RequestHandler = async (req, res) => {
   try {
     const adminId = req.userId!;
-    const numbers = await storage.getPhoneNumbersByAdminId(adminId);
-    res.json({ numbers });
+
+    // Get admin's current Twilio credentials
+    const credentials = await storage.getTwilioCredentialsByAdminId(adminId);
+    if (!credentials) {
+      return res.json({ numbers: [] });
+    }
+
+    // Get all numbers for this admin
+    const allNumbers = await storage.getPhoneNumbersByAdminId(adminId);
+
+    // Decrypt auth token to verify numbers belong to current credentials
+    const decryptedAuthToken = decrypt(credentials.authToken);
+    if (!decryptedAuthToken) {
+      return res.json({ numbers: allNumbers }); // Return all if decryption fails
+    }
+
+    // Get numbers actually in the current Twilio account
+    const twilioClient = new TwilioClient(
+      credentials.accountSid,
+      decryptedAuthToken,
+    );
+
+    try {
+      const twilioNumbers = await twilioClient.getAllIncomingPhoneNumbers();
+
+      // Filter to only show numbers that exist in the current Twilio account
+      const filteredNumbers = allNumbers.filter((num) =>
+        twilioNumbers.includes(num.phoneNumber)
+      );
+
+      console.log(
+        `[GetNumbers] Admin ${adminId}: ${allNumbers.length} total, ${filteredNumbers.length} in current Twilio account`
+      );
+
+      res.json({ numbers: filteredNumbers });
+    } catch (twilioError) {
+      console.warn(
+        "[GetNumbers] Could not verify numbers with Twilio, returning all numbers for admin",
+        twilioError
+      );
+      // Fallback: return all numbers if Twilio check fails
+      res.json({ numbers: allNumbers });
+    }
   } catch (error) {
     console.error("Get numbers error:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -279,6 +321,58 @@ export const handleSetActiveNumber: RequestHandler = async (req, res) => {
   } catch (error) {
     console.error("Set active number error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Delete a phone number
+ * Removes number from database and deletes associated messages
+ */
+export const handleDeletePhoneNumber: RequestHandler = async (req, res) => {
+  try {
+    const adminId = req.userId!;
+    const { phoneNumberId } = req.params;
+
+    if (!phoneNumberId) {
+      return res.status(400).json({ error: "Phone number ID is required" });
+    }
+
+    // Get the phone number and verify it belongs to this admin
+    const phoneNumber = await storage.getPhoneNumberById(phoneNumberId);
+    if (!phoneNumber) {
+      return res.status(404).json({ error: "Phone number not found" });
+    }
+
+    if (phoneNumber.adminId !== adminId) {
+      return res
+        .status(403)
+        .json({ error: "You do not have permission to delete this number" });
+    }
+
+    console.log(
+      `[DeleteNumber] Admin ${adminId} deleting number: ${phoneNumber.phoneNumber}`
+    );
+
+    // Delete all messages associated with this phone number
+    await storage.deleteMessagesByPhoneNumber(phoneNumberId);
+
+    // Delete all contacts associated with this phone number
+    await storage.deleteContactsByPhoneNumber(phoneNumberId);
+
+    // Delete the phone number
+    await storage.deletePhoneNumber(phoneNumberId);
+
+    console.log(
+      `[DeleteNumber] ✅ Successfully deleted number: ${phoneNumber.phoneNumber}`
+    );
+
+    res.json({
+      message: `Phone number ${phoneNumber.phoneNumber} removed successfully`,
+      phoneNumber,
+    });
+  } catch (error) {
+    console.error("Delete phone number error:", error);
+    res.status(500).json({ error: "Failed to delete phone number" });
   }
 };
 

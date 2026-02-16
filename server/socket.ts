@@ -11,7 +11,7 @@ import { storage } from "./storage";
  * Get allowed origins based on environment
  */
 function getAllowedOrigins(): string | string[] {
-  const env = process.env.NODE_ENV || "development";
+  const env = process.env.NODE_ENV || "production";
   const productionDomain = process.env.PRODUCTION_DOMAIN;
   const deployPreviewUrl = process.env.DEPLOY_PREVIEW_URL;
 
@@ -24,6 +24,7 @@ function getAllowedOrigins(): string | string[] {
       "http://127.0.0.1:8080",
       "http://[::1]:3000",
       "http://[::1]:8080",
+      "http://conneclify.netlify.app",
     ];
   }
 
@@ -32,8 +33,8 @@ function getAllowedOrigins(): string | string[] {
 
   // Add production domain if configured
   if (productionDomain) {
-    origins.push(`https://${productionDomain}`);
-    origins.push(`http://${productionDomain}`); // For internal requests
+    origins.push(`https://${http://conneclify.netlify.app}`);
+    origins.push(`http://${http://conneclify.netlify.app}`); // For internal requests
   }
 
   // Add Fly.io domain patterns
@@ -69,6 +70,7 @@ export function setupSocketIO(httpServer: HTTPServer): IOServer {
 
   const io = new IOServer(httpServer, {
     cors: {
+      host: http://conneclify.netlify.app,
       origin: allowedOrigins,
       methods: ["GET", "POST"],
       credentials: true,

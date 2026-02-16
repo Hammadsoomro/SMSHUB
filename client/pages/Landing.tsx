@@ -135,7 +135,7 @@ export default function Landing() {
       </section>
 
       {/* Ad Space */}
-      <GoogleAdSense />
+      <GoogleAdSense placement="landing" />
 
       {/* Features Section */}
       <section className="py-20 px-4 bg-card/50">
@@ -212,9 +212,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Ad Space */}
-      <GoogleAdSense />
-
       {/* How It Works */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
@@ -270,9 +267,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Ad Space */}
-      <GoogleAdSense />
-
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10 border-t border-border">
         <div className="max-w-4xl mx-auto text-center">
@@ -296,18 +290,34 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4 bg-background/50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center text-sm text-muted-foreground">
-          <p>&copy; 2024 conneclify. All rights reserved.</p>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-foreground smooth-transition">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-foreground smooth-transition">
-              Terms
-            </a>
-            <a href="#" className="hover:text-foreground smooth-transition">
-              Contact
-            </a>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center text-sm text-muted-foreground mb-4">
+            <p>&copy; 2026 conneclify. All rights reserved.</p>
+            <div className="flex gap-6">
+              <Link
+                to="/privacy"
+                className="hover:text-foreground smooth-transition"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                to="/terms"
+                className="hover:text-foreground smooth-transition"
+              >
+                Terms and Conditions
+              </Link>
+              <a
+                href="mailto:contact@conneclify.com"
+                className="hover:text-foreground smooth-transition"
+              >
+                Contact
+              </a>
+            </div>
+          </div>
+          <div className="border-t border-border pt-4 mt-4">
+            <p className="text-xs text-muted-foreground">
+              <span className="font-semibold">Created by:</span> Hammad Soomro
+            </p>
           </div>
         </div>
       </footer>

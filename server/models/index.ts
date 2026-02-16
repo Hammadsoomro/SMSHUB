@@ -97,7 +97,12 @@ export const TeamMemberModel = mongoose.model<ITeamMember>(
 );
 
 // Message Schema
-export interface IMessage extends Document, Message {}
+export interface IMessage extends Document, Message {
+  status?: "queued" | "sent" | "delivered" | "failed" | "undelivered";
+  errorCode?: number;
+  errorMessage?: string;
+  statusUpdatedAt?: string;
+}
 
 const messageSchema = new Schema<IMessage>(
   {
@@ -109,6 +114,14 @@ const messageSchema = new Schema<IMessage>(
     direction: { type: String, enum: ["inbound", "outbound"], required: true },
     timestamp: { type: String, required: true },
     sid: { type: String, sparse: true },
+    status: {
+      type: String,
+      enum: ["queued", "sent", "delivered", "failed", "undelivered"],
+      default: "queued",
+    },
+    errorCode: { type: Number, sparse: true },
+    errorMessage: { type: String, sparse: true },
+    statusUpdatedAt: { type: String, sparse: true },
   },
   { collection: "messages" },
 );

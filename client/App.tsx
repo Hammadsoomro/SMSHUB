@@ -1,8 +1,5 @@
-import "./global.css";
-
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,6 +11,8 @@ import Signup from "./pages/Signup";
 import InitAdmin from "./pages/InitAdmin";
 import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import { ContactProvider } from "./contexts/ContactContext";
 import { registerServiceWorker } from "./lib/service-worker";
 
@@ -54,6 +53,8 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/init-admin" element={<InitAdmin />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsAndConditions />} />
 
                 {/* Team Member Routes */}
                 <Route path="/messages" element={<Messages />} />
@@ -62,15 +63,24 @@ const App = () => {
 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/conversations" element={<Conversations />} />
+                <Route
+                  path="/admin/conversations"
+                  element={<Conversations />}
+                />
                 <Route path="/admin/credentials" element={<Credentials />} />
                 <Route path="/admin/buy-numbers" element={<BuyNumbers />} />
-                <Route path="/admin/bought-numbers" element={<BoughtNumbers />} />
+                <Route
+                  path="/admin/bought-numbers"
+                  element={<BoughtNumbers />}
+                />
                 <Route path="/admin/team" element={<TeamManagement />} />
                 <Route path="/admin/settings" element={<Settings />} />
                 <Route path="/admin/account" element={<AccountInfo />} />
                 <Route path="/admin/insights" element={<Insights />} />
-                <Route path="/admin/twilio-balance" element={<TwilioBalance />} />
+                <Route
+                  path="/admin/twilio-balance"
+                  element={<TwilioBalance />}
+                />
 
                 {/* Catch All */}
                 <Route path="*" element={<NotFound />} />
@@ -83,4 +93,4 @@ const App = () => {
   );
 };
 
-createRoot(document.getElementById("root")!).render(<App />);
+export default App;

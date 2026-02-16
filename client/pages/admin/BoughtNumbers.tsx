@@ -4,7 +4,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import GoogleAdSense from "@/components/GoogleAdSense";
-import { AlertCircle, Phone, Loader2, Search, Check, X } from "lucide-react";
+import { AlertCircle, Phone, Loader2, Search, Check, X, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PhoneNumber, TeamMember } from "@shared/api";
 
@@ -20,6 +20,9 @@ export default function BoughtNumbers() {
   const [selectedNumberId, setSelectedNumberId] = useState<string | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
   const [isAssigning, setIsAssigning] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [numberToDelete, setNumberToDelete] = useState<PhoneNumber | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchNumbers();
@@ -69,6 +72,57 @@ export default function BoughtNumbers() {
       setSelectedMemberId("");
     }
     setShowAssignModal(true);
+  };
+
+  const handleDeleteClick = (phoneNumber: PhoneNumber) => {
+    setNumberToDelete(phoneNumber);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!numberToDelete) return;
+
+    setIsDeleting(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `/api/admin/numbers/${numberToDelete.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        let errorMessage = "Failed to remove number";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Server error (${response.status})`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      setNumbers(numbers.filter((n) => n.id !== numberToDelete.id));
+      setShowDeleteConfirm(false);
+      setNumberToDelete(null);
+      setSuccess(
+        `✅ Number ${numberToDelete.phoneNumber} removed successfully!`
+      );
+
+      setTimeout(() => {
+        setSuccess("");
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleAssignNumber = async () => {
@@ -149,6 +203,88 @@ export default function BoughtNumbers() {
             Buy New Number
           </Button>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && numberToDelete && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowDeleteConfirm(false)}
+            />
+            <Card
+              className="p-6 border-red-300 fixed inset-0 m-auto w-96 h-fit z-50 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-red-700">
+                  Remove Phone Number
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setNumberToDelete(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+                <p className="text-sm text-red-800 mb-2">
+                  Are you sure you want to remove this number?
+                </p>
+                <p className="font-mono font-semibold text-red-900">
+                  {numberToDelete.phoneNumber}
+                </p>
+              </div>
+
+              <div className="space-y-3 mb-4">
+                <p className="text-sm text-muted-foreground">
+                  ⚠️ This action will:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                  <li>Remove the number from your account</li>
+                  {numberToDelete.assignedTo && (
+                    <li>Unassign it from {teamMembers.find((m) => m.id === numberToDelete.assignedTo)?.name}</li>
+                  )}
+                  <li>Delete all related messages (cannot be undone)</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Removing...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setNumberToDelete(null);
+                  }}
+                  disabled={isDeleting}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </Card>
+          </>
+        )}
 
         {/* Assign Number Modal */}
         {showAssignModal && (
@@ -345,12 +481,21 @@ export default function BoughtNumbers() {
                   )}
                 </div>
 
-                <Button
-                  onClick={() => handleAssignClick(num.id)}
-                  className="w-full bg-gradient-to-r from-primary to-secondary"
-                >
-                  {num.assignedTo ? "Change Assignment" : "Assign Number"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleAssignClick(num.id)}
+                    className="flex-1 bg-gradient-to-r from-primary to-secondary"
+                  >
+                    {num.assignedTo ? "Change Assignment" : "Assign Number"}
+                  </Button>
+                  <Button
+                    onClick={() => handleDeleteClick(num)}
+                    variant="outline"
+                    className="px-3 border-red-200 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>

@@ -16,6 +16,136 @@ export const handleWebhookHealth: RequestHandler = async (req, res) => {
 };
 
 /**
+ * Handle message status callbacks from Twilio
+ * Receives delivery status updates (sent, delivered, failed, undelivered)
+ * Tracks message delivery status and notifies connected clients in real-time
+ */
+export const handleStatusCallback: RequestHandler = async (req, res) => {
+  try {
+    const {
+      MessageSid,
+      MessageStatus,
+      ErrorCode,
+      ErrorMessage,
+      Timestamp: twilioTimestamp,
+    } = req.body;
+
+    // Debug: Log all status callback data
+    console.log("[handleStatusCallback] Status callback received");
+    console.log("[handleStatusCallback] MessageSid:", MessageSid);
+    console.log("[handleStatusCallback] MessageStatus:", MessageStatus);
+    console.log("[handleStatusCallback] ErrorCode:", ErrorCode);
+    console.log("[handleStatusCallback] ErrorMessage:", ErrorMessage);
+    console.log("[handleStatusCallback] Full request body:", JSON.stringify(req.body));
+
+    // Validate required fields
+    if (!MessageSid || !MessageStatus) {
+      console.error(
+        "[handleStatusCallback] Missing required fields - MessageSid:",
+        !!MessageSid,
+        "MessageStatus:",
+        !!MessageStatus
+      );
+      return res.status(400).send("Missing required fields");
+    }
+
+    // Find the message by MessageSid
+    console.log("[handleStatusCallback] Looking up message with SID:", MessageSid);
+    const message = await storage.getMessageBySid(MessageSid);
+
+    if (!message) {
+      console.warn(
+        "[handleStatusCallback] Message not found for SID:",
+        MessageSid,
+        "- Webhook may have arrived before message was stored"
+      );
+      // Don't return error - Twilio may send status before we store the message
+      return res.status(200).json({ status: "queued", message: "Message SID not found yet" });
+    }
+
+    console.log("[handleStatusCallback] Message found:", message.id);
+
+    // Update message status
+    const updatedMessage = {
+      ...message,
+      status: MessageStatus.toLowerCase(),
+      errorCode: ErrorCode ? parseInt(ErrorCode) : undefined,
+      errorMessage: ErrorMessage,
+      statusUpdatedAt: new Date().toISOString(),
+    };
+
+    console.log("[handleStatusCallback] Updating message status to:", MessageStatus);
+    await storage.updateMessage(updatedMessage);
+    console.log("[handleStatusCallback] Message status updated successfully");
+
+    // Get the phone number to notify the right users
+    const phoneNumber = await storage.getPhoneNumberById(message.phoneNumberId);
+    if (!phoneNumber) {
+      console.warn("[handleStatusCallback] Phone number not found for message");
+      return res.status(200).json({ status: "ok" });
+    }
+
+    // Publish real-time status update via Ably
+    if (ablyServer.isInitialized) {
+      try {
+        const statusUpdateData = {
+          messageId: message.id,
+          messageSid: MessageSid,
+          phoneNumberId: message.phoneNumberId,
+          status: MessageStatus.toLowerCase(),
+          errorCode: ErrorCode,
+          errorMessage: ErrorMessage,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Notify admin
+        if (phoneNumber.adminId) {
+          console.log(
+            `[handleStatusCallback] Publishing status update to admin: ${phoneNumber.adminId}`
+          );
+          await ablyServer.publishMessage(phoneNumber.adminId, message.phoneNumberId, {
+            ...statusUpdateData,
+            userId: phoneNumber.adminId,
+            type: "message_status_update",
+          });
+        }
+
+        // Notify assigned team member if different from admin
+        if (
+          phoneNumber.assignedTo &&
+          phoneNumber.assignedTo !== phoneNumber.adminId
+        ) {
+          console.log(
+            `[handleStatusCallback] Publishing status update to team member: ${phoneNumber.assignedTo}`
+          );
+          await ablyServer.publishMessage(phoneNumber.assignedTo, message.phoneNumberId, {
+            ...statusUpdateData,
+            userId: phoneNumber.assignedTo,
+            type: "message_status_update",
+          });
+        }
+      } catch (error) {
+        console.error("[handleStatusCallback] Error publishing Ably events:", error);
+        // Continue even if Ably fails - status is already stored
+      }
+    }
+
+    console.log(
+      "[handleStatusCallback] ✅ Status callback processed successfully for message",
+      MessageSid,
+      "- Status:",
+      MessageStatus
+    );
+
+    // Return success response
+    res.json({ status: "ok", messageSid: MessageSid });
+  } catch (error) {
+    console.error("[handleStatusCallback] ❌ Status callback error:", error);
+    res.status(500).send("Internal server error");
+  }
+};
+
+/**
  * Handle inbound SMS from Twilio webhook
  * Receives form data from Twilio and stores the message in the database
  */

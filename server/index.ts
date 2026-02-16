@@ -22,6 +22,7 @@ import {
   handleUpdateMessagingServiceSid,
   handleGetNumbers,
   handleSetActiveNumber,
+  handleDeletePhoneNumber,
   handleGetTeamMembers,
   handleInviteTeamMember,
   handleRemoveTeamMember,
@@ -57,7 +58,7 @@ import {
 } from "./routes/messages";
 
 // Webhooks
-import { handleInboundSMS, handleWebhookHealth } from "./routes/webhooks";
+import { handleInboundSMS, handleWebhookHealth, handleStatusCallback } from "./routes/webhooks";
 
 // Ably token generation
 import { handleGetAblyToken } from "./routes/ably";
@@ -225,6 +226,16 @@ export async function createServer() {
     handleInboundSMS,
   );
 
+  // Status callback webhook - tracks message delivery status
+  // Health check
+  app.get("/api/webhooks/status", handleWebhookHealth);
+  // Status callback endpoint requires Twilio signature validation
+  app.post(
+    "/api/webhooks/status",
+    validateTwilioSignature,
+    handleStatusCallback,
+  );
+
   // Admin routes (requires admin role)
   app.post(
     "/api/admin/credentials",
@@ -251,6 +262,12 @@ export async function createServer() {
     handleUpdateMessagingServiceSid,
   );
   app.get("/api/admin/numbers", authMiddleware, adminOnly, handleGetNumbers);
+  app.delete(
+    "/api/admin/numbers/:phoneNumberId",
+    authMiddleware,
+    adminOnly,
+    handleDeletePhoneNumber,
+  );
   app.post(
     "/api/admin/numbers/set-active",
     authMiddleware,
